@@ -1,4 +1,4 @@
-package at.v3rtumnus.planman.dto.expenses;
+package at.v3rtumnus.planman.dto.expense;
 
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
