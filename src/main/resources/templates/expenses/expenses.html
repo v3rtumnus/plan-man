@@ -8,7 +8,7 @@
             var month = date.substring(0, date.indexOf('-'))
             var year = date.substring(date.indexOf('-') + 1)
 
-            var monthlyUrl = '/expenses/ongoing/monthly?month=' + month + '&year=' + year;
+            var monthlyUrl = '/expenses/monthly?month=' + month + '&year=' + year;
 
             $("#monthlyContainer").load(monthlyUrl);
         }
@@ -17,7 +17,7 @@
             var month = date.substring(0, date.indexOf('-'))
             var year = date.substring(date.indexOf('-') + 1)
 
-            var pieUrl = '/expenses/ongoing/pie?month=' + month + '&year=' + year;
+            var pieUrl = '/expenses/pie?month=' + month + '&year=' + year;
 
             $("#pieContainer").load(pieUrl);
         }
@@ -27,7 +27,7 @@
             if (lastMonths != -1) {
                 monthsParam = '?lastMonths=' + lastMonths;
             }
-            var graphUrl = '/expenses/ongoing/graph' + monthsParam;
+            var graphUrl = '/expenses/graph' + monthsParam;
 
             $("#graphContainer").load(graphUrl);
         }

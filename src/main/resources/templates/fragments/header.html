@@ -36,7 +36,7 @@
 <div th:fragment="header">
     <!-- this is header -->
     <nav class="mb-1 navbar navbar-expand-lg navbar-dark primary-color">
-        <a class="navbar-brand" href="#">Navbar</a>
+        <a class="navbar-brand" href="#">Plan-Man</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent-333"
                 aria-controls="navbarSupportedContent-333" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -49,14 +49,17 @@
                     </a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdownMenuExpenses" data-toggle="dropdown"
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownMenuExpensesOngoing" data-toggle="dropdown"
                        aria-haspopup="true" aria-expanded="false" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/expenses') ? 'active':''}">
                         Ausgaben
                     </a>
                     <div class="dropdown-menu dropdown-default" aria-labelledby="navbarDropdownMenuExpenses">
-                        <a class="dropdown-item" th:href="@{/expenses/ongoing}">Laufende Ausgaben</a>
-                        <a class="dropdown-item" th:href="@{/expenses/fixed}">Monatliche Fixausgaben</a>
+                        <a class="dropdown-item" th:href="@{/expenses}">&Uuml;bersicht</a>
+                        <a class="dropdown-item" th:href="@{/expenses/detail}">Detailansicht</a>
                     </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/balance}" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/balance') ? 'active':''}">Monatsbilanz</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdownMenuCredit" data-toggle="dropdown"
@@ -69,7 +72,7 @@
                     </div>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/shares}">Aktien</a>
+                    <a class="nav-link" th:href="@{/shares}" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/shares') ? 'active':''}">Aktien</a>
                 </li>
             </ul>
             <ul class="navbar-nav ml-auto">

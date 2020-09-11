@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -33,9 +32,9 @@ public class ExpensesController {
 
     private final ExpenseService expenseService;
 
-    @GetMapping(path = "/ongoing")
-    public ModelAndView getOngoingExpenses() {
-        ModelAndView modelAndView = new ModelAndView("expenses/ongoing");
+    @GetMapping
+    public ModelAndView getExpenses() {
+        ModelAndView modelAndView = new ModelAndView("expenses/expenses");
 
         LocalDate endOfCurrentMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1).minusDays(1);
         LocalDate minimumExpenseDate = expenseService.getMinimumExpenseDate().withDayOfMonth(1);
@@ -54,10 +53,10 @@ public class ExpensesController {
         return modelAndView;
     }
 
-    @GetMapping(path = "/ongoing/monthly")
-    public ModelAndView getOngoingExpensesMonthlyOverview(@RequestParam(value = "year", required = false) Integer year,
+    @GetMapping(path = "/monthly")
+    public ModelAndView getExpensesMonthlyOverview(@RequestParam(value = "year", required = false) Integer year,
                                                           @RequestParam(value = "month", required = false) Integer month) {
-        ModelAndView modelAndView = new ModelAndView("fragments/expenses_ongoing_monthly");
+        ModelAndView modelAndView = new ModelAndView("fragments/expenses_monthly");
         List<ExpenseSummary> expenseSummaryForMonth = expenseService.getExpenseSummaryForMonth(
                 year, month);
 
@@ -73,10 +72,10 @@ public class ExpensesController {
         return modelAndView;
     }
 
-    @GetMapping(path = "/ongoing/pie")
-    public ModelAndView getOngoingExpensesPie(@RequestParam(value = "year", required = false) Integer year,
+    @GetMapping(path = "/pie")
+    public ModelAndView getExpensesPie(@RequestParam(value = "year", required = false) Integer year,
                                               @RequestParam(value = "month", required = false) Integer month) {
-        ModelAndView modelAndView = new ModelAndView("fragments/expenses_ongoing_pie");
+        ModelAndView modelAndView = new ModelAndView("fragments/expenses_pie");
         List<ExpenseSummary> expenseSummaryForMonth = expenseService.getExpenseSummaryForMonth(
                 year, month);
 
@@ -97,9 +96,9 @@ public class ExpensesController {
         return modelAndView;
     }
 
-    @GetMapping(path = "/ongoing/graph")
-    public ModelAndView getOngoingExpensesGraph(@RequestParam(value = "lastMonths", required = false) Integer lastMonths) {
-        ModelAndView modelAndView = new ModelAndView("fragments/expenses_ongoing_graph");
+    @GetMapping(path = "/graph")
+    public ModelAndView getExpensesGraph(@RequestParam(value = "lastMonths", required = false) Integer lastMonths) {
+        ModelAndView modelAndView = new ModelAndView("fragments/expenses_graph");
         Map<LocalDate, List<ExpenseSummary>> expenseSummaryForMonths = expenseService.getExpenseSummariesForLastMonths(lastMonths);
 
         List<ExpenseGraphItem> expenseGraphItems = new ArrayList<>();

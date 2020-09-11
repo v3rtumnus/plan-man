@@ -29,12 +29,12 @@ public class ExpenseService {
         LocalDate currentDate;
 
         if (lastMonths != null) {
-            currentDate = LocalDate.now().minusMonths(lastMonths - 1).withDayOfMonth(1);
+            currentDate = LocalDate.now().minusMonths(lastMonths).withDayOfMonth(1);
         } else {
             currentDate = getMinimumExpenseDate().withDayOfMonth(1);
         }
 
-        while (currentDate.isBefore(LocalDate.now())) {
+        while (currentDate.isBefore(LocalDate.now().minusMonths(1))) {
             expenseSummaries.put(currentDate,
                     ongoingExpensesRepository.getExpenseSummaryForMonth(currentDate.getYear(), currentDate.getMonthValue()));
 
