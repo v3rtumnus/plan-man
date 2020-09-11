@@ -90,7 +90,6 @@
                         <select id="monthSelection" style="text-align: center" onchange="initializeMonthData()">
                             <option th:each="dateOption: ${datesToSelect}" th:value="${#temporals.format(dateOption, 'M-yyyy')}">[[${#temporals.format(dateOption, 'MMMM yyyy', new java.util.Locale("de"))}]]</option>
                         </select>
-                        &nbsp;&nbsp;<a href="#">Alle Ausgaben anzeigen</a>
                     </form>
 
                     <div id="monthlyContainer">
