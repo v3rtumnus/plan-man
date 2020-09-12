@@ -1,4 +1,4 @@
-package at.v3rtumnus.planman.rest;
+package at.v3rtumnus.planman.controller.ui;
 
 import at.v3rtumnus.planman.dto.PlanManUser;
 import org.springframework.security.core.Authentication;

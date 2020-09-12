@@ -37,6 +37,31 @@
             retrievePie($("#monthSelection :selected").val());
         }
 
+        function handleNewExpense() {
+            var date = $('#date').val();
+            var category = $('#category').val();
+            var comment = $('#comment').val() != '' ? $('#comment').val() : null;
+            var amount = $('#amount').val();
+
+            $.ajax({
+                url:"/api/expenses",
+                type:"POST",
+                data:JSON.stringify ({ date: date, category: category, comment: comment, amount: amount }),
+                contentType:"application/json; charset=utf-8",
+                success: function() {
+                    $("#successNotification").show();
+                    $("#errorNotification").hide();
+
+                    initializeMonthData();
+                    retrieveGraph(3);
+                },
+                error: function(jqXHR, exception) {
+                    $("#successNotification").hide();
+                    $("#errorNotification").show();
+                }
+            });
+        }
+
         $(document).ready(function() {
             initializeMonthData();
             retrieveGraph(3);
@@ -51,30 +76,28 @@
 
     <h1>Laufende Ausgaben</h1>
 
-    <div class="alert alert-primary" role="alert" th:if="${successMessage}" th:text="${successMessage}"></div>
-    <div class="alert alert-danger" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+    <div id="successNotification" class="alert alert-primary" role="alert" style="display: none">Ausgabe erfolgreich gespeichert</div>
+    <div id="errorNotification" class="alert alert-danger" role="alert" style="display: none">Leider ist ein Fehler aufgetreten</div>
 
     <div class="row">
         <div class="col">
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Neue Ausgabe</h4>
-                    <form class="form-inline" method="post" th:action="@{/credit}" th:object="${expense}">
+                    <form class="form-inline" method="post">
                         <div class="md-form" style="margin: 0;">
-                            <input class="form-control" name="date" placeholder="Datum" size="10" th:field="*{date}"
+                            <input class="form-control" id="date" name="date" placeholder="Datum" size="10"
                                    type="date">
-                            <input class="form-control" name="category" placeholder="Kategorie" required th:field="*{category}"
+                            <input class="form-control" id="category" name="category" placeholder="Kategorie" required
                                    type="search" list="categories-list"/>
                             <datalist id="categories-list">
-                                <option>Eltern</option>
-                                <option>Kinder</option>
-                                <option>Wohnung</option>
+                                <option th:each="category: ${categories}">[[${category}]]</option>
                             </datalist>
-                            <input class="form-control" name="comment" placeholder="Kommentar" required th:field="*{comment}"
+                            <input class="form-control" id="comment" name="comment" placeholder="Kommentar"
                                    type="text"/>
-                            <input class="form-control" name="amount" placeholder="Betrag" required size="10"
-                                   th:field="*{amount}" type="number"/>
-                            <button class="btn btn-primary" type="submit">Speichern</button>
+                            <input class="form-control" id="amount" name="amount" placeholder="Betrag" required size="10" step="0.01"
+                                   type="number"/>
+                            <button class="btn btn-primary" type="submit" onclick="handleNewExpense(); return false;">Speichern</button>
                         </div>
                     </form>
                 </div>

@@ -14,7 +14,7 @@ import java.time.LocalDate;
 public class CreditSingleTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(name = "TRANSACTION_DATE")

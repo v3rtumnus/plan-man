@@ -1,9 +1,8 @@
-package at.v3rtumnus.planman.rest;
+package at.v3rtumnus.planman.controller.ui;
 
 import at.v3rtumnus.planman.dto.credit.CreditPlanRow;
 import at.v3rtumnus.planman.dto.credit.Payment;
 import at.v3rtumnus.planman.dto.credit.RowType;
-import at.v3rtumnus.planman.dto.credit.SimulationData;
 import at.v3rtumnus.planman.entity.CreditSingleTransaction;
 import at.v3rtumnus.planman.service.CreditService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Collections;

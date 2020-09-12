@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-public class Expense {
+public class ExpenseDto {
     private BigDecimal amount;
     private String category;
     private String comment;

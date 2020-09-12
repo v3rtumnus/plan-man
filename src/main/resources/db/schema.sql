@@ -18,7 +18,7 @@ CREATE TABLE expense_category (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE expense_ongoing (
+CREATE TABLE expense (
     id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
     transaction_date date NOT NULL,
     comment varchar(255) DEFAULT NULL,

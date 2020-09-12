@@ -1,15 +1,15 @@
-package at.v3rtumnus.planman.rest;
+package at.v3rtumnus.planman.controller.ui;
 
-import at.v3rtumnus.planman.dto.expense.Expense;
+import at.v3rtumnus.planman.dto.expense.ExpenseDto;
 import at.v3rtumnus.planman.dto.expense.ExpenseGraphItem;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
+import at.v3rtumnus.planman.entity.ExpenseCategory;
 import at.v3rtumnus.planman.service.ExpenseService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
@@ -32,6 +32,11 @@ public class ExpensesController {
 
     private final ExpenseService expenseService;
 
+    @PostMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public @ResponseBody  void saveExpense(@RequestBody ExpenseDto expense) {
+        System.out.println(expense);
+    }
+
     @GetMapping
     public ModelAndView getExpenses() {
         ModelAndView modelAndView = new ModelAndView("expenses/expenses");
@@ -47,8 +52,13 @@ public class ExpensesController {
 
         Collections.reverse(datesToSelect);
 
+        List<String> categoryNames = expenseService.getExpenseCategories()
+                .stream()
+                .map(ExpenseCategory::getName)
+                .collect(Collectors.toList());
+
         modelAndView.addObject("datesToSelect", datesToSelect);
-        modelAndView.addObject("expense", new Expense());
+        modelAndView.addObject("categories", categoryNames);
 
         return modelAndView;
     }

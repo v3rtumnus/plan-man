@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,13 +9,15 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "EXPENSE_ONGOING")
+@Table(name = "EXPENSE")
 @Data
-public class OngoingExpense {
+@NoArgsConstructor
+@AllArgsConstructor
+public class Expense {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column
     private LocalDate transactionDate;
@@ -27,7 +30,7 @@ public class OngoingExpense {
 
     @ManyToOne
     @JoinColumn(name = "EXPENSE_CATEGORY_ID")
-    private ExpenseGategory category;
+    private ExpenseCategory category;
 
     @ManyToOne
     @JoinColumn(name = "USER_PROFILE_ID")
