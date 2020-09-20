@@ -52,6 +52,11 @@
                     $("#successNotification").show();
                     $("#errorNotification").hide();
 
+                    $('#category').val('');
+                    $('#comment').val('');
+                    $('#amount').val('');
+                    $('#category').focus();
+
                     initializeMonthData();
                     retrieveGraph(3);
                 },

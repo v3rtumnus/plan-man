@@ -39,7 +39,7 @@ public class ExpensesController {
 
     @GetMapping
     public ModelAndView getExpenses() {
-        ModelAndView modelAndView = new ModelAndView("expenses/expenses");
+        ModelAndView modelAndView = new ModelAndView("expenses/overview");
 
         LocalDate endOfCurrentMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1).minusDays(1);
         LocalDate minimumExpenseDate = expenseService.getMinimumExpenseDate().withDayOfMonth(1);
@@ -166,6 +166,43 @@ public class ExpensesController {
         modelAndView.addObject("amounts", amounts);
         modelAndView.addObject("categories", categories);
         modelAndView.addObject("colors", colors);
+
+        return modelAndView;
+    }
+
+    @GetMapping("/detail")
+    public ModelAndView getExpenseDetails() {
+        ModelAndView modelAndView = new ModelAndView("expenses/detail");
+
+        LocalDate endOfCurrentMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1).minusDays(1);
+        LocalDate minimumExpenseDate = expenseService.getMinimumExpenseDate().withDayOfMonth(1);
+
+        List<LocalDate> datesToSelect = new LinkedList<>();
+        while (endOfCurrentMonth.isAfter(minimumExpenseDate)) {
+            datesToSelect.add(minimumExpenseDate);
+            minimumExpenseDate = minimumExpenseDate.plusMonths(1);
+        }
+
+        Collections.reverse(datesToSelect);
+
+        List<String> categoryNames = expenseService.getExpenseCategories()
+                .stream()
+                .map(ExpenseCategory::getName)
+                .collect(Collectors.toList());
+
+        modelAndView.addObject("datesToSelect", datesToSelect);
+        modelAndView.addObject("categories", categoryNames);
+
+        return modelAndView;
+    }
+
+    @GetMapping(path = "/detail/monthly")
+    public ModelAndView getExpensesMonthlyDetails(@RequestParam(value = "year", required = false) Integer year,
+                                                   @RequestParam(value = "month", required = false) Integer month) {
+        ModelAndView modelAndView = new ModelAndView("fragments/expenses_details");
+        List<ExpenseDto> expensesForMonth = expenseService.getExpensesForMonth(year, month);
+
+        modelAndView.addObject("expensesForMonth", expensesForMonth);
 
         return modelAndView;
     }

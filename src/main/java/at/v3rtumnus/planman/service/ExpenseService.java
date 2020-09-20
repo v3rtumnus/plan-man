@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -83,5 +84,38 @@ public class ExpenseService {
         expenseRepository.saveAndFlush(new Expense(null, expense.getDate(), expense.getComment(), expense.getAmount(), category, user));
 
         log.info("Expense successfully saved");
+    }
+
+    public void deleteExpense(long id) {
+        log.info("Removing expense with id {}", id);
+
+        expenseRepository.deleteById(id);
+    }
+
+    public void updateExpenses(List<ExpenseDto> expenses) {
+        log.info("Updating expenses");
+
+        UserProfile user = userProfileRepository.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Username could not be found"));
+
+        List<Expense> expenseEntities = expenses.stream()
+                .map(expense -> {
+                    ExpenseCategory category = expenseCategoryRepository.findByName(expense.getCategory())
+                            .orElseGet(() -> {
+                                log.info("Creating new category for {}", expense.getCategory());
+
+                                ExpenseCategory newCategory = new ExpenseCategory(null, expense.getCategory());
+
+                                return expenseCategoryRepository.saveAndFlush(newCategory);
+                            });
+                    return new Expense(expense.getId(), expense.getDate(), expense.getComment(), expense.getAmount(), category, user);
+                })
+                .collect(Collectors.toList());
+
+            expenseRepository.saveAll(expenseEntities);
+    }
+
+    public List<ExpenseDto> getExpensesForMonth(int year, int month) {
+        return expenseRepository.getExpensesForMonth(year, month);
     }
 }
