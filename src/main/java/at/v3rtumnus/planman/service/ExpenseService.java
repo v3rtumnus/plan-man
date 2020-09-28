@@ -63,7 +63,7 @@ public class ExpenseService {
     }
 
     public List<ExpenseCategory> getExpenseCategories() {
-        return expenseCategoryRepository.findAll();
+        return expenseCategoryRepository.findAllByOrderByName();
     }
 
     public void saveExpense(ExpenseDto expense) {
