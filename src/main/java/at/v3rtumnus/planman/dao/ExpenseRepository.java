@@ -26,6 +26,6 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     @Query("SELECT new at.v3rtumnus.planman.dto.expense.ExpenseDto(e.id, e.amount, e.category.name, e.comment, e.transactionDate) FROM Expense e " +
             "WHERE month(e.transactionDate) = :month AND year(e.transactionDate) = :year " +
-            "ORDER BY e.transactionDate")
+            "ORDER BY e.transactionDate DESC")
     List<ExpenseDto> getExpensesForMonth(@Param("year") int year, @Param("month") int month);
 }
