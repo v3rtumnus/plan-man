@@ -41,7 +41,7 @@
             var date = $('#date').val();
             var category = $('#category').val();
             var comment = $('#comment').val() != '' ? $('#comment').val() : null;
-            var amount = $('#amount').val().replace(",", ".");
+            var amount = $('#amount').val();
 
             $.ajax({
                 url:"/api/expenses",
@@ -111,7 +111,7 @@
                             <input class="form-control" id="comment" name="comment" placeholder="Kommentar"
                                    type="text"/>
                             <input class="form-control" id="amount" name="amount" placeholder="Betrag" required
-                                   type="text"/>
+                                   type="number"/>
                             <button class="btn btn-primary" type="submit" onclick="handleNewExpense(); return false;">Speichern</button>
                         </div>
                     </form>
