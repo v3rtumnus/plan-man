@@ -1,0 +1,28 @@
+@startuml
+class CreditSingleTransaction {
+  Long id
+  LocalDate transactionDate
+  String description
+  BigDecimal amount
+}
+
+class ExpenseCategory {
+  Long id
+  String name
+}
+
+class UserProfile {
+  String username
+  String password
+}
+
+class Expense {
+  Long id;
+  LocalDate transactionDate;
+  String comment;
+  BigDecimal amount;
+}
+
+Expense "n" --> "1" ExpenseCategory
+Expense "n" --> "1" UserProfile
+@enduml
