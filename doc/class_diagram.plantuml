@@ -23,6 +23,30 @@ class Expense {
   BigDecimal amount;
 }
 
+class FinancialProduct {
+  String isin
+  FinancialProductType type
+}
+
+class FinancialTransaction {
+  Long id
+  LocalDate transactionDate
+  BigDecimal amount
+  BigDecimal quantity
+  BigDecimal fee
+  FinancialTransactionType transactionType
+}
+
+class SavingsPlan {
+  Long id
+  LocalDate startDate
+  LocalDate endDate
+  SavingsPlanInterval interval
+  BigDecimal amount
+}
+
 Expense "n" --> "1" ExpenseCategory
 Expense "n" --> "1" UserProfile
+FinancialTransaction "n" --> "1" FinancialProduct
+SavingsPlan "n" --> "1" FinancialProduct
 @enduml
