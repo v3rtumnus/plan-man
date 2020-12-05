@@ -1,4 +1,5 @@
 pipeline {
+    agent any
 
     environment {
         GRADLE_USER_HOME = '/var/lib/jenkins/.gradle'
