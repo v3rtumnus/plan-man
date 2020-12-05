@@ -1,4 +1,9 @@
 node {
+
+    environment {
+        GRADLE_USER_HOME = '/var/lib/jenkins/.gradle'
+    }
+
     stage 'Clone sources'
         git credentialsId: 'jenkins-ssh',
             url: 'git@github.com:v3rtumnus/plan-man.git'
