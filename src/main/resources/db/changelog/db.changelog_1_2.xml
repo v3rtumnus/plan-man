@@ -9,6 +9,14 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <createTable tableName="financial_product_watchlist">
+            <column name="isin" type="VARCHAR(12)">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
         <createTable tableName="financial_transaction">
             <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
                 <constraints nullable="false" unique="true"/>
@@ -48,7 +56,25 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <addForeignKeyConstraint baseColumnNames="financial_product_id" baseTableName="financial_transaction" constraintName="fk_financial_transaction_product" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id" referencedTableName="financial_product" validate="true"/>
-        <addForeignKeyConstraint baseColumnNames="financial_product_id" baseTableName="savings_plan" constraintName="fk_savings_plan_product" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id" referencedTableName="financial_product" validate="true"/>
+        <createTable tableName="savings_account">
+            <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="start_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="DATE" />
+            <column name="amount" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="interest_rate" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="interval" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="financial_product_id" baseTableName="financial_transaction" constraintName="fk_financial_transaction_product" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="isin" referencedTableName="financial_product" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="financial_product_id" baseTableName="savings_plan" constraintName="fk_savings_plan_product" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="isin" referencedTableName="financial_product" validate="true"/>
     </changeSet>
 </databaseChangeLog>

@@ -12,18 +12,16 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class SavingsPlan {
+public class SavingsAccount {
     @Id
     private Long id;
 
     private LocalDate startDate;
     private LocalDate endDate;
 
+    private BigDecimal amount;
+    private BigDecimal interestRate;
+
     @Enumerated(EnumType.STRING)
     private Interval interval;
-
-    private BigDecimal amount;
-
-    @OneToOne
-    private FinancialProduct financialProduct;
 }
