@@ -1,6 +1,6 @@
 package at.v3rtumnus.planman.service;
 
-import at.v3rtumnus.planman.entity.CreditSingleTransaction;
+import at.v3rtumnus.planman.entity.credit.CreditSingleTransaction;
 import at.v3rtumnus.planman.conf.CreditConfig;
 import at.v3rtumnus.planman.dao.CreditSinglePaymentRepository;
 import at.v3rtumnus.planman.dto.credit.CreditPlanRow;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 

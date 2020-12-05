@@ -5,8 +5,8 @@ import at.v3rtumnus.planman.dao.ExpenseRepository;
 import at.v3rtumnus.planman.dao.UserProfileRepository;
 import at.v3rtumnus.planman.dto.expense.ExpenseDto;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
-import at.v3rtumnus.planman.entity.Expense;
-import at.v3rtumnus.planman.entity.ExpenseCategory;
+import at.v3rtumnus.planman.entity.expense.Expense;
+import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import at.v3rtumnus.planman.entity.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,6 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

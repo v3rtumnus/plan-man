@@ -1,4 +1,4 @@
-package at.v3rtumnus.planman.entity;
+package at.v3rtumnus.planman.entity.credit;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

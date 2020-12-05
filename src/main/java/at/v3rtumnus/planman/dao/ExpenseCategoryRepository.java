@@ -1,6 +1,6 @@
 package at.v3rtumnus.planman.dao;
 
-import at.v3rtumnus.planman.entity.ExpenseCategory;
+import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

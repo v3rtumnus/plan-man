@@ -2,14 +2,12 @@ package at.v3rtumnus.planman.dao;
 
 import at.v3rtumnus.planman.dto.expense.ExpenseDto;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
-import at.v3rtumnus.planman.entity.Expense;
+import at.v3rtumnus.planman.entity.expense.Expense;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 

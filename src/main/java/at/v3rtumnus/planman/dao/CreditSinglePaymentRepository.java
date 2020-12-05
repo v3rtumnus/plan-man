@@ -1,6 +1,6 @@
 package at.v3rtumnus.planman.dao;
 
-import at.v3rtumnus.planman.entity.CreditSingleTransaction;
+import at.v3rtumnus.planman.entity.credit.CreditSingleTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

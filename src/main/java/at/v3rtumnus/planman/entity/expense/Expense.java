@@ -1,5 +1,6 @@
-package at.v3rtumnus.planman.entity;
+package at.v3rtumnus.planman.entity.expense;
 
+import at.v3rtumnus.planman.entity.UserProfile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

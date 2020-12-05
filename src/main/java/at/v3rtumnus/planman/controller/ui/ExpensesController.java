@@ -3,7 +3,7 @@ package at.v3rtumnus.planman.controller.ui;
 import at.v3rtumnus.planman.dto.expense.ExpenseDto;
 import at.v3rtumnus.planman.dto.expense.ExpenseGraphItem;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
-import at.v3rtumnus.planman.entity.ExpenseCategory;
+import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import at.v3rtumnus.planman.service.ExpenseService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
