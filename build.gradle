@@ -24,8 +24,8 @@ dependencies {
 
 	implementation 'org.liquibase:liquibase-core:3.6.3'
 
-	compileOnly 'org.projectlombok:lombok:1.18.10'
-	annotationProcessor 'org.projectlombok:lombok:1.18.10'
+	compileOnly 'org.projectlombok:lombok:1.18.16'
+	annotationProcessor 'org.projectlombok:lombok:1.18.16'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

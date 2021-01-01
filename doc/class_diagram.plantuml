@@ -51,6 +51,12 @@ class FinancialTransaction {
   FinancialTransactionType transactionType
 }
 
+class Dividend {
+  Long id
+  LocalDate transactionDate
+  BigDecimal amount
+}
+
 class SavingsPlan {
   Long id
   LocalDate startDate
@@ -62,5 +68,6 @@ class SavingsPlan {
 Expense "n" --> "1" ExpenseCategory
 Expense "n" --> "1" UserProfile
 FinancialTransaction "n" --> "1" FinancialProduct
+Dividend "n" --> "1" FinancialProduct
 SavingsPlan "n" --> "1" FinancialProduct
 @enduml

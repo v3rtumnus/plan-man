@@ -18,6 +18,9 @@ public class FinancialProduct {
     @Id
     private String isin;
 
+    private String symbol;
+    private String name;
+
     @Enumerated(EnumType.STRING)
     private FinancialProductType type;
 }
