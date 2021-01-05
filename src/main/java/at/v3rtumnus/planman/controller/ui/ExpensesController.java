@@ -1,6 +1,6 @@
 package at.v3rtumnus.planman.controller.ui;
 
-import at.v3rtumnus.planman.dto.expense.ExpenseDto;
+import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
 import at.v3rtumnus.planman.dto.expense.ExpenseGraphItem;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
 import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
@@ -33,7 +33,7 @@ public class ExpensesController {
     private final ExpenseService expenseService;
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public @ResponseBody  void saveExpense(@RequestBody ExpenseDto expense) {
+    public @ResponseBody  void saveExpense(@RequestBody ExpenseDTO expense) {
         System.out.println(expense);
     }
 
@@ -200,7 +200,7 @@ public class ExpensesController {
     public ModelAndView getExpensesMonthlyDetails(@RequestParam(value = "year", required = false) Integer year,
                                                    @RequestParam(value = "month", required = false) Integer month) {
         ModelAndView modelAndView = new ModelAndView("fragments/expenses_details");
-        List<ExpenseDto> expensesForMonth = expenseService.getExpensesForMonth(year, month);
+        List<ExpenseDTO> expensesForMonth = expenseService.getExpensesForMonth(year, month);
 
         modelAndView.addObject("expensesForMonth", expensesForMonth);
 

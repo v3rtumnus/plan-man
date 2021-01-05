@@ -1,6 +1,6 @@
 package at.v3rtumnus.planman.dao;
 
-import at.v3rtumnus.planman.dto.expense.ExpenseDto;
+import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
 import at.v3rtumnus.planman.entity.expense.Expense;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,8 +22,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             "GROUP BY e.category")
     List<ExpenseSummary> getExpenseSummaryForMonth(@Param("year") int year, @Param("month") int month);
 
-    @Query("SELECT new at.v3rtumnus.planman.dto.expense.ExpenseDto(e.id, e.amount, e.category.name, e.comment, e.transactionDate) FROM Expense e " +
+    @Query("SELECT new at.v3rtumnus.planman.dto.expense.ExpenseDTO(e.id, e.amount, e.category.name, e.comment, e.transactionDate) FROM Expense e " +
             "WHERE month(e.transactionDate) = :month AND year(e.transactionDate) = :year " +
             "ORDER BY e.transactionDate DESC")
-    List<ExpenseDto> getExpensesForMonth(@Param("year") int year, @Param("month") int month);
+    List<ExpenseDTO> getExpensesForMonth(@Param("year") int year, @Param("month") int month);
 }

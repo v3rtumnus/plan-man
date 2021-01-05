@@ -3,7 +3,7 @@ package at.v3rtumnus.planman.service;
 import at.v3rtumnus.planman.dao.ExpenseCategoryRepository;
 import at.v3rtumnus.planman.dao.ExpenseRepository;
 import at.v3rtumnus.planman.dao.UserProfileRepository;
-import at.v3rtumnus.planman.dto.expense.ExpenseDto;
+import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
 import at.v3rtumnus.planman.entity.expense.Expense;
 import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
@@ -65,7 +65,7 @@ public class ExpenseService {
         return expenseCategoryRepository.findAllByOrderByName();
     }
 
-    public void saveExpense(ExpenseDto expense) {
+    public void saveExpense(ExpenseDTO expense) {
         log.info("Saving expense for category {}", expense.getCategory());
 
         ExpenseCategory category = expenseCategoryRepository.findByName(expense.getCategory())
@@ -91,7 +91,7 @@ public class ExpenseService {
         expenseRepository.deleteById(id);
     }
 
-    public void updateExpenses(List<ExpenseDto> expenses) {
+    public void updateExpenses(List<ExpenseDTO> expenses) {
         log.info("Updating expenses");
 
         UserProfile user = userProfileRepository.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName())
@@ -114,7 +114,7 @@ public class ExpenseService {
             expenseRepository.saveAll(expenseEntities);
     }
 
-    public List<ExpenseDto> getExpensesForMonth(int year, int month) {
+    public List<ExpenseDTO> getExpensesForMonth(int year, int month) {
         return expenseRepository.getExpensesForMonth(year, month);
     }
 }

@@ -22,8 +22,10 @@ public class FinancialTransaction {
     private BigDecimal fee;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "financial_transaction_type")
     private FinancialTransactionType transactionType;
 
     @ManyToOne
+    @JoinColumn(name = "financial_product_id")
     private FinancialProduct financialProduct;
 }

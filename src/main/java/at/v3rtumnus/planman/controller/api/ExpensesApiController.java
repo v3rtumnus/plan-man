@@ -1,6 +1,6 @@
 package at.v3rtumnus.planman.controller.api;
 
-import at.v3rtumnus.planman.dto.expense.ExpenseDto;
+import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
 import at.v3rtumnus.planman.service.ExpenseService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ public class ExpensesApiController {
     private final ExpenseService expenseService;
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public @ResponseBody void saveExpense(@RequestBody ExpenseDto expense) {
+    public @ResponseBody void saveExpense(@RequestBody ExpenseDTO expense) {
         expenseService.saveExpense(expense);
     }
 
@@ -29,7 +29,7 @@ public class ExpensesApiController {
     }
 
     @PutMapping
-    public @ResponseBody void updateExpenses(@RequestBody List<ExpenseDto> expenses) {
+    public @ResponseBody void updateExpenses(@RequestBody List<ExpenseDTO> expenses) {
         expenseService.updateExpenses(expenses);
     }
 }

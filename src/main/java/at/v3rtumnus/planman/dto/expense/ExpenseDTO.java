@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExpenseDto {
+public class ExpenseDTO {
     private Long id;
     private BigDecimal amount;
     private String category;

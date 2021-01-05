@@ -1,0 +1,167 @@
+package at.v3rtumnus.planman.service;
+
+import at.v3rtumnus.planman.dao.FinancialProductRepository;
+import at.v3rtumnus.planman.dto.finance.FinancialOverviewDTO;
+import at.v3rtumnus.planman.dto.finance.FinancialProductDTO;
+import at.v3rtumnus.planman.dto.finance.FinancialTransactionDTO;
+import at.v3rtumnus.planman.entity.finance.FinancialProduct;
+import at.v3rtumnus.planman.entity.finance.FinancialTransaction;
+import at.v3rtumnus.planman.entity.finance.FinancialTransactionType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import yahoofinance.Stock;
+import yahoofinance.YahooFinance;
+import yahoofinance.quotes.fx.FxQuote;
+import yahoofinance.quotes.fx.FxSymbols;
+
+import javax.transaction.Transactional;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class FinanceService {
+
+    @Autowired
+    private final FinancialProductRepository financialProductRepository;
+
+    @Scheduled(cron = "${financial.shares.check}")
+    @Transactional
+    public void checkAllActiveShares() throws JsonProcessingException {
+        log.info("Starting check for all active shares");
+
+        FinancialOverviewDTO overview = new FinancialOverviewDTO();
+
+        BigDecimal purchasePriceTotal = BigDecimal.ZERO;
+        BigDecimal amountTotalDayBefore = BigDecimal.ZERO;
+        BigDecimal amountTotal = BigDecimal.ZERO;
+        BigDecimal changeToday = BigDecimal.ZERO;
+        BigDecimal changeTotal = BigDecimal.ZERO;
+
+        for (FinancialProduct financialProduct : financialProductRepository.findAll()) {
+            FinancialProductDTO productDTO = null;
+            try {
+                productDTO = mapToFinancialProductDtoWithLiveData(financialProduct);
+
+                //null is returned in case the financial product is currently not active
+                if (productDTO == null) {
+                    continue;
+                }
+
+                //add amounts to totals for overview
+                BigDecimal productPurchasePrice = productDTO.getCombinedPurchasePrice().multiply(productDTO.getCurrentQuantity().setScale(2, RoundingMode.HALF_UP));
+                purchasePriceTotal = purchasePriceTotal.add(productPurchasePrice);
+
+                BigDecimal productAmountTotal = productDTO.getCurrentPrice().multiply(productDTO.getCurrentQuantity());
+
+                amountTotal = amountTotal.add(productAmountTotal);
+
+                changeToday = changeToday.add(productDTO.getChangeToday());
+
+                amountTotalDayBefore = amountTotalDayBefore.add(productAmountTotal.subtract(productDTO.getChangeToday()));
+
+                changeTotal = changeTotal.add(productAmountTotal.subtract(productPurchasePrice));
+
+                overview.getActiveProducts().add(productDTO);
+            } catch (IOException e) {
+                log.error("Error occured during retrieval of live data", e);
+                //TODO handle this error as email
+            }
+        }
+        overview.setPurchasePriceTotal(purchasePriceTotal);
+        overview.setAmountTotalDayBefore(amountTotalDayBefore);
+        overview.setAmountTotal(amountTotal);
+        overview.setChangeToday(changeToday);
+        overview.setChangeTotal(changeTotal);
+
+        overview.setPercentChangeToday(changeToday
+                .divide(amountTotalDayBefore, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100L)));
+
+        overview.setPercentChangeTotal(changeTotal
+                .divide(purchasePriceTotal, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100L)));
+
+        System.out.println(new ObjectMapper().writeValueAsString(overview));
+
+        log.info("Successfully finished check for active shares and sent mail");
+    }
+
+    private FinancialProductDTO mapToFinancialProductDtoWithLiveData(FinancialProduct financialProduct) throws IOException {
+        FinancialProductDTO productDTO = new FinancialProductDTO();
+
+        BeanUtils.copyProperties(financialProduct, productDTO);
+
+        productDTO.setTransactions(financialProduct.getTransactions()
+        .stream().map(transaction -> {
+                    FinancialTransactionDTO transactionDTO = new FinancialTransactionDTO();
+                    BeanUtils.copyProperties(transaction, transactionDTO);
+
+                    return transactionDTO;
+                })
+        .collect(Collectors.toList()));
+
+        //go through the transactions and calculate current qauntity and combined purchase price
+        BigDecimal currentQuantity = BigDecimal.ZERO;
+        BigDecimal combinedPurchasePriceCounter = BigDecimal.ZERO;
+        BigDecimal combinedPurchasePriceDenominator = BigDecimal.ZERO;
+
+        for (FinancialTransaction transaction : financialProduct.getTransactions()) {
+            if (transaction.getTransactionType() == FinancialTransactionType.SELL) {
+                currentQuantity = currentQuantity.subtract(transaction.getQuantity());
+
+                combinedPurchasePriceCounter = combinedPurchasePriceCounter.subtract(transaction.getAmount());
+                combinedPurchasePriceDenominator = combinedPurchasePriceDenominator.subtract(transaction.getQuantity());
+            } else {
+                currentQuantity = currentQuantity.add(transaction.getQuantity());
+
+                combinedPurchasePriceCounter = combinedPurchasePriceCounter.add(transaction.getAmount());
+                combinedPurchasePriceDenominator = combinedPurchasePriceDenominator.add(transaction.getQuantity());
+            }
+        }
+
+        //return null in case the current quantity is zero
+        if (currentQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            return null;
+        }
+
+        productDTO.setCurrentQuantity(currentQuantity);
+
+        //get the current price from Yahoo Finance and perform currency conversion if necessary
+        Stock stock = YahooFinance.get(financialProduct.getSymbol());
+
+        BigDecimal currentPrice = stock.getQuote().getPrice();
+        BigDecimal change = stock.getQuote().getChange();
+        BigDecimal combinedPurchasePrice = combinedPurchasePriceCounter.divide(combinedPurchasePriceDenominator, RoundingMode.HALF_UP);
+
+        if (stock.getCurrency().equals("USD")) {
+            FxQuote dollarEuroConversion = YahooFinance.getFx(FxSymbols.USDEUR);
+
+            currentPrice = currentPrice.multiply(dollarEuroConversion.getPrice());
+            change = change.multiply(dollarEuroConversion.getPrice());
+            combinedPurchasePrice = combinedPurchasePrice.multiply(dollarEuroConversion.getPrice());
+        }
+
+        productDTO.setCombinedPurchasePrice(combinedPurchasePrice);
+        productDTO.setCurrentPrice(currentPrice);
+        productDTO.setChangeToday(change.multiply(productDTO.getCurrentQuantity()));
+        productDTO.setPercentChangeToday(stock.getQuote().getChangeInPercent());
+        productDTO.setPercentChangeTotal(productDTO.getCurrentPrice()
+                .subtract(productDTO.getCombinedPurchasePrice())
+                .divide(productDTO.getCombinedPurchasePrice(), RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100L)));
+
+        return productDTO;
+    }
+}
