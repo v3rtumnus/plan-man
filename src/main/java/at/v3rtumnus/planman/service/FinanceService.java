@@ -15,15 +15,20 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.quotes.fx.FxQuote;
 import yahoofinance.quotes.fx.FxSymbols;
 
 import javax.transaction.Transactional;
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +38,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FinanceService {
 
-    @Autowired
+    private final TemplateEngine templateEngine;
     private final FinancialProductRepository financialProductRepository;
 
     @Scheduled(cron = "${financial.shares.check}")
@@ -93,7 +98,15 @@ public class FinanceService {
                 .divide(purchasePriceTotal, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100L)));
 
-        System.out.println(new ObjectMapper().writeValueAsString(overview));
+        Context mailContext = new Context();
+        mailContext.setVariable("overview", overview);
+        String mailContent = templateEngine.process("email/financials_overview_email.html", mailContext);
+
+        try {
+            Files.write(new File("/home/michael/mailtest.html").toPath(), mailContent.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         log.info("Successfully finished check for active shares and sent mail");
     }
@@ -143,7 +156,7 @@ public class FinanceService {
 
         BigDecimal currentPrice = stock.getQuote().getPrice();
         BigDecimal change = stock.getQuote().getChange();
-        BigDecimal combinedPurchasePrice = combinedPurchasePriceCounter.divide(combinedPurchasePriceDenominator, RoundingMode.HALF_UP);
+        BigDecimal combinedPurchasePrice = combinedPurchasePriceCounter.divide(combinedPurchasePriceDenominator, 2, RoundingMode.HALF_UP);
 
         if (stock.getCurrency().equals("USD")) {
             FxQuote dollarEuroConversion = YahooFinance.getFx(FxSymbols.USDEUR);
@@ -155,7 +168,9 @@ public class FinanceService {
 
         productDTO.setCombinedPurchasePrice(combinedPurchasePrice);
         productDTO.setCurrentPrice(currentPrice);
+        productDTO.setCurrentAmount(currentQuantity.multiply(currentPrice));
         productDTO.setChangeToday(change.multiply(productDTO.getCurrentQuantity()));
+        productDTO.setChangeTotal(productDTO.getCurrentAmount().subtract(combinedPurchasePrice.multiply(currentQuantity)));
         productDTO.setPercentChangeToday(stock.getQuote().getChangeInPercent());
         productDTO.setPercentChangeTotal(productDTO.getCurrentPrice()
                 .subtract(productDTO.getCombinedPurchasePrice())

@@ -16,10 +16,12 @@ public class FinancialProductDTO {
 
     private BigDecimal currentQuantity;
     private BigDecimal currentPrice;
+    private BigDecimal currentAmount;
 
     private BigDecimal combinedPurchasePrice;
 
     private BigDecimal changeToday;
+    private BigDecimal changeTotal;
     private BigDecimal percentChangeToday;
     private BigDecimal percentChangeTotal;
 

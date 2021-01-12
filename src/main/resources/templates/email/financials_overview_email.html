@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<style>
+	body {
+	  font: normal 12px/150% Arial, Helvetica, sans-serif;
+	}
+	
+	.financial-table table {
+	  border-collapse: collapse;
+	  text-align: left;
+	  width: 100%;
+	}
+
+	.financial-table table td,
+	.financial-table table th {
+	  padding: 3px 10px;
+	}
+
+	.financial-table table thead th {
+	  background-color: #FFFFFF;
+	  color: #000000;
+	  font-size: 15px;
+	  font-weight: bold;
+	  border-bottom: 1px solid #000000;
+	}
+
+	.financial-table table tbody td {
+	  color: #000000;
+	  font-size: 12px;
+	  font-weight: normal;
+	}
+
+	.financial-table table tbody .alt td {
+	  background: #EEEEEE;
+	}
+
+	.financial-table table tfoot td {
+	  font-size: 15px;
+	  font-weight: bold;
+	  background-color: #FFFFFF;
+	  color: #000000;
+	  border-top: 1px solid #000000;
+	}
+	</style>
+  </head>
+  <body>
+    <p>
+      Hello!
+    </p>
+    <p>
+      Here is your portfolio performance overview for today:
+    </p>
+	
+	<div class="financial-table">
+		<table>
+			<thead>
+			  <tr>
+				<th>Name</th>
+				<th>Quantity</th>
+				<th>Purchase price</th>
+				<th>Current price</th>
+				<th>Change total</th>
+				<th>Change total in percent</th>
+				<th>Change today</th>
+				<th>Change today in percent</th>
+				<th>Current amount</th>
+			  </tr>
+			</thead>
+			<tbody>
+			  <tr th:each="activeProduct : ${overview.activeProducts}">
+				  <td>[[${activeProduct.name}]]</td>
+				  <td>[[${activeProduct.currentQuantity}]]</td>
+				  <td>[[${activeProduct.combinedPurchasePrice}]]</td>
+				  <td>[[${activeProduct.currentPrice}]]</td>
+				  <td>[[${activeProduct.changeTotal}]]</td>
+				  <td>[[${activeProduct.percentChangeTotal}]]</td>
+				  <td>[[${activeProduct.changeToday}]]</td>
+				  <td>[[${activeProduct.percentChangeToday}]]</td>
+				  <td>[[${activeProduct.currentAmount}]]</td>
+			  </tr>
+			</tbody>
+			<tfoot>
+			  <tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td>[[${overview.changeTotal}]]</td>
+				<td>[[${overview.percentChangeTotal}]]</td>
+				<td>[[${overview.changeToday}]]</td>
+				<td>[[${overview.percentChangeToday}]]</td>
+				<td>[[${overview.amountTotal}]]</td>
+			  </tr>
+			</tfoot>
+		</table>
+	</div>
+    <p>
+      Regards, <br />
+      <em>The Plan-Man Team</em>
+    </p>
+  </body>
+</html>
