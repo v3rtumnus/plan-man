@@ -9,7 +9,7 @@
 	
 	.financial-table table {
 	  border-collapse: collapse;
-	  text-align: left;
+	  text-align: right;
 	  width: 100%;
 	}
 
@@ -43,6 +43,22 @@
 	  color: #000000;
 	  border-top: 1px solid #000000;
 	}
+
+	.financial-row-FUND {
+	  background-color: #DDDDDD
+	}
+
+	.financial-row-ETF {
+	  background-color: #BBBBBB
+	}
+
+	.financial-value-positive {
+	  color: #006600 !important
+	}
+
+	.financial-value-negative {
+	  color: #FF0000 !important
+	}
 	</style>
   </head>
   <body>
@@ -57,7 +73,7 @@
 		<table>
 			<thead>
 			  <tr>
-				<th>Name</th>
+				<th style="text-align: left">Name</th>
 				<th>Quantity</th>
 				<th>Purchase price</th>
 				<th>Current price</th>
@@ -69,16 +85,16 @@
 			  </tr>
 			</thead>
 			<tbody>
-			  <tr th:each="activeProduct : ${overview.activeProducts}">
-				  <td>[[${activeProduct.name}]]</td>
-				  <td>[[${activeProduct.currentQuantity}]]</td>
-				  <td>[[${activeProduct.combinedPurchasePrice}]]</td>
-				  <td>[[${activeProduct.currentPrice}]]</td>
-				  <td>[[${activeProduct.changeTotal}]]</td>
-				  <td>[[${activeProduct.percentChangeTotal}]]</td>
-				  <td>[[${activeProduct.changeToday}]]</td>
-				  <td>[[${activeProduct.percentChangeToday}]]</td>
-				  <td>[[${activeProduct.currentAmount}]]</td>
+			  <tr th:class="${'financial-row-' + activeProduct.type}" th:each="activeProduct : ${overview.activeProducts}">
+				  <td style="text-align: left">[[${activeProduct.name}]]</td>
+				  <td>[[${#numbers.formatDecimal(activeProduct.currentQuantity, 1, 'POINT', 2, 'COMMA')}]]</td>
+				  <td>[[${#numbers.formatDecimal(activeProduct.combinedPurchasePrice, 1, 'POINT', 2, 'COMMA')}]] EUR</td>
+				  <td>[[${#numbers.formatDecimal(activeProduct.currentPrice, 1, 'POINT', 2, 'COMMA')}]] EUR</td>
+				  <td th:class="${activeProduct.changeTotal >= 0} ? 'financial-value-positive' : 'financial-value-negative'">[[${#numbers.formatDecimal(activeProduct.changeTotal, 1, 'POINT', 2, 'COMMA')}]] EUR</td>
+				  <td th:class="${activeProduct.percentChangeTotal >= 0} ? 'financial-value-positive' : 'financial-value-negative'">[[${#numbers.formatDecimal(activeProduct.percentChangeTotal, 1, 'POINT', 2, 'COMMA')}]] %</td>
+				  <td th:class="${activeProduct.changeToday >= 0} ? 'financial-value-positive' : 'financial-value-negative'">[[${#numbers.formatDecimal(activeProduct.changeToday, 1, 'POINT', 2, 'COMMA')}]] EUR</td>
+				  <td th:class="${activeProduct.percentChangeToday >= 0} ? 'financial-value-positive' : 'financial-value-negative'">[[${#numbers.formatDecimal(activeProduct.percentChangeToday, 1, 'POINT', 2, 'COMMA')}]] %</td>
+				  <td>[[${#numbers.formatDecimal(activeProduct.currentAmount, 1, 'POINT', 2, 'COMMA')}]] EUR</td>
 			  </tr>
 			</tbody>
 			<tfoot>
@@ -87,11 +103,11 @@
 				<td></td>
 				<td></td>
 				<td></td>
-				<td>[[${overview.changeTotal}]]</td>
-				<td>[[${overview.percentChangeTotal}]]</td>
-				<td>[[${overview.changeToday}]]</td>
-				<td>[[${overview.percentChangeToday}]]</td>
-				<td>[[${overview.amountTotal}]]</td>
+				<td th:class="${overview.changeTotal >= 0} ? 'financial-value-positive' : 'financial-value-negative'">[[${#numbers.formatDecimal(overview.changeTotal, 1, 'POINT', 2, 'COMMA')}]] EUR</td>
+				<td th:class="${overview.percentChangeTotal >= 0} ? 'financial-value-positive' : 'financial-value-negative'">[[${#numbers.formatDecimal(overview.percentChangeTotal, 1, 'POINT', 2, 'COMMA')}]] %</td>
+				<td th:class="${overview.changeToday >= 0} ? 'financial-value-positive' : 'financial-value-negative'">[[${#numbers.formatDecimal(overview.changeToday, 1, 'POINT', 2, 'COMMA')}]] EUR</td>
+				<td th:class="${overview.percentChangeToday >= 0} ? 'financial-value-positive' : 'financial-value-negative'">[[${#numbers.formatDecimal(overview.percentChangeToday, 1, 'POINT', 2, 'COMMA')}]] %</td>
+				<td>[[${#numbers.formatDecimal(overview.amountTotal, 1, 'POINT', 2, 'COMMA')}]] EUR</td>
 			  </tr>
 			</tfoot>
 		</table>

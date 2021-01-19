@@ -5,6 +5,7 @@ import at.v3rtumnus.planman.dto.finance.FinancialOverviewDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialProductDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialTransactionDTO;
 import at.v3rtumnus.planman.entity.finance.FinancialProduct;
+import at.v3rtumnus.planman.entity.finance.FinancialProductType;
 import at.v3rtumnus.planman.entity.finance.FinancialTransaction;
 import at.v3rtumnus.planman.entity.finance.FinancialTransactionType;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,6 +23,7 @@ import yahoofinance.YahooFinance;
 import yahoofinance.quotes.fx.FxQuote;
 import yahoofinance.quotes.fx.FxSymbols;
 
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,6 +41,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FinanceService {
 
+    private final EmailService emailService;
     private final TemplateEngine templateEngine;
     private final FinancialProductRepository financialProductRepository;
 
@@ -65,7 +69,7 @@ public class FinanceService {
                 }
 
                 //add amounts to totals for overview
-                BigDecimal productPurchasePrice = productDTO.getCombinedPurchasePrice().multiply(productDTO.getCurrentQuantity().setScale(2, RoundingMode.HALF_UP));
+                BigDecimal productPurchasePrice = productDTO.getCombinedPurchasePrice().multiply(productDTO.getCurrentQuantity());
                 purchasePriceTotal = purchasePriceTotal.add(productPurchasePrice);
 
                 BigDecimal productAmountTotal = productDTO.getCurrentPrice().multiply(productDTO.getCurrentQuantity());
@@ -84,6 +88,15 @@ public class FinanceService {
                 //TODO handle this error as email
             }
         }
+        
+        overview.getActiveProducts().sort((p1, p2) -> {
+            if (p1.getType() != p2.getType()) {
+                return p1.getType().ordinal() - p2.getType().ordinal();
+            } else {
+                return p2.getCurrentAmount().intValue() - p1.getCurrentAmount().intValue();
+            }
+        });
+
         overview.setPurchasePriceTotal(purchasePriceTotal);
         overview.setAmountTotalDayBefore(amountTotalDayBefore);
         overview.setAmountTotal(amountTotal);
@@ -102,13 +115,15 @@ public class FinanceService {
         mailContext.setVariable("overview", overview);
         String mailContent = templateEngine.process("email/financials_overview_email.html", mailContext);
 
-        try {
-            Files.write(new File("/home/michael/mailtest.html").toPath(), mailContent.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        log.info("Sending email for portfolio overview");
 
-        log.info("Successfully finished check for active shares and sent mail");
+        try {
+            emailService.sendHtmlMessage("Portfolio overview", mailContent);
+
+            log.info("Successfully finished check for active shares and sent mail");
+        } catch (MessagingException e) {
+            log.error("Error sending mail for portfolio overview", e);
+        }
     }
 
     private FinancialProductDTO mapToFinancialProductDtoWithLiveData(FinancialProduct financialProduct) throws IOException {
@@ -134,8 +149,11 @@ public class FinanceService {
             if (transaction.getTransactionType() == FinancialTransactionType.SELL) {
                 currentQuantity = currentQuantity.subtract(transaction.getQuantity());
 
-                combinedPurchasePriceCounter = combinedPurchasePriceCounter.subtract(transaction.getAmount());
-                combinedPurchasePriceDenominator = combinedPurchasePriceDenominator.subtract(transaction.getQuantity());
+                if (currentQuantity.compareTo(BigDecimal.ZERO) == 0) {
+                    combinedPurchasePriceCounter = BigDecimal.ZERO;
+                    combinedPurchasePriceDenominator = BigDecimal.ZERO;
+                }
+
             } else {
                 currentQuantity = currentQuantity.add(transaction.getQuantity());
 
@@ -156,14 +174,18 @@ public class FinanceService {
 
         BigDecimal currentPrice = stock.getQuote().getPrice();
         BigDecimal change = stock.getQuote().getChange();
-        BigDecimal combinedPurchasePrice = combinedPurchasePriceCounter.divide(combinedPurchasePriceDenominator, 2, RoundingMode.HALF_UP);
+        BigDecimal combinedPurchasePrice = combinedPurchasePriceCounter.divide(combinedPurchasePriceDenominator, RoundingMode.HALF_UP);
 
-        if (stock.getCurrency().equals("USD")) {
-            FxQuote dollarEuroConversion = YahooFinance.getFx(FxSymbols.USDEUR);
+        if (stock.getCurrency().equals("USD") || stock.getCurrency().equals("CAD")) {
+            FxQuote euroConversion;
+            if (stock.getCurrency().equals("USD")) {
+                euroConversion = YahooFinance.getFx(FxSymbols.USDEUR);
+            } else {
+                euroConversion = YahooFinance.getFx(FxSymbols.CADEUR);
+            }
 
-            currentPrice = currentPrice.multiply(dollarEuroConversion.getPrice());
-            change = change.multiply(dollarEuroConversion.getPrice());
-            combinedPurchasePrice = combinedPurchasePrice.multiply(dollarEuroConversion.getPrice());
+            currentPrice = currentPrice.multiply(euroConversion.getPrice());
+            change = change.multiply(euroConversion.getPrice());
         }
 
         productDTO.setCombinedPurchasePrice(combinedPurchasePrice);
@@ -173,7 +195,7 @@ public class FinanceService {
         productDTO.setChangeTotal(productDTO.getCurrentAmount().subtract(combinedPurchasePrice.multiply(currentQuantity)));
         productDTO.setPercentChangeToday(stock.getQuote().getChangeInPercent());
         productDTO.setPercentChangeTotal(productDTO.getCurrentPrice()
-                .subtract(productDTO.getCombinedPurchasePrice())
+                .subtract(productDTO.getCombinedPurchasePrice()).setScale(4, RoundingMode.HALF_UP)
                 .divide(productDTO.getCombinedPurchasePrice(), RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100L)));
 
