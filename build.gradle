@@ -19,9 +19,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
-	implementation 'org.keycloak:keycloak-spring-security-adapter:12.0.2'
-	implementation 'org.keycloak:keycloak-spring-boot-starter:12.0.2'
-
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
 
 	implementation 'org.mariadb.jdbc:mariadb-java-client'
