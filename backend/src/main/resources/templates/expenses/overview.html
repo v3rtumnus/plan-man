@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="fragments/header :: header-css"/>
+
+    <script>
+        function retrieveMonthlyOverview(date) {
+            var month = date.substring(0, date.indexOf('-'))
+            var year = date.substring(date.indexOf('-') + 1)
+
+            var monthlyUrl = '/expenses/monthly?month=' + month + '&year=' + year;
+
+            $("#monthlyContainer").load(monthlyUrl);
+        }
+
+        function retrievePie(date) {
+            var month = date.substring(0, date.indexOf('-'))
+            var year = date.substring(date.indexOf('-') + 1)
+
+            var pieUrl = '/expenses/pie?month=' + month + '&year=' + year;
+
+            $("#pieContainer").load(pieUrl);
+        }
+
+        function retrieveGraph(lastMonths) {
+            var monthsParam = '';
+            if (lastMonths != -1) {
+                monthsParam = '?lastMonths=' + lastMonths;
+            }
+            var graphUrl = '/expenses/graph' + monthsParam;
+
+            $("#graphContainer").load(graphUrl);
+        }
+
+        function initializeMonthData() {
+            retrieveMonthlyOverview($("#monthSelection :selected").val());
+            retrievePie($("#monthSelection :selected").val());
+        }
+
+        function handleNewExpense() {
+            var date = $('#date').val();
+            var category = $('#category').val();
+            var comment = $('#comment').val() != '' ? $('#comment').val() : null;
+            var amount = $('#amount').val();
+
+            $.ajax({
+                url:"/api/expenses",
+                type:"POST",
+                data:JSON.stringify ({ date: date, category: category, comment: comment, amount: amount }),
+                contentType:"application/json; charset=utf-8",
+                success: function() {
+                    $("#successNotification").show();
+                    $("#errorNotification").hide();
+
+                    $('#category').val('');
+                    $('#comment').val('');
+                    $('#amount').val('');
+                    $('#category').focus();
+
+                    initializeMonthData();
+                    retrieveGraph(3);
+                },
+                error: function(jqXHR, exception) {
+                    $("#successNotification").hide();
+                    $("#errorNotification").show();
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            initializeMonthData();
+            retrieveGraph(3);
+
+            var now = new Date();
+            var month = (now.getMonth() + 1);
+            var day = now.getDate();
+            if (month < 10)
+                month = "0" + month;
+            if (day < 10)
+                day = "0" + day;
+            var today = now.getFullYear() + '-' + month + '-' + day;
+            $('#date').val(today);
+        });
+    </script>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container">
+
+    <h1>Laufende Ausgaben</h1>
+
+    <div id="successNotification" class="alert alert-primary" role="alert" style="display: none">Ausgabe erfolgreich gespeichert</div>
+    <div id="errorNotification" class="alert alert-danger" role="alert" style="display: none">Leider ist ein Fehler aufgetreten</div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Neue Ausgabe</h4>
+                    <form class="form-inline" method="post">
+                        <div class="md-form" style="margin: 0;">
+                            <input class="form-control" id="date" name="date" placeholder="Datum" size="10"
+                                   type="date">
+                            <input class="form-control" id="category" name="category" placeholder="Kategorie" required
+                                   type="search" list="categories-list"/>
+                            <datalist id="categories-list">
+                                <option th:each="category: ${categories}">[[${category}]]</option>
+                            </datalist>
+                            <input class="form-control" id="comment" name="comment" placeholder="Kommentar"
+                                   type="text"/>
+                            <input class="form-control" id="amount" name="amount" placeholder="Betrag" required
+                                   type="number"/>
+                            <button class="btn btn-primary" type="submit" onclick="handleNewExpense(); return false;">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form class="form-inline">
+                        <select id="monthSelection" style="text-align: center" onchange="initializeMonthData()">
+                            <option th:each="dateOption: ${datesToSelect}" th:value="${#temporals.format(dateOption, 'M-yyyy')}">[[${#temporals.format(dateOption, 'MMMM yyyy', new java.util.Locale("de"))}]]</option>
+                        </select>
+                    </form>
+
+                    <div id="monthlyContainer">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div id="pieContainer">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+
+                    <h4 class="card-title">Ausgabenverlauf</h4>
+                    &nbsp;&nbsp;<a href="#" onclick="retrieveGraph(3); return false;">Letzte 3 Monate</a>
+                    &nbsp;&nbsp;<a href="#" onclick="retrieveGraph(12); return false;">Letztes Jahr</a>
+                    &nbsp;&nbsp;<a href="#" onclick="retrieveGraph(-1); return false;">Von Beginn</a>
+                    <div id="graphContainer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

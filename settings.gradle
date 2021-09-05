@@ -1,1 +1,4 @@
-rootProject.name = 'plan-man'
+rootProject.name = "plan-man"
+
+include(":backend")
+include(":frontend")

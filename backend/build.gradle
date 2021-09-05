@@ -1,0 +1,52 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.8.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+	id 'java'
+}
+
+group = 'at.v3rtumnus'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-devtools'
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
+
+	implementation 'io.jsonwebtoken:jjwt:0.9.1'
+
+	implementation 'org.mariadb.jdbc:mariadb-java-client'
+
+	implementation 'org.liquibase:liquibase-core:3.6.3'
+
+	implementation 'com.yahoofinance-api:YahooFinanceAPI:3.15.0'
+
+	compileOnly 'org.projectlombok:lombok:1.18.16'
+	annotationProcessor 'org.projectlombok:lombok:1.18.16'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+bootJar {
+    launchScript()
+
+    baseName "plan-man"
+}
+
+if (project.hasProperty("prod")) {
+	tasks.withType(Jar) {
+		dependsOn(":frontend:yarn_build")
+
+		from("../frontend/build") {
+			into("static")
+		}
+	}
+}

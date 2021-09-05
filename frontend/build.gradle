@@ -1,0 +1,6 @@
+plugins {
+    id("com.github.node-gradle.node") version "1.5.1"
+}
+
+yarn_build.dependsOn(yarn_install)
+yarn_test.dependsOn(yarn_install)

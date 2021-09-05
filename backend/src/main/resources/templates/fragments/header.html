@@ -1,0 +1,97 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <div th:fragment="header-css">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+        <!-- Google Fonts Roboto -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+        <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" th:href="@{/resources/mdbootstrap/css/bootstrap.min.css}"
+              href="../../mdbootstrap/css/bootstrap.min.css">
+        <!-- Material Design Bootstrap -->
+        <link rel="stylesheet" th:href="@{/resources/mdbootstrap/css/mdb.min.css}"
+              href="../../mdbootstrap/css/mdb.min.css">
+        <link rel="stylesheet" th:href="@{/resources/mdbootstrap/css/mdb.min.css}"
+              href="../../mdbootstrap/css/mdb.min.css">
+        <link rel="stylesheet" th:href="@{/resources/css/style.css}"
+              href="../../css/style.css">
+
+        <!-- jQuery -->
+        <script type="text/javascript" th:src="@{/resources/mdbootstrap/js/jquery.min.js}"
+                src="../../js/jquery.min.js"></script>
+        <!-- Bootstrap tooltips -->
+        <script type="text/javascript" th:src="@{/resources/mdbootstrap/js/popper.min.js}"
+                src="../../js/popper.min.js"></script>
+        <!-- Bootstrap core JavaScript -->
+        <script type="text/javascript" th:src="@{/resources/mdbootstrap/js/bootstrap.min.js}"
+                src="../../js/bootstrap.min.js"></script>
+        <!-- MDB core JavaScript -->
+        <script type="text/javascript" th:src="@{/resources/mdbootstrap/js/mdb.min.js}"
+                src="../../js/mdb.min.js"></script>
+        <script type="text/javascript" th:src="@{/resources/chartjs/Chart.min.js}"
+                src="../../chartjs/Chart.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    </div>
+</head>
+<body>
+<div th:fragment="header">
+    <!-- this is header -->
+    <nav class="mb-1 navbar navbar-expand-lg navbar-dark primary-color">
+        <a class="navbar-brand" href="#">Plan-Man</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent-333"
+                aria-controls="navbarSupportedContent-333" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent-333" sec:authorize="hasRole('USER')">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item" th:classappend="${#httpServletRequest.getRequestURI() == '/' ? 'active':''}">
+                    <a class="nav-link" th:href="@{/}">Home
+                        <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownMenuExpenses" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/expenses') ? 'active':''}">
+                        Ausgaben
+                    </a>
+                    <div class="dropdown-menu dropdown-default" aria-labelledby="navbarDropdownMenuExpenses">
+                        <a class="dropdown-item" th:href="@{/expenses}">&Uuml;bersicht</a>
+                        <a class="dropdown-item" th:href="@{/expenses/detail}">Detailansicht</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/balance}" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/balance') ? 'active':''}">Monatsbilanz</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownMenuCredit" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/credit') ? 'active':''}">
+                        Kredit
+                    </a>
+                    <div class="dropdown-menu dropdown-default" aria-labelledby="navbarDropdownMenuCredit">
+                        <a class="dropdown-item" th:href="@{/credit/overview}">Kreditübersicht</a>
+                        <a class="dropdown-item" th:href="@{/credit/plan}">Tilgungsplan</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/shares}" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/shares') ? 'active':''}">Aktien</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownMenuProfile" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/profile') ? 'active':''}">
+                        <span th:text="${loggedInUser}">Username</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right dropdown-default"
+                         aria-labelledby="navbarDropdownMenuProfile">
+                        <a class="dropdown-item" th:href="@{/profile/settings}">Einstellungen</a>
+                        <a class="dropdown-item" th:href="@{/logout}">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
+
+</body>
+</html>

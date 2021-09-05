@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="fragments/header :: header-css"/>
+    <script>
+        function retrieveMonthlyDetails() {
+            var date = $("#monthSelection :selected").val();
+            var month = date.substring(0, date.indexOf('-'))
+            var year = date.substring(date.indexOf('-') + 1)
+
+            var detailUrl = '/expenses/detail/monthly?month=' + month + '&year=' + year;
+
+            $("#detailContainer").load(detailUrl);
+
+            $('#saveButton').attr('disabled', true);
+            $('#resetButton').attr('disabled', true);
+        }
+
+        function handleExpenseUpdates() {
+            var payload = [];
+            $.each($('.dirty'), function(index, value) {
+                var id = value.id;
+
+                var item = {}
+
+                item['id'] = id
+                item['date'] = $('#' + id + '-date').text();
+                item['category'] = $('#' + id + '-category').text();
+                item['comment'] = $('#' + id + '-comment').text();
+
+                var amount = $('#' + id + '-amount').text();
+                item['amount'] = parseFloat(amount);
+
+                payload.push(item)
+            });
+
+            $.ajax({
+                url:"/api/expenses",
+                type:"PUT",
+                data:JSON.stringify(payload),
+                contentType:"application/json; charset=utf-8",
+                success: function() {
+                    $("#successNotification").show();
+                    $("#errorNotification").hide();
+
+                    retrieveMonthlyDetails();
+                },
+                error: function(jqXHR, exception) {
+                    $("#successNotification").hide();
+                    $("#errorNotification").show();
+                }
+            });
+        }
+
+        $(document).on('input', 'td[contenteditable]', function(e) {
+            e.target.parentNode.classList.add("dirty");
+
+            $('#saveButton').attr('disabled', false);
+            $('#resetButton').attr('disabled', false);
+        });
+
+        $(document).on('click', 'button.delete', function(e) {
+            if (confirm("Sind Sie sicher?")) {
+                var id = e.target.parentNode.parentNode.parentNode.id;
+
+
+                $.ajax({
+                    url:"/api/expenses/" + id,
+                    type:"DELETE",
+                    success: function() {
+                        $("#successNotification").show();
+                        $("#errorNotification").hide();
+
+                        retrieveMonthlyDetails();
+                    },
+                    error: function(jqXHR, exception) {
+                        $("#successNotification").hide();
+                        $("#errorNotification").show();
+                    }
+                });
+            }
+        });
+
+        $(document).ready(function() {
+            retrieveMonthlyDetails();
+        });
+    </script>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container">
+
+    <h1>Laufende Ausgaben</h1>
+
+    <div id="successNotification" class="alert alert-primary" role="alert" style="display: none">&Auml;nderungen erfolgreich durchgef&uuml;hrt</div>
+    <div id="errorNotification" class="alert alert-danger" role="alert" style="display: none">Leider ist ein Fehler aufgetreten</div>
+
+    <form class="form-inline">
+        <label for="monthSelection">Monat ausw&auml;hlen:&nbsp;&nbsp;&nbsp;</label>
+        <select id="monthSelection" style="text-align: center" onchange="retrieveMonthlyDetails()" name="monthSelection">
+            <option th:each="dateOption: ${datesToSelect}" th:value="${#temporals.format(dateOption, 'M-yyyy')}">[[${#temporals.format(dateOption, 'MMMM yyyy', new java.util.Locale("de"))}]]</option>
+        </select>
+
+        <button id="saveButton" class="btn btn-primary" type="submit" onclick="handleExpenseUpdates(); return false;" disabled>Speichern</button>
+        <button id="resetButton" class="btn" type="button" onclick="retrieveMonthlyDetails(); return false;"disabled>Abbrechen</button>
+    </form>
+
+    <div id="detailContainer" style="margin-top:30px">
+
+    </div>
+</div>
+</body>
+</html>

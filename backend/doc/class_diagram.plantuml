@@ -1,0 +1,73 @@
+@startuml
+class CreditSingleTransaction {
+  Long id
+  LocalDate transactionDate
+  String description
+  BigDecimal amount
+}
+
+class ExpenseCategory {
+  Long id
+  String name
+}
+
+class UserProfile {
+  String username
+  String password
+}
+
+class Expense {
+  Long id;
+  LocalDate transactionDate;
+  String comment;
+  BigDecimal amount;
+}
+
+
+class SavingsAccount {
+  Long id
+  LocalDate startDate
+  LocalDate endDate
+  BigDecimal amount
+  BigDecimal interestRate
+}
+
+class FinancialProduct {
+  String isin
+  FinancialProductType type
+}
+
+class FinancialProductWatchlist {
+  String isin
+  FinancialProductType type
+}
+
+class FinancialTransaction {
+  Long id
+  LocalDate transactionDate
+  BigDecimal amount
+  BigDecimal quantity
+  BigDecimal fee
+  FinancialTransactionType transactionType
+}
+
+class Dividend {
+  Long id
+  LocalDate transactionDate
+  BigDecimal amount
+}
+
+class SavingsPlan {
+  Long id
+  LocalDate startDate
+  LocalDate endDate
+  SavingsPlanInterval interval
+  BigDecimal amount
+}
+
+Expense "n" --> "1" ExpenseCategory
+Expense "n" --> "1" UserProfile
+FinancialTransaction "n" --> "1" FinancialProduct
+Dividend "n" --> "1" FinancialProduct
+SavingsPlan "n" --> "1" FinancialProduct
+@enduml

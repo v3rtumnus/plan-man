@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container">
+
+    <h1>Kredit&uuml;bersicht</h1>
+
+    <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
+    <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
+
+    <div class="row">
+        <div class="col-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Restlaufzeit</h4>
+                    <h5 class="card-subtitle mb-2 text-muted" th:inline="text">[[${yearsRemaining}]] Jahre [[${monthsRemaining}]] Monate</h5>
+                    <p class="card-text">Ursprünglich [[${originalYearsRemaining}]] Jahre [[${originalMonthsRemaining}]] Monate</p>
+                </div>
+
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Neue Sondertilgung</h4>
+                    <form class="form-inline" th:action="@{/credit}" th:object="${payment}" method="post">
+                        <div class="md-form" style="margin: 0;">
+                            <input required name="amount" type="number" placeholder="Betrag" class="form-control" size="10" th:field="*{amount}"/>
+                            <input required name="description" type="text" placeholder="Beschreibung" class="form-control" th:field="*{description}"/>
+                            <input placeholder="Datum" type="date" name="date" class="form-control" size="10" th:field="*{date}">
+                            <button type="submit" class="btn btn-primary">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Sonderzahlungen bisher</h4>
+                    <h5 class="card-subtitle mb-2 text-muted">[[${#numbers.formatDecimal(additionalPaymentsSum, 0, 'POINT', 2, 'COMMA')}]] &euro;</h5>
+                    <div style="float: left">
+                        <p class="card-text" th:each="additionalPayment: ${additionalPayments.subList(0, additionalPayments.size() / 2)}">[[${#temporals.format(additionalPayment.date, 'dd.MM.YYYY')}]] - [[${#numbers.formatDecimal(additionalPayment.balanceChange, 0, 'POINT', 2, 'COMMA')}]] &euro;</p>
+                    </div>
+                    <div style="float: right">
+                        <p class="card-text" th:each="additionalPayment: ${additionalPayments.subList(additionalPayments.size() / 2, additionalPayments.size())}">[[${#temporals.format(additionalPayment.date, 'dd.MM.YYYY')}]] - [[${#numbers.formatDecimal(additionalPayment.balanceChange, 0, 'POINT', 2, 'COMMA')}]] &euro;</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Minimal mögliche Rate</h4>
+                    <h5 class="card-subtitle mb-2 text-muted">[[${#numbers.formatDecimal(minimumInstallment, 0, 'POINT', 2, 'COMMA')}]] &euro;</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
