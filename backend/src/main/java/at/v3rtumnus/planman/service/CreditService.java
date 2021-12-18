@@ -178,8 +178,8 @@ public class CreditService {
                 new Tuple<>(nextAdditionalTransactionDate, RowType.ADDITIONAL_PAYMENT) : nextBalanceChangingDate;
     }
 
-    public void saveSingleTransaction(CreditSingleTransaction transaction) {
-        creditSinglePaymentRepository.saveAndFlush(transaction);
+    public CreditSingleTransaction saveSingleTransaction(CreditSingleTransaction transaction) {
+        return creditSinglePaymentRepository.saveAndFlush(transaction);
     }
 
     public void removeSingleTransaction(long transactionId) {
