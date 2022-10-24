@@ -114,7 +114,6 @@ public class FinanceService {
         Context mailContext = new Context();
         mailContext.setVariable("overview", overview);
         String mailContent = templateEngine.process("email/financials_overview_email.html", mailContext);
-
         log.info("Sending email for portfolio overview");
 
         try {
@@ -194,10 +193,13 @@ public class FinanceService {
         productDTO.setChangeToday(change.multiply(productDTO.getCurrentQuantity()));
         productDTO.setChangeTotal(productDTO.getCurrentAmount().subtract(combinedPurchasePrice.multiply(currentQuantity)));
         productDTO.setPercentChangeToday(stock.getQuote().getChangeInPercent());
-        productDTO.setPercentChangeTotal(productDTO.getCurrentPrice()
-                .subtract(productDTO.getCombinedPurchasePrice()).setScale(4, RoundingMode.HALF_UP)
-                .divide(productDTO.getCombinedPurchasePrice(), RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100L)));
+
+        if (productDTO.getCombinedPurchasePrice().compareTo(BigDecimal.ZERO) != 0) {
+            productDTO.setPercentChangeTotal(productDTO.getCurrentPrice()
+                    .subtract(productDTO.getCombinedPurchasePrice()).setScale(4, RoundingMode.HALF_UP)
+                    .divide(productDTO.getCombinedPurchasePrice(), RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100L)));
+        }
 
         return productDTO;
     }
