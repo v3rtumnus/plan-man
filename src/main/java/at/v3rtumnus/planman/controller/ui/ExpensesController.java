@@ -32,11 +32,6 @@ public class ExpensesController {
 
     private final ExpenseService expenseService;
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public @ResponseBody  void saveExpense(@RequestBody ExpenseDTO expense) {
-        System.out.println(expense);
-    }
-
     @GetMapping
     public ModelAndView getExpenses() {
         ModelAndView modelAndView = new ModelAndView("expenses/overview");

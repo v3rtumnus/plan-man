@@ -1,0 +1,22 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_6.xml" xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <changeSet author="michael" id="add-interest-rate-table">
+        <createTable tableName="credit_interval">
+            <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="installment" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="interest_rate" type="DECIMAL(10, 4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fee" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_until" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

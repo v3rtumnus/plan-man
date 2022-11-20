@@ -1,20 +1,20 @@
 package at.v3rtumnus.planman.service;
 
+import at.v3rtumnus.planman.dao.CreditIntervalRepository;
+import at.v3rtumnus.planman.dto.credit.*;
+import at.v3rtumnus.planman.entity.credit.CreditInterval;
 import at.v3rtumnus.planman.entity.credit.CreditSingleTransaction;
-import at.v3rtumnus.planman.conf.CreditConfig;
 import at.v3rtumnus.planman.dao.CreditSinglePaymentRepository;
-import at.v3rtumnus.planman.dto.credit.CreditPlanRow;
-import at.v3rtumnus.planman.dto.credit.RegularAdditionalPayment;
-import at.v3rtumnus.planman.dto.credit.RowType;
-import at.v3rtumnus.planman.dto.credit.SimulationData;
 import at.v3rtumnus.planman.util.DateUtil;
 import at.v3rtumnus.planman.util.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -25,28 +25,22 @@ public class CreditService {
     private CreditSinglePaymentRepository creditSinglePaymentRepository;
 
     @Autowired
-    private CreditConfig creditConfig;
+    private CreditIntervalRepository creditIntervalRepository;
 
     public List<CreditPlanRow> generateOriginalCreditPlan() {
-        return generatePlan(true, null, null);
+        return generatePlan(true, null);
     }
 
     public List<CreditPlanRow> generateCurrentCreditPlan() {
-        return generatePlan(false, null, null);
+        return generatePlan(false, null);
     }
 
-    public List<CreditPlanRow> generateCreditPlanSimulation(SimulationData simulationData) {
-        return generatePlan(false, simulationData, null);
-    }
-
-    public List<CreditPlanRow> generatePlan(boolean original, SimulationData simulationData, BigDecimal installment) {
+    public List<CreditPlanRow> generatePlan(boolean original, BigDecimal installment) {
         int lastRowWithInterestCalculated = -1;
         List<CreditSingleTransaction> additionalTransactions = creditSinglePaymentRepository.findAllByOrderByTransactionDate();
 
-        if (simulationData != null) {
-            additionalTransactions.addAll(generateAdditionalPaymentsForSimulation(simulationData));
-        }
-
+        List<CreditInterval> creditIntervals = creditIntervalRepository.findAllOrderedCreditIntervals();
+        Iterator<CreditInterval> creditIntervalIterator = creditIntervals.iterator();
 
         LocalDate currentDate = additionalTransactions.get(0).getTransactionDate();
 
@@ -55,24 +49,35 @@ public class CreditService {
 
         int rowId = 1;
         LocalDate currentInstallmentDate = currentDate;
+        CreditInterval currentCreditInterval = creditIntervalIterator.next();
+        BigDecimal latestInterestRate = BigDecimal.ZERO;
         do {
             //get next balance change date
             Tuple<LocalDate, RowType> nextBalanceChanging = getNextBalanceChangingDate(currentDate, currentInstallmentDate, additionalTransactions);
 
+            LocalDate intervalValidUntil = currentCreditInterval.getValidUntilDate();
+            if (intervalValidUntil != null && intervalValidUntil.isBefore(nextBalanceChanging.x)) {
+                currentCreditInterval = creditIntervalIterator.next();
+            }
+
             switch (nextBalanceChanging.y) {
                 case INSTALLMENT:
-                    BigDecimal installmentAmount = creditConfig.getInstallmentAmount();
+                    BigDecimal installmentAmount = currentCreditInterval.getInstallment();
+                    currentInstallmentDate = nextBalanceChanging.x;
 
                     //if custom installment was given and relevant date is after today
                     if (installment != null && nextBalanceChanging.x.isAfter(LocalDate.now())) {
                         installmentAmount = installment;
                     }
 
+                    if (installmentAmount.compareTo(BigDecimal.ZERO) == 0) {
+                        break;
+                    }
+
                     BigDecimal paymentAmount = installmentAmount.min(currentAmount.abs());
 
                     currentAmount = currentAmount.add(paymentAmount);
                     planRows.add(new CreditPlanRow(rowId++, nextBalanceChanging.x, paymentAmount, currentAmount, RowType.INSTALLMENT));
-                    currentInstallmentDate = nextBalanceChanging.x;
                     break;
                 case ADDITIONAL_PAYMENT:
                     paymentAmount = additionalTransactions.get(0).getAmount();
@@ -94,40 +99,65 @@ public class CreditService {
                 case END_OF_QUARTER:
                     BigDecimal interestForQuarter = BigDecimal.ZERO;
 
-                    ListIterator<CreditPlanRow> planRowIterator = planRows.listIterator(lastRowWithInterestCalculated + 1);
-
-                    CreditPlanRow currentPlanRow = planRowIterator.next();
-
-                    BigDecimal interestRate = creditConfig.getInterestRate();
-                    if (simulationData != null && simulationData.getInterestChange() != null && !simulationData.getInterestChange().getChangeDate().isBefore(nextBalanceChanging.x)) {
-                        interestRate = simulationData.getInterestChange().getInterestRate();
+                    LocalDate beginDateCreditIntervals;
+                    if (lastRowWithInterestCalculated > -1) {
+                        beginDateCreditIntervals = planRows.get(lastRowWithInterestCalculated).getDate();
+                    } else {
+                        beginDateCreditIntervals = planRows.get(0).getDate();
                     }
 
-                    while (planRowIterator.hasNext()) {
-                        CreditPlanRow nextRow = planRowIterator.next();
+                    Map<LocalDate, InterestPeriod> interestPeriods = getRelevantCreditIntervals(creditIntervals, beginDateCreditIntervals, nextBalanceChanging.x);
 
-                        long daysBetween = DAYS.between(currentPlanRow.getDate(), nextRow.getDate());
+                    List<CreditPlanRow> relevantPlanRows = planRows.subList(lastRowWithInterestCalculated + 1, planRows.size());
 
-                        BigDecimal interestForStep = BigDecimal.valueOf(
-                                currentPlanRow.getNewBalance().doubleValue() * daysBetween / 360.0 * interestRate.doubleValue() / 100);
+                    addRelevantPlanRowsForInterestPeriod(interestPeriods, relevantPlanRows, nextBalanceChanging.x);
+                    addMissingInformationToRelevantRows(interestPeriods, latestInterestRate);
+
+                    List<LocalDate> dates = new ArrayList<>(interestPeriods.keySet());
+
+                    dates.addAll(relevantPlanRows.stream()
+                            .map(CreditPlanRow::getDate)
+                            .collect(Collectors.toList()));
+
+                    ArrayList<Map.Entry<LocalDate, InterestPeriod>> entries = new ArrayList<>(interestPeriods.entrySet());
+                    for (int i = 0; i < interestPeriods.size(); i++) {
+                        Map.Entry<LocalDate, InterestPeriod> interestPeriodEntry = entries.get(i);
+                        LocalDate date = interestPeriodEntry.getKey();
+                        InterestPeriod interestPeriod = interestPeriodEntry.getValue();
+
+                        interestPeriod.setDays(DAYS.between(date, getPeriodEnd(date, dates, nextBalanceChanging.x)));
+                    }
+
+                    InterestPeriod latestInterestPeriod = null;
+                    BigDecimal baseAmountForInterestCalculation = lastRowWithInterestCalculated == -1
+                            ? BigDecimal.ZERO :
+                            planRows.get(lastRowWithInterestCalculated).getNewBalance();
+
+                    for (Map.Entry<LocalDate, InterestPeriod> interestPeriodEntry : interestPeriods.entrySet()) {
+                        InterestPeriod interestPeriod = interestPeriodEntry.getValue();
+                        BigDecimal interestRate = interestPeriod.getInterestRate();
+
+                        if (interestPeriod.getBalanceChange() != null && interestPeriod.getBalanceChange().compareTo(BigDecimal.ZERO) != 0) {
+                            baseAmountForInterestCalculation = baseAmountForInterestCalculation.add(interestPeriod.getBalanceChange());
+                        }
+
+                        BigDecimal interestForStep = baseAmountForInterestCalculation
+                                .multiply(BigDecimal.valueOf(interestPeriod.getDays()))
+                                .divide(BigDecimal.valueOf(360), RoundingMode.HALF_UP)
+                                .multiply(interestRate)
+                                .divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
 
                         interestForQuarter = interestForQuarter.add(interestForStep);
 
-                        currentPlanRow = nextRow;
+                        latestInterestPeriod = interestPeriod;
                     }
+                    currentAmount = currentAmount.add(interestForQuarter.subtract(currentCreditInterval.getFee()));
 
-                    long daysBetween = DAYS.between(currentPlanRow.getDate(), nextBalanceChanging.x);
+                    planRows.add(new CreditPlanRow(rowId++, nextBalanceChanging.x, interestForQuarter.subtract(currentCreditInterval.getFee()), currentAmount, RowType.END_OF_QUARTER));
 
-                    BigDecimal interestForStep = BigDecimal.valueOf(
-                            currentPlanRow.getNewBalance().doubleValue() * daysBetween / 360.0 * interestRate.doubleValue() / 100);
+                    lastRowWithInterestCalculated = planRows.size() - 1;
 
-                    interestForQuarter = interestForQuarter.add(interestForStep);
-
-                    currentAmount = currentAmount.add(interestForQuarter.subtract(creditConfig.getProcessingFee()));
-
-                    planRows.add(new CreditPlanRow(rowId++, nextBalanceChanging.x, interestForQuarter.subtract(creditConfig.getProcessingFee()), currentAmount, RowType.END_OF_QUARTER));
-
-                    lastRowWithInterestCalculated = planRows.size() - 2;
+                    latestInterestRate = latestInterestPeriod.getInterestRate();
 
                     break;
             }
@@ -139,26 +169,82 @@ public class CreditService {
         return planRows;
     }
 
-    private List<CreditSingleTransaction> generateAdditionalPaymentsForSimulation(SimulationData simulationData) {
-        List<CreditSingleTransaction> additionalTransactions = new ArrayList<>();
+    private void addMissingInformationToRelevantRows(Map<LocalDate, InterestPeriod> interestPeriods, BigDecimal latestInterestRate) {
+        InterestPeriod lastPeriod = new InterestPeriod(null, latestInterestRate, BigDecimal.ZERO);
+        for (Map.Entry<LocalDate, InterestPeriod> interestPeriod : interestPeriods.entrySet()) {
+            InterestPeriod value = interestPeriod.getValue();
+            if (value.getInterestRate() == null) {
+                value.setInterestRate(lastPeriod.getInterestRate());
+            }
 
-        if (simulationData.getAdditionalPayments() != null) {
-            simulationData.getAdditionalPayments().forEach(ap ->
-                    additionalTransactions.add(new CreditSingleTransaction(ap.getPaymentDate(), ap.getPaymentAmount())));
+            lastPeriod = value;
         }
+    }
 
-        RegularAdditionalPayment regularAdditionalPayment = simulationData.getRegularAdditionalPayment();
-        if (regularAdditionalPayment != null) {
-            LocalDate paymentDate = regularAdditionalPayment.getStartDate();
-            BigDecimal paymentAmount = regularAdditionalPayment.getPaymentAmount();
+    private Map<LocalDate, InterestPeriod> addRelevantPlanRowsForInterestPeriod(Map<LocalDate, InterestPeriod> interestPeriods,
+                                                                                List<CreditPlanRow> relevantPlanRows,
+                                                                                LocalDate endDate) {
+        for (int i = 0; i < relevantPlanRows.size(); i++) {
+            CreditPlanRow creditPlanRow = relevantPlanRows.get(i);
+            LocalDate date = creditPlanRow.getDate();
 
-            for (int i = 1; i < 10000; i++) {
-                additionalTransactions.add(new CreditSingleTransaction(paymentDate, paymentAmount));
-                paymentDate = paymentDate.plusMonths(1);
+            if (interestPeriods.containsKey(date)) {
+                InterestPeriod interestPeriod = interestPeriods.get(date);
+
+                BigDecimal newBalanceChange = Optional.ofNullable(interestPeriod.getBalanceChange())
+                        .orElse(BigDecimal.ZERO)
+                        .add(creditPlanRow.getBalanceChange());
+
+                interestPeriod.setBalanceChange(newBalanceChange);
+            } else {
+                interestPeriods.put(date, new InterestPeriod(null, null,
+                        creditPlanRow.getBalanceChange()));
             }
         }
 
-        return additionalTransactions;
+        return interestPeriods;
+    }
+
+    private LocalDate getPeriodEnd(LocalDate currentDate, List<LocalDate> dates, LocalDate maxDate) {
+        Optional<LocalDate> relevantPeriodEnd = dates.stream()
+                .filter(date -> date.isAfter(currentDate))
+                .findFirst();
+
+        if (!relevantPeriodEnd.isPresent() || relevantPeriodEnd.get().isAfter(maxDate)) {
+            return maxDate;
+        }
+
+        return relevantPeriodEnd.get();
+    }
+
+    private Map<LocalDate, InterestPeriod> getRelevantCreditIntervals(List<CreditInterval> creditIntervals, LocalDate beginDate, LocalDate endDate) {
+        List<CreditInterval> relevantIntervals = creditIntervals
+                .stream()
+                .filter(interval -> {
+                    LocalDate validUntilDate = interval.getValidUntilDate();
+
+                    return validUntilDate == null ||
+                            validUntilDate.isEqual(beginDate) ||
+                            validUntilDate.isAfter(beginDate);
+                })
+                .collect(Collectors.toList());
+
+        LocalDate lastValidUntil = beginDate.minusDays(1);
+        Map<LocalDate, InterestPeriod> interestPeriods = new TreeMap<>();
+
+        for (CreditInterval relevantInterval : relevantIntervals) {
+            //remove credit interval with NULL valid until if it is not needed
+            if (lastValidUntil.isAfter(endDate) || lastValidUntil.isEqual(endDate)) {
+                break;
+            }
+
+            LocalDate interestPeriodBegin = lastValidUntil.plusDays(1);
+            interestPeriods.put(interestPeriodBegin, new InterestPeriod(null,
+                    relevantInterval.getInterestRate(), null));
+            lastValidUntil = relevantInterval.getValidUntilDate();
+        }
+
+        return interestPeriods;
     }
 
     private Tuple<LocalDate, RowType> getNextBalanceChangingDate(LocalDate currentDate, LocalDate currentInstallmentDate, List<CreditSingleTransaction> additionalTransactions) {
@@ -186,21 +272,26 @@ public class CreditService {
         creditSinglePaymentRepository.deleteById(transactionId);
     }
 
-    public int getMinimumInstallment() {
+    public BigDecimal getMinimumInstallment() {
         List<CreditPlanRow> originalCreditPlan = generateOriginalCreditPlan();
 
         LocalDate lastOriginalInstallmentDate = originalCreditPlan.get(originalCreditPlan.size() - 1).getDate();
 
-        int testedMinimumInstallment = creditConfig.getInstallmentAmount().intValue();
+        BigDecimal testedMinimumInstallment = creditIntervalRepository
+                .findAllOrderedCreditIntervals()
+                .stream().map(CreditInterval::getInstallment)
+                .max(BigDecimal::compareTo)
+                .get();
 
         LocalDate lastInstallmentDate = lastOriginalInstallmentDate;
 
         while (!lastInstallmentDate.isAfter(lastOriginalInstallmentDate)) {
-            List<CreditPlanRow> simulatedCreditPlan = generatePlan(false, null, BigDecimal.valueOf(--testedMinimumInstallment));
+            testedMinimumInstallment = testedMinimumInstallment.subtract(BigDecimal.ONE);
+            List<CreditPlanRow> simulatedCreditPlan = generatePlan(false, testedMinimumInstallment);
 
             lastInstallmentDate = simulatedCreditPlan.get(simulatedCreditPlan.size() -1).getDate();
         }
 
-        return ++testedMinimumInstallment;
+        return testedMinimumInstallment.add(BigDecimal.ONE);
     }
 }
