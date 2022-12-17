@@ -24,7 +24,7 @@ pipeline {
                 sh 'docker-compose -f /var/plan-man-data/docker-compose.yml down'
                 sh 'cp build/libs/plan-man.jar /var/plan-man-data/docker'
                 sh 'docker-compose -f /var/plan-man-data/docker-compose.yml build'
-                sh 'docker-compose -f /var/plan-man-data/docker-compose.yml up'
+                sh 'docker-compose -f /var/plan-man-data/docker-compose.yml up -d'
             }
         }
     }
