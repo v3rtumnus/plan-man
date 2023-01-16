@@ -69,13 +69,7 @@ public class ExpenseService {
         log.info("Saving expense for category {}", expense.getCategory());
 
         ExpenseCategory category = expenseCategoryRepository.findByName(expense.getCategory())
-                .orElseGet(() -> {
-                    log.info("Creating new category for {}", expense.getCategory());
-
-                    ExpenseCategory newCategory = new ExpenseCategory(null, expense.getCategory());
-
-                    return expenseCategoryRepository.saveAndFlush(newCategory);
-                });
+                .orElseThrow(() -> new RuntimeException("Category not found"));
 
         UserProfile user = userProfileRepository.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new UsernameNotFoundException("Username could not be found"));

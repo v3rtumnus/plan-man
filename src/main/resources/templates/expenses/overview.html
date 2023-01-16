@@ -103,11 +103,9 @@
                         <div class="md-form" style="margin: 0;">
                             <input class="form-control" id="date" name="date" placeholder="Datum" size="10"
                                    type="date">
-                            <input class="form-control" id="category" name="category" placeholder="Kategorie" required
-                                   type="search" list="categories-list"/>
-                            <datalist id="categories-list">
+                            <select class="form-control" id="categories-list">
                                 <option th:each="category: ${categories}">[[${category}]]</option>
-                            </datalist>
+                            </select>
                             <input class="form-control" id="comment" name="comment" placeholder="Kommentar"
                                    type="text"/>
                             <input class="form-control" id="amount" name="amount" placeholder="Betrag" required
