@@ -21,7 +21,7 @@ pipeline {
 
         stage('Deploy service') {
             steps {
-                sh 'docker-compose -f /var/plan-man-data/docker-compose.yml stop'
+                sh 'docker-compose -f /var/plan-man-data/docker-compose.yml down'
                 sh 'cp build/libs/plan-man.jar /var/plan-man-data/docker'
                 sh 'docker-compose -f /var/plan-man-data/docker-compose.yml build'
                 sh 'docker-compose -f /var/plan-man-data/docker-compose.yml up -d'
