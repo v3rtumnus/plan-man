@@ -1,14 +1,14 @@
 pipeline {
     agent any
 
-    environment {
-        GRADLE_USER_HOME = '/var/lib/jenkins/.gradle'
+    triggers { 
+        pollSCM('*/5 * * * *') 
     }
-
+    
     stages {
         stage('Clone sources') {
             steps {
-                git credentialsId: 'jenkins-ssh',
+                git credentialsId: 'github-ssh',
                     url: 'git@github.com:v3rtumnus/plan-man.git'
             }
         }
@@ -21,10 +21,10 @@ pipeline {
 
         stage('Deploy service') {
             steps {
-                sh 'sudo service plan-man stop'
-                sh 'cp build/libs/plan-man.jar /opt/plan-man/'
-                sh 'sudo chmod a+x /opt/plan-man/plan-man.jar'
-                sh 'sudo service plan-man start'
+                sh 'docker-compose -f /var/plan-man-data/docker-compose.yml stop'
+                sh 'cp build/libs/plan-man.jar /var/plan-man-data/docker'
+                sh 'docker-compose -f /var/plan-man-data/docker-compose.yml build'
+                sh 'docker-compose -f /var/plan-man-data/docker-compose.yml up -d'
             }
         }
     }
