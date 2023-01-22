@@ -44,14 +44,14 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent-333" sec:authorize="hasRole('USER')">
             <ul class="navbar-nav mr-auto">
-                <li class="nav-item" th:classappend="${#httpServletRequest.getRequestURI() == '/' ? 'active':''}">
+                <li class="nav-item" th:classappend="${requestURI == '/' ? 'active':''}">
                     <a class="nav-link" th:href="@{/}">Home
                         <span class="sr-only">(current)</span>
                     </a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdownMenuExpenses" data-toggle="dropdown"
-                       aria-haspopup="true" aria-expanded="false" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/expenses') ? 'active':''}">
+                       aria-haspopup="true" aria-expanded="false" th:classappend="${requestURI.startsWith('/expenses') ? 'active':''}">
                         Ausgaben
                     </a>
                     <div class="dropdown-menu dropdown-default" aria-labelledby="navbarDropdownMenuExpenses">
@@ -60,11 +60,11 @@
                     </div>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/balance}" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/balance') ? 'active':''}">Monatsbilanz</a>
+                    <a class="nav-link" th:href="@{/balance}" th:classappend="${requestURI.startsWith('/balance') ? 'active':''}">Monatsbilanz</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdownMenuCredit" data-toggle="dropdown"
-                       aria-haspopup="true" aria-expanded="false" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/credit') ? 'active':''}">
+                       aria-haspopup="true" aria-expanded="false" th:classappend="${requestURI.startsWith('/credit') ? 'active':''}">
                         Kredit
                     </a>
                     <div class="dropdown-menu dropdown-default" aria-labelledby="navbarDropdownMenuCredit">
@@ -73,13 +73,13 @@
                     </div>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/shares}" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/shares') ? 'active':''}">Aktien</a>
+                    <a class="nav-link" th:href="@{/shares}" th:classappend="${requestURI.startsWith('/shares') ? 'active':''}">Aktien</a>
                 </li>
             </ul>
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdownMenuProfile" data-toggle="dropdown"
-                       aria-haspopup="true" aria-expanded="false" th:classappend="${#httpServletRequest.getRequestURI().startsWith('/profile') ? 'active':''}">
+                       aria-haspopup="true" aria-expanded="false" th:classappend="${requestURI.startsWith('/profile') ? 'active':''}">
                         <span th:text="${loggedInUser}">Username</span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right dropdown-default"

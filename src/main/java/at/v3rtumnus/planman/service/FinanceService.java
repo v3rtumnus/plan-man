@@ -23,8 +23,8 @@ import yahoofinance.YahooFinance;
 import yahoofinance.quotes.fx.FxQuote;
 import yahoofinance.quotes.fx.FxSymbols;
 
-import javax.mail.MessagingException;
-import javax.transaction.Transactional;
+import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;

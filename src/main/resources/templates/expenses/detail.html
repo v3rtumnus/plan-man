@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <div th:replace="fragments/header :: header-css"/>
+    <div th:replace="~{fragments/header :: header-css}"/>
     <script>
         function retrieveMonthlyDetails() {
             var date = $("#monthSelection :selected").val();
@@ -88,7 +88,7 @@
 </head>
 <body>
 
-<div th:replace="fragments/header :: header"/>
+<div th:replace="~{fragments/header :: header}"/>
 
 <div class="container">
 
