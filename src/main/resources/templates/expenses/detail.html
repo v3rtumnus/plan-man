@@ -90,9 +90,13 @@
 
 <div th:replace="~{fragments/header :: header}"/>
 
-<div class="container">
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
 
-    <h1>Laufende Ausgaben</h1>
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Laufende Ausgaben</h1>
+    </div>
 
     <div id="successNotification" class="alert alert-primary" role="alert" style="display: none">&Auml;nderungen erfolgreich durchgef&uuml;hrt</div>
     <div id="errorNotification" class="alert alert-danger" role="alert" style="display: none">Leider ist ein Fehler aufgetreten</div>
@@ -110,6 +114,8 @@
     <div id="detailContainer" style="margin-top:30px">
 
     </div>
-</div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
 </body>
 </html>

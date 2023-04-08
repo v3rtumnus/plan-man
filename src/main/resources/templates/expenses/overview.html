@@ -87,9 +87,14 @@
 
 <div th:replace="~{fragments/header :: header}"/>
 
-<div class="container">
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
 
-    <h1>Laufende Ausgaben</h1>
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Laufende Ausgaben</h1>
+    </div>
+
 
     <div id="successNotification" class="alert alert-primary" role="alert" style="display: none">Ausgabe erfolgreich gespeichert</div>
     <div id="errorNotification" class="alert alert-danger" role="alert" style="display: none">Leider ist ein Fehler aufgetreten</div>
@@ -99,17 +104,25 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Neue Ausgabe</h4>
-                    <form class="form-inline" method="post">
-                        <div class="md-form" style="margin: 0;">
-                            <input class="form-control" id="date" name="date" placeholder="Datum" size="10"
+                    <form class="row g-3" method="post">
+                        <div class="col-md-2">
+                            <input class="form-control" id="date" name="date" placeholder="Datum"
                                    type="date">
+                        </div>
+                        <div class="col-md-2">
                             <select class="form-control" id="categories-list">
                                 <option th:each="category: ${categories}">[[${category}]]</option>
                             </select>
+                        </div>
+                        <div class="col-md-4">
                             <input class="form-control" id="comment" name="comment" placeholder="Kommentar"
                                    type="text"/>
+                        </div>
+                        <div class="col-md-2">
                             <input class="form-control" id="amount" name="amount" placeholder="Betrag" required
                                    type="number"/>
+                        </div>
+                        <div class="col-md-2">
                             <button class="btn btn-primary" type="submit" onclick="handleNewExpense(); return false;">Speichern</button>
                         </div>
                     </form>
@@ -122,6 +135,7 @@
         <div class="col">
             <div class="card">
                 <div class="card-body">
+                    <h4 class="card-title">Monats&uuml;bersicht</h4>
                     <form class="form-inline">
                         <select id="monthSelection" style="text-align: center" onchange="initializeMonthData()">
                             <option th:each="dateOption: ${datesToSelect}" th:value="${#temporals.format(dateOption, 'M-yyyy')}">[[${#temporals.format(dateOption, 'MMMM yyyy', new java.util.Locale("de"))}]]</option>
@@ -159,6 +173,8 @@
             </div>
         </div>
     </div>
-</div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
 </body>
 </html>

@@ -7,9 +7,13 @@
 
 <div th:replace="~{fragments/header :: header}"/>
 
-<div class="container">
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
 
-    <h1>Kredit&uuml;bersicht</h1>
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Kredit&uuml;bersicht</h1>
+    </div>
 
     <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
     <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
@@ -29,12 +33,20 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Neue Sondertilgung</h4>
-                    <form class="form-inline" th:action="@{/credit}" th:object="${payment}" method="post">
-                        <div class="md-form" style="margin: 0;">
-                            <input required name="amount" type="number" placeholder="Betrag" class="form-control" size="10" th:field="*{amount}"/>
-                            <input required name="description" type="text" placeholder="Beschreibung" class="form-control" th:field="*{description}"/>
-                            <input placeholder="Datum" type="date" name="date" class="form-control" size="10" th:field="*{date}">
-                            <button type="submit" class="btn btn-primary">Speichern</button>
+                    <form class="row g-3" th:action="@{/credit}" th:object="${payment}" method="post">
+                        <div class="col-md-3">
+                            <input required name="amount" id="amount" type="number" placeholder="Betrag" class="form-control" th:field="*{amount}"/>
+                        </div>
+                        <div class="col-md-3">
+                            <input required name="description" id="description" type="text" placeholder="Beschreibung" class="form-control" th:field="*{description}"/>
+                        </div>
+                        <div class="col-md-3">
+                            <input required name="date" id="date" type="date" placeholder="Datum" class="form-control" th:field="*{date}"/>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-floating">
+                                <button type="submit" class="btn btn-primary">Speichern</button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -66,6 +78,8 @@
         </div>
     </div>
 
-</div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
 </body>
 </html>

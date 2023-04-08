@@ -1,0 +1,68 @@
+<html lang="en">
+<head>
+<body>
+  <div th:fragment="sidebar">
+    <aside id="sidebar" class="sidebar">
+
+      <ul class="sidebar-nav" id="sidebar-nav">
+
+        <li class="nav-item">
+          <a class="nav-link collapsed" th:href="@{/}">
+            <i class="bi bi-grid"></i>
+            <span>Home</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link " data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-cart2"></i><span>Ausgaben</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li>
+              <a th:href="@{/expenses}">
+                <i class="bi bi-circle"></i><span>&Uuml;bersicht</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/expenses/detail}">
+                <i class="bi bi-circle"></i><span>Detailansicht</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link collapsed" th:href="@{/balance}">
+            <i class="bi bi-table"></i>
+            <span>Monatsbilanz</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-house"></i><span>Kredit</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a th:href="@{/credit/overview}">
+                <i class="bi bi-circle"></i><span>Kredit&uuml;bersicht</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/credit/plan}">
+                <i class="bi bi-circle"></i><span>Tilgungsplan</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link collapsed" th:href="@{/shares}">
+            <i class="bi bi-graph-up"></i>
+            <span>Aktien</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+  </div>
+</body>
+</html>

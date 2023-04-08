@@ -7,28 +7,36 @@
 
 <div th:replace="~{fragments/header :: header}"/>
 
-<div class="container">
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
 
-    <h1>Tilgungsplan</h1>
+<main id="main" class="main">
 
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th scope="col">Datum</th>
-            <th scope="col">Beschreibung</th>
-            <th scope="col">Transaktionsbetrag</th>
-            <th scope="col">Neuer Kontostand</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="creditPlanRow: ${currentCreditPlan}">
-            <th th:text="${#temporals.format(creditPlanRow.date, 'dd.MM.yyyy')}"></th>
-            <td th:text="${creditPlanRow.description}"></td>
-            <td th:text="${#numbers.formatDecimal(creditPlanRow.balanceChange, 0, 'POINT', 2, 'COMMA')}"></td>
-            <td th:text="${#numbers.formatDecimal(creditPlanRow.newBalance, 0, 'POINT', 2, 'COMMA')}"></td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+    <div class="pagetitle">
+        <h1>Tilgungsplan</h1>
+    </div>
+
+    <section class="section">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Datum</th>
+                <th scope="col">Beschreibung</th>
+                <th scope="col">Transaktionsbetrag</th>
+                <th scope="col">Neuer Kontostand</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="creditPlanRow: ${currentCreditPlan}">
+                <th th:text="${#temporals.format(creditPlanRow.date, 'dd.MM.yyyy')}"></th>
+                <td th:text="${creditPlanRow.description}"></td>
+                <td th:text="${#numbers.formatDecimal(creditPlanRow.balanceChange, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td th:text="${#numbers.formatDecimal(creditPlanRow.newBalance, 0, 'POINT', 2, 'COMMA')}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
 </body>
 </html>

@@ -19,9 +19,8 @@ public class SavingsAccount {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    private BigDecimal amount;
-    private BigDecimal interestRate;
+    private BigDecimal startAmount;
+    private BigDecimal endAmount;
 
-    @Enumerated(EnumType.STRING)
-    private Interval interval;
+    private BigDecimal interestRate;
 }

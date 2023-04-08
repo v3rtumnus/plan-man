@@ -4,50 +4,78 @@
     <div th:replace="~{fragments/header :: header-css}"/>
 </head>
 <body>
+<main>
+    <div class="container">
 
-<div th:replace="~{fragments/header :: header}"/>
+        <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
 
-<div class="container">
-
-    <div class="row" style="margin-top:20px">
-        <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
-            <form th:action="@{/login}" method="post">
-                <fieldset>
-                    <h1>Login</h1>
-
-                    <div th:if="${param.error}">
-                        <div class="alert alert-danger">
-                            Falscher Benutzername oder falsches Passwort.
+                        <div class="d-flex justify-content-center py-4">
+                            <a href="index.html" class="logo d-flex align-items-center w-auto">
+                                <span class="d-none d-lg-block">Plan-Man</span>
+                            </a>
                         </div>
-                    </div>
-                    <div th:if="${param.logout}">
-                        <div class="alert alert-info">
-                            Du wurdest erfolgreich ausgeloggt.
-                        </div>
-                    </div>
 
-                    <div class="form-group">
-                        <input type="text" name="username" id="username" class="form-control input-lg"
-                               placeholder="Benutzername" required="true" autofocus="true"/>
-                    </div>
-                    <div class="form-group">
-                        <input type="password" name="password" id="password" class="form-control input-lg"
-                               placeholder="Passwort" required="true"/>
-                    </div>
-                    <input type='checkbox' name="remember-me"/>Remember Me? <br/>
+                        <form th:action="@{/login}" method="post">
+                            <div th:if="${param.error}">
+                                <div class="alert alert-danger">
+                                    Falscher Benutzername oder falsches Passwort.
+                                </div>
+                            </div>
+                            <div th:if="${param.logout}">
+                                <div class="alert alert-info">
+                                    Du wurdest erfolgreich ausgeloggt.
+                                </div>
+                            </div>
 
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <input type="submit" class="btn btn-lg btn-primary btn-block" value="Login"/>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                        </div>
+                            <div class="card mb-3">
+
+                                <div class="card-body">
+
+                                    <div class="pt-4 pb-2">
+                                        <h5 class="card-title text-center pb-0 fs-4">Login</h5>
+                                        <p class="text-center small">Bitte Benutzername und Passwort eingeben</p>
+                                    </div>
+
+                                    <form class="row g-3 needs-validation" novalidate>
+
+                                        <div class="col-12">
+                                            <label for="usernameInput" class="form-label">Benutzername</label>
+                                            <div class="input-group has-validation">
+                                                <input type="text" name="username" class="form-control"
+                                                       id="usernameInput" required>
+                                                <div class="invalid-feedback">Bitte Benutzernamen eingeben</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="passwordInput" class="form-label">Passwort</label>
+                                            <input type="password" name="password" class="form-control"
+                                                   id="passwordInput" required>
+                                            <div class="invalid-feedback">Bitte Passwort eingeben!</div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="remember"
+                                                       value="true" id="rememberMe">
+                                                <label class="form-check-label" for="rememberMe">Remember me</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <button class="btn btn-primary w-100" type="submit">Login</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                </fieldset>
-            </form>
-        </div>
+                </div>
+            </div>
+        </section>
     </div>
-
-</div>
+</main>
 </body>
 </html>
