@@ -14,10 +14,10 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link " data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link " data-bs-target="#expenses-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-cart2"></i><span>Ausgaben</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <ul id="expenses-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
             <li>
               <a th:href="@{/expenses}">
                 <i class="bi bi-circle"></i><span>&Uuml;bersicht</span>
@@ -38,10 +38,10 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#credit-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-house"></i><span>Kredit</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="credit-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
               <a th:href="@{/credit/overview}">
                 <i class="bi bi-circle"></i><span>Kredit&uuml;bersicht</span>
@@ -56,10 +56,21 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" th:href="@{/shares}">
-            <i class="bi bi-graph-up"></i>
-            <span>Aktien</span>
+          <a class="nav-link collapsed" data-bs-target="#share-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-graph-up"></i><span>Aktien</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
+          <ul id="share-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a th:href="@{/shares/overview}">
+                <i class="bi bi-circle"></i><span>&Uuml;bersicht</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/shares/upload}">
+                <i class="bi bi-circle"></i><span>Upload</span>
+              </a>
+            </li>
+          </ul>
         </li>
       </ul>
     </aside>

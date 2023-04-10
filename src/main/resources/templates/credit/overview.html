@@ -20,7 +20,7 @@
 
     <div class="row">
         <div class="col-4">
-            <div class="card">
+            <div class="card" style="height: 100%">
                 <div class="card-body">
                     <h4 class="card-title">Restlaufzeit</h4>
                     <h5 class="card-subtitle mb-2 text-muted" th:inline="text">[[${yearsRemaining}]] Jahre [[${monthsRemaining}]] Monate</h5>
@@ -30,7 +30,7 @@
             </div>
         </div>
         <div class="col">
-            <div class="card">
+            <div class="card" style="height: 100%">
                 <div class="card-body">
                     <h4 class="card-title">Neue Sondertilgung</h4>
                     <form class="row g-3" th:action="@{/credit}" th:object="${payment}" method="post">
@@ -55,7 +55,7 @@
     </div>
     <div class="row">
         <div class="col">
-            <div class="card">
+            <div class="card" style="height: 100%">
                 <div class="card-body">
                     <h4 class="card-title">Sonderzahlungen bisher</h4>
                     <h5 class="card-subtitle mb-2 text-muted">[[${#numbers.formatDecimal(additionalPaymentsSum, 0, 'POINT', 2, 'COMMA')}]] &euro;</h5>
@@ -69,7 +69,7 @@
             </div>
         </div>
         <div class="col">
-            <div class="card">
+            <div class="card" style="height: 100%">
                 <div class="card-body">
                     <h4 class="card-title">Minimal mögliche Rate</h4>
                     <h5 class="card-subtitle mb-2 text-muted">[[${#numbers.formatDecimal(minimumInstallment, 0, 'POINT', 2, 'COMMA')}]] &euro;</h5>

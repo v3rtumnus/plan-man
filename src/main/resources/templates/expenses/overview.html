@@ -24,7 +24,7 @@
 
         function retrieveGraph(lastMonths) {
             var monthsParam = '';
-            if (lastMonths != -1) {
+            if (lastMonths !== -1) {
                 monthsParam = '?lastMonths=' + lastMonths;
             }
             var graphUrl = '/expenses/graph' + monthsParam;

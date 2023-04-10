@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/header :: header-css}"/>
+
+    <script type="text/javascript">
+        $("#share-upload").on("change", function () {
+            var file_data = $("#share-upload").prop("files");
+            var form_data = new FormData();
+            form_data.append("file", file_data);
+            alert(form_data);
+            $.ajax({
+                url: "/uploads",
+                dataType: 'script',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function () {
+                    alert("works");
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Aktien-Upload</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Upload</h5>
+                    <input class="form-control" type="file" id="share-upload" multiple/>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Protokoll</h5>
+                    <div id="uploadResult">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>
