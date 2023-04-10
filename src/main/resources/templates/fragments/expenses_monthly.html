@@ -7,19 +7,19 @@
         <thead>
         <tr>
             <th scope="col">Kategorie</th>
-            <th scope="col">Betrag</th>
+            <th scope="col" style="text-align: right">Betrag</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="expenseSummaryElement: ${expenseSummary}">
             <td>[[${expenseSummaryElement.category}]]</td>
-            <td>[[${expenseSummaryElement.amount}]] €</td>
+            <td style="text-align: right">[[${expenseSummaryElement.amount}]] €</td>
         </tr>
         </tbody>
         <tfoot>
         <tr th:if= "${!expenseSummary.isEmpty()}">
             <th>Summe</th>
-            <th>[[${monthlySum}]] €</th>
+            <th style="text-align: right">[[${monthlySum}]] €</th>
         </tr>
         </tfoot>
     </table>
