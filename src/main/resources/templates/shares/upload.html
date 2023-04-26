@@ -3,23 +3,99 @@
 <head>
     <div th:replace="~{fragments/header :: header-css}"/>
 
-    <script type="text/javascript">
-        $("#share-upload").on("change", function () {
-            var file_data = $("#share-upload").prop("files");
-            var form_data = new FormData();
-            form_data.append("file", file_data);
-            alert(form_data);
-            $.ajax({
-                url: "/uploads",
-                dataType: 'script',
-                cache: false,
-                contentType: false,
-                processData: false,
-                data: form_data,
-                type: 'post',
-                success: function () {
-                    alert("works");
+    <script>
+        function createResultBodyRow(name) {
+            $('#uploadResultBody').append(`<tr id="P${name}">
+                        <td>${name}</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div></td>
+                            </div>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                   </tr>`);
+        }
+
+        function handleUploadResult(json) {
+            let date = '-';
+            let isin = '-';
+            let description = '-';
+            let backgroundClass = ''
+
+            if (json.result === 'SUCCESS') {
+                switch(json.type) {
+                    case 'BUY':
+                        description = "Kauf";
+                        break;
+                    case 'SELL':
+                        description = "Verkauf";
+                        break;
+                    case 'DIVIDEND':
+                        description = "Dividende: " + json.amount;
                 }
+            }
+
+            switch(json.result) {
+                case 'SUCCESS':
+                    date = json.date;
+                    isin = json.isin;
+                    backgroundClass = 'bg-success';
+                    break;
+                case 'FAILURE':
+                    description = json.error;
+                    backgroundClass = 'bg-danger';
+                    break;
+                case 'DUPLICATE':
+                    description = 'Bereits importiert';
+                    backgroundClass = 'bg-warning';
+                    break;
+                case 'IGNORED':
+                    description = 'Ignoriert';
+                    backgroundClass = 'bg-warning';
+            }
+
+            $(document.getElementById("P" + json.filename)).html(`
+                        <td>${json.filename}</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar ${backgroundClass}" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></td>
+                            </div>
+                        <td>${date}</td>
+                        <td>${isin}</td>
+                        <td>${description}</td>
+            `);
+
+        }
+
+        $(document).ready(function () {
+            $('#share-upload').on("change", function () {
+                $('#uploadResultBody').empty();
+
+                Array.from($('#share-upload')[0].files).forEach(
+                    f => {
+                        var form_data = new FormData();
+                        form_data.append("file", f);
+
+                        createResultBodyRow(f.name);
+
+                        $.ajax({
+                            url: "/api/finance",
+                            dataType: "json",
+                            cache: false,
+                            contentType: false,
+                            processData: false,
+                            data: form_data,
+                            type: 'post',
+                            success: function (data) {
+                                handleUploadResult(data);
+                            },
+                            error: function (data) {
+                                handleUploadResult(data);
+                            }
+                        });
+                    }
+                );
             });
         });
     </script>
@@ -33,7 +109,7 @@
 <main id="main" class="main">
 
     <div class="pagetitle">
-        <h1>Aktien-Upload</h1>
+        <h1>Wertpapier-Upload</h1>
     </div>
 
     <div class="row">
@@ -42,6 +118,21 @@
                 <div class="card-body">
                     <h5 class="card-title">Upload</h5>
                     <input class="form-control" type="file" id="share-upload" multiple/>
+                    <div id="uploadResult" style="margin-top: 1em">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th scope="col">Dateiname</th>
+                                <th scope="col">Fortschritt</th>
+                                <th scope="col">Datum</th>
+                                <th scope="col">ISIN</th>
+                                <th scope="col">Beschreibung</th>
+                            </tr>
+                            </thead>
+                            <tbody id="uploadResultBody">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -51,10 +142,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Protokoll</h5>
-                    <div id="uploadResult">
-
-                    </div>
+                    <h5 class="card-title">Archiv</h5>
                 </div>
             </div>
         </div>

@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.entity.finance;
 
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,4 +25,11 @@ public class FinancialProduct {
 
     @OneToMany(mappedBy = "financialProduct")
     private List<FinancialTransaction> transactions;
+
+    @OneToMany(mappedBy = "financialProduct")
+    private List<Dividend> dividends;
+
+    public FinancialProduct(String isin) {
+        this.isin = isin;
+    }
 }

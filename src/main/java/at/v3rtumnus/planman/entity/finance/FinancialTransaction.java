@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @Entity
 public class FinancialTransaction {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private LocalDate transactionDate;
@@ -28,4 +29,13 @@ public class FinancialTransaction {
     @ManyToOne
     @JoinColumn(name = "financial_product_id")
     private FinancialProduct financialProduct;
+
+    public FinancialTransaction(LocalDate transactionDate, BigDecimal amount, BigDecimal quantity, BigDecimal fee, FinancialTransactionType transactionType, FinancialProduct financialProduct) {
+        this.transactionDate = transactionDate;
+        this.amount = amount;
+        this.quantity = quantity;
+        this.fee = fee;
+        this.transactionType = transactionType;
+        this.financialProduct = financialProduct;
+    }
 }
