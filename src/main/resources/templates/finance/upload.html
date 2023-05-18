@@ -69,10 +69,10 @@
         }
 
         $(document).ready(function () {
-            $('#share-upload').on("change", function () {
+            $('#financial-upload').on("change", function () {
                 $('#uploadResultBody').empty();
 
-                Array.from($('#share-upload')[0].files).forEach(
+                Array.from($('#financial-upload')[0].files).forEach(
                     f => {
                         var form_data = new FormData();
                         form_data.append("file", f);
@@ -117,7 +117,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Upload</h5>
-                    <input class="form-control" type="file" id="share-upload" multiple/>
+                    <input class="form-control" type="file" id="financial-upload" multiple/>
                     <div id="uploadResult" style="margin-top: 1em">
                         <table class="table">
                             <thead>
@@ -143,6 +143,20 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Archiv</h5>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Dateiname</th>
+                            <th scope="col">Datum</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="uploadLog: ${uploadLogs}">
+                                <td>[[${uploadLog.filename}]]</td>
+                                <td>[[${#temporals.format(uploadLog.date, 'dd.MM.YYYY')}]]</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

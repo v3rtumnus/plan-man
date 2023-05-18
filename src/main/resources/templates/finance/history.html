@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Wertpapier-Aktivit&auml;ten</h1>
+    </div>
+
+    <section class="section">
+        <table class="table datatable">
+            <thead>
+            <tr>
+                <th scope="col">Datum</th>
+                <th scope="col">Wertpapier</th>
+                <th scope="col">Typ</th>
+                <th scope="col">Anzahl</th>
+                <th scope="col">Betrag</th>
+                <th scope="col">Geb&uuml;hr</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="transaction: ${transactions}">
+                <td th:text="${#temporals.format(transaction.transactionDate, 'dd.MM.yyyy')}"></td>
+                <td th:text="${transaction.product.name}"></td>
+                <td th:text="${@thymeleafService.formatTransactionType(transaction.transactionType)}"></td>
+                <td th:text="${#numbers.formatDecimal(transaction.quantity, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td th:text="${#numbers.formatDecimal(transaction.amount, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td th:text="${#numbers.formatDecimal(transaction.fee, 0, 'POINT', 2, 'COMMA')}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

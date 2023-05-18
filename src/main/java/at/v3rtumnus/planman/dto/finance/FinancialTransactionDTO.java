@@ -15,4 +15,5 @@ public class FinancialTransactionDTO {
     private BigDecimal quantity;
     private BigDecimal fee;
     private FinancialTransactionType transactionType;
+    private FinancialProductDTO product;
 }

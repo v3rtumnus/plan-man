@@ -4,6 +4,7 @@ import at.v3rtumnus.planman.dao.DividendRepository;
 import at.v3rtumnus.planman.dao.FinancialProductRepository;
 import at.v3rtumnus.planman.dao.FinancialTransactionRepository;
 import at.v3rtumnus.planman.dao.UploadLogRepository;
+import at.v3rtumnus.planman.dto.finance.UploadLogDto;
 import at.v3rtumnus.planman.dto.finance.UploadResult;
 import at.v3rtumnus.planman.dto.finance.UploadResultDto;
 import at.v3rtumnus.planman.dto.finance.UploadType;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -36,6 +38,13 @@ public class FinanceImportService {
     private final DividendRepository dividendRepository;
     private final FinancialTransactionRepository financialTransactionRepository;
     private final UploadLogRepository uploadLogRepository;
+
+    public List<UploadLogDto> retrieveUploadLogs() {
+        return uploadLogRepository.findByOrderByImportedAtDesc()
+                .stream()
+                .map(uploadLog -> new UploadLogDto(uploadLog.getFilename(), uploadLog.getImportedAt()))
+                .collect(Collectors.toList());
+    }
 
     public UploadResultDto importFinanceFile(MultipartFile file) {
         log.info("Importing " + file.getOriginalFilename());
@@ -175,7 +184,7 @@ public class FinanceImportService {
                 product);
 
         financialTransactionRepository.save(transaction);
-        uploadLogRepository.save(new UploadLog(filename, date));
+        uploadLogRepository.save(new UploadLog(filename, LocalDate.now()));
 
         return UploadResultDto
                 .builder()
@@ -250,7 +259,7 @@ public class FinanceImportService {
                 product);
 
         financialTransactionRepository.save(transaction);
-        uploadLogRepository.save(new UploadLog(filename, date));
+        uploadLogRepository.save(new UploadLog(filename, LocalDate.now()));
 
         return UploadResultDto
                 .builder()
@@ -296,7 +305,7 @@ public class FinanceImportService {
 
         FinancialProduct product = getOrCreateFinancialProduct(isin);
         dividendRepository.save(new Dividend(date, amount, product));
-        uploadLogRepository.save(new UploadLog(filename, date));
+        uploadLogRepository.save(new UploadLog(filename, LocalDate.now()));
 
         return UploadResultDto
                 .builder()

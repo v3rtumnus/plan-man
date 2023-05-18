@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.controller.api;
 
+import at.v3rtumnus.planman.dto.finance.UploadLogDto;
 import at.v3rtumnus.planman.dto.finance.UploadResult;
 import at.v3rtumnus.planman.dto.finance.UploadResultDto;
 import at.v3rtumnus.planman.service.FinanceImportService;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Objects;
 
 @Controller

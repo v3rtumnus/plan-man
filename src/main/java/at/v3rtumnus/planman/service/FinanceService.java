@@ -1,13 +1,12 @@
 package at.v3rtumnus.planman.service;
 
+import at.v3rtumnus.planman.dao.DividendRepository;
 import at.v3rtumnus.planman.dao.FinancialProductRepository;
+import at.v3rtumnus.planman.dao.FinancialTransactionRepository;
 import at.v3rtumnus.planman.dto.finance.FinancialOverviewDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialProductDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialTransactionDTO;
-import at.v3rtumnus.planman.entity.finance.FinancialProduct;
-import at.v3rtumnus.planman.entity.finance.FinancialProductType;
-import at.v3rtumnus.planman.entity.finance.FinancialTransaction;
-import at.v3rtumnus.planman.entity.finance.FinancialTransactionType;
+import at.v3rtumnus.planman.entity.finance.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +30,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +41,54 @@ public class FinanceService {
     private final EmailService emailService;
     private final TemplateEngine templateEngine;
     private final FinancialProductRepository financialProductRepository;
+    private final FinancialTransactionRepository financialTransactionRepository;
+    private final DividendRepository dividendRepository;
+
+    public List<FinancialTransactionDTO> retrieveFinancialTransactions() {
+        List<FinancialTransaction> transactions = financialTransactionRepository.findAllByOrderByTransactionDateDesc();
+
+        List<FinancialTransactionDTO> transactionList = new ArrayList<>();
+
+        for (FinancialTransaction transaction : transactions) {
+            FinancialTransactionDTO transactionDTO = new FinancialTransactionDTO();
+            transactionDTO.setTransactionDate(transaction.getTransactionDate());
+            transactionDTO.setTransactionType(transaction.getTransactionType());
+            transactionDTO.setAmount(transaction.getAmount());
+            transactionDTO.setFee(transaction.getFee());
+            transactionDTO.setQuantity(transaction.getQuantity());
+
+            FinancialProduct financialProduct = transaction.getFinancialProduct();
+
+            transactionDTO.setProduct(new FinancialProductDTO(
+                    financialProduct.getIsin(),
+                    financialProduct.getName(),
+                    financialProduct.getType()));
+
+            transactionList.add(transactionDTO);
+        }
+
+        List<Dividend> dividends = dividendRepository.findAllByOrderByTransactionDateDesc();
+
+        for (Dividend dividend : dividends) {
+            FinancialTransactionDTO transactionDTO = new FinancialTransactionDTO();
+            transactionDTO.setTransactionDate(dividend.getTransactionDate());
+            transactionDTO.setTransactionType(FinancialTransactionType.DIVIDEND);
+            transactionDTO.setAmount(dividend.getAmount());
+
+            FinancialProduct financialProduct = dividend.getFinancialProduct();
+
+            transactionDTO.setProduct(new FinancialProductDTO(
+                    financialProduct.getIsin(),
+                    financialProduct.getName(),
+                    financialProduct.getType()));
+
+            transactionList.add(transactionDTO);
+        }
+
+        transactionList.sort(Comparator.comparing(FinancialTransactionDTO::getTransactionDate).reversed());
+
+        return transactionList;
+    }
 
     @Scheduled(cron = "${financial.shares.check}")
     @Transactional

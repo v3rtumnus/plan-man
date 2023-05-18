@@ -2,11 +2,13 @@ package at.v3rtumnus.planman.dto.finance;
 
 import at.v3rtumnus.planman.entity.finance.FinancialProductType;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class FinancialProductDTO {
     private String isin;
 
@@ -26,4 +28,10 @@ public class FinancialProductDTO {
     private BigDecimal percentChangeTotal;
 
     private List<FinancialTransactionDTO> transactions;
+
+    public FinancialProductDTO(String isin, String name, FinancialProductType type) {
+        this.isin = isin;
+        this.name = name;
+        this.type = type;
+    }
 }

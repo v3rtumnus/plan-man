@@ -1235,3 +1235,17 @@ h6 {
 .row {
   margin-bottom: 1em;
 }
+
+.financial-value-positive {
+  color: #006600 !important;
+  text-align: right;
+}
+
+.financial-value-negative {
+  color: #FF0000 !important;
+  text-align: right;
+}
+
+.table-sortable th {
+  cursor: pointer;
+}
