@@ -287,10 +287,10 @@ public class FinanceImportService {
                     throw new RuntimeException("File cannot be parsed");
                 }
             } else if (l.trim().startsWith("Endbetrag")) {
-                Matcher matcher = Pattern.compile("-?\\d+,\\d+").matcher(l);
+                Matcher matcher = Pattern.compile("-?\\d*\\.?\\d+,\\d+").matcher(l);
 
                 if (matcher.find()) {
-                    amount = new BigDecimal(matcher.group().replace(",", "."));
+                    amount = new BigDecimal(matcher.group().replace(".", "").replace(",", "."));
                 } else {
                     throw new RuntimeException("File cannot be parsed");
                 }

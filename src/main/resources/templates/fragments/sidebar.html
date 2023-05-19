@@ -57,12 +57,17 @@
 
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#finance-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-graph-up"></i><span>Wertpapiere</span><i class="bi bi-chevron-down ms-auto"></i>
+            <i class="bi bi-graph-up"></i><span>Finanzen</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
           <ul id="finance-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
               <a th:href="@{/finance/overview}">
                 <i class="bi bi-circle"></i><span>&Uuml;bersicht</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/finance/securities}">
+                <i class="bi bi-circle"></i><span>Wertpapiere</span>
               </a>
             </li>
             <li>

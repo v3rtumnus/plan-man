@@ -5,7 +5,6 @@ import at.v3rtumnus.planman.service.FinanceService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,8 +19,13 @@ public class FinanceController {
     private final FinanceService financeService;
 
     @GetMapping(path = "/overview")
-    public ModelAndView getFinancialOverview() {
+    public ModelAndView getOverview() {
         return new ModelAndView("finance/overview");
+    }
+
+    @GetMapping(path = "/securities")
+    public ModelAndView getSecurities() {
+        return new ModelAndView("finance/securities");
     }
 
     @GetMapping(path = "/history")
