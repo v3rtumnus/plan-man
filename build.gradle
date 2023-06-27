@@ -9,6 +9,7 @@ sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
+	maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -25,7 +26,7 @@ dependencies {
 
 	implementation 'org.liquibase:liquibase-core:4.20.0'
 
-	implementation 'com.yahoofinance-api:YahooFinanceAPI:3.17.0'
+	implementation('com.github.v3rtumnus:yahoofinance-api:develop-SNAPSHOT')
 	implementation 'org.apache.pdfbox:pdfbox:3.0.0-RC1'
 
 	compileOnly 'org.projectlombok:lombok:1.18.26'
