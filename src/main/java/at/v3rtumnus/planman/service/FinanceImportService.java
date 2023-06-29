@@ -177,7 +177,7 @@ public class FinanceImportService {
 
         FinancialProduct product = getOrCreateFinancialProduct(isin);
         FinancialTransaction transaction = new FinancialTransaction(date,
-                buy ? value : amount,
+                value,
                 quantity,
                 buy ? Objects.requireNonNull(amount).abs().subtract(value) : Objects.requireNonNull(value).subtract(amount),
                 buy ? FinancialTransactionType.BUY : FinancialTransactionType.SELL,
@@ -252,7 +252,7 @@ public class FinanceImportService {
 
         FinancialProduct product = getOrCreateFinancialProduct(isin);
         FinancialTransaction transaction = new FinancialTransaction(date,
-                buy ? value : amount,
+                value,
                 quantity,
                 buy ? Objects.requireNonNull(amount).abs().subtract(value) : Objects.requireNonNull(value).subtract(amount),
                 buy ? FinancialTransactionType.BUY : FinancialTransactionType.SELL,
