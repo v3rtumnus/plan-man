@@ -7,12 +7,9 @@ import at.v3rtumnus.planman.dto.finance.FinancialOverviewDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialProductDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialTransactionDTO;
 import at.v3rtumnus.planman.entity.finance.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
@@ -24,12 +21,10 @@ import yahoofinance.quotes.fx.FxSymbols;
 
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
-import java.io.File;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -92,7 +87,7 @@ public class FinanceService {
 
     @Scheduled(cron = "${financial.shares.check}")
     @Transactional
-    public void checkAllActiveShares() throws JsonProcessingException {
+    public void checkAllActiveShares() throws IOException {
         log.info("Starting check for all active shares");
 
         FinancialOverviewDTO overview = new FinancialOverviewDTO();
@@ -103,10 +98,16 @@ public class FinanceService {
         BigDecimal changeToday = BigDecimal.ZERO;
         BigDecimal changeTotal = BigDecimal.ZERO;
 
-        for (FinancialProduct financialProduct : financialProductRepository.findAll()) {
+        List<FinancialProduct> financialProducts = financialProductRepository.findAll();
+
+        Map<String, Stock> stocks = YahooFinance.get(
+                financialProducts
+                        .stream().map(FinancialProduct::getSymbol).toList().toArray(new String[0]));
+
+        for (FinancialProduct financialProduct : financialProducts) {
             FinancialProductDTO productDTO = null;
             try {
-                productDTO = mapToFinancialProductDtoWithLiveData(financialProduct);
+                productDTO = mapToFinancialProductDtoWithLiveData(financialProduct, stocks);
 
                 //null is returned in case the financial product is currently not active
                 if (productDTO == null) {
@@ -170,7 +171,7 @@ public class FinanceService {
         }
     }
 
-    private FinancialProductDTO mapToFinancialProductDtoWithLiveData(FinancialProduct financialProduct) throws IOException {
+    private FinancialProductDTO mapToFinancialProductDtoWithLiveData(FinancialProduct financialProduct, Map<String, Stock> stocks) throws IOException {
         FinancialProductDTO productDTO = new FinancialProductDTO();
 
         BeanUtils.copyProperties(financialProduct, productDTO);
@@ -214,7 +215,7 @@ public class FinanceService {
         productDTO.setCurrentQuantity(currentQuantity);
 
         //get the current price from Yahoo Finance and perform currency conversion if necessary
-        Stock stock = YahooFinance.get(financialProduct.getSymbol());
+        Stock stock = stocks.get(financialProduct.getSymbol());
 
         BigDecimal currentPrice = stock.getQuote().getPrice();
         BigDecimal change = stock.getQuote().getChange();

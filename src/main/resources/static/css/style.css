@@ -1249,3 +1249,7 @@ h6 {
 .table-sortable th {
   cursor: pointer;
 }
+
+.table-hover {
+  cursor: pointer;
+}
