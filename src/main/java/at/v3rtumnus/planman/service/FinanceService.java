@@ -102,7 +102,9 @@ public class FinanceService {
 
         Map<String, Stock> stocks = YahooFinance.get(
                 financialProducts
-                        .stream().map(FinancialProduct::getSymbol).toList().toArray(new String[0]));
+                        .stream()
+                        .map(FinancialProduct::getSymbol)
+                        .filter(Objects::nonNull).toList().toArray(new String[0]));
 
         for (FinancialProduct financialProduct : financialProducts) {
             FinancialProductDTO productDTO = null;
@@ -216,6 +218,10 @@ public class FinanceService {
 
         //get the current price from Yahoo Finance and perform currency conversion if necessary
         Stock stock = stocks.get(financialProduct.getSymbol());
+
+        if (stock == null) {
+            return productDTO;
+        }
 
         BigDecimal currentPrice = stock.getQuote().getPrice();
         BigDecimal change = stock.getQuote().getChange();
