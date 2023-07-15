@@ -24,29 +24,29 @@
                         <tbody>
                             <tr>
                                 <td>Aktien</td>
-                                <td style="text-align: right">25.000 €</td>
-                                <td class="financial-value-positive" style="text-align: right">+5.000 € total</td>
-                                <td class="financial-value-positive" style="text-align: right">+500 € p.a.</td>
+                                <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(shareSum, 2, 'EUR')}"></td>
+                                <td th:class="${@thymeleafService.getNumberClass(shareChange)}" th:text="${@thymeleafService.formatNumber(shareChange, 2, 'EUR')}"></td>
+                                <td th:class="${@thymeleafService.getNumberClass(shareDividend)}" th:text="${@thymeleafService.formatNumber(shareDividend, 2, 'EUR')}"></td>
                             </tr>
                             <tr>
                                 <td>Aktienfonds</td>
-                                <td style="text-align: right">5.000 €</td>
-                                <td class="financial-value-positive" style="text-align: right">+5.000 € total</td>
-                                <td class="financial-value-positive" style="text-align: right">+500 € p.a.</td>
+                                <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(fundSum, 2, 'EUR')}"></td>
+                                <td th:class="${@thymeleafService.getNumberClass(fundChange)}" th:text="${@thymeleafService.formatNumber(fundChange, 2, 'EUR')}"></td>
+                                <td th:class="${@thymeleafService.getNumberClass(fundDividend)}" th:text="${@thymeleafService.formatNumber(fundDividend, 2, 'EUR')}"></td>
                             </tr>
                             <tr>
                                 <td>ETFs</td>
-                                <td style="text-align: right">10.000 €</td>
-                                <td class="financial-value-positive" style="text-align: right">+5.000 € total</td>
-                                <td class="financial-value-positive" style="text-align: right">+500 € p.a.</td>
+                                <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(etfSum, 2, 'EUR')}"></td>
+                                <td th:class="${@thymeleafService.getNumberClass(etfChange)}" th:text="${@thymeleafService.formatNumber(etfChange, 2, 'EUR')}"></td>
+                                <td th:class="${@thymeleafService.getNumberClass(etfDividend)}" th:text="${@thymeleafService.formatNumber(etfDividend, 2, 'EUR')}"></td>
                             </tr>
                         </tbody>
                         <tfoot>
                             <tr style="font-weight: bold">
                                 <td>Summe</td>
-                                <td style="text-align: right">40.000 €</td>
-                                <td class="financial-value-positive" style="text-align: right">+5.000 € total</td>
-                                <td class="financial-value-positive" style="text-align: right">+500 € p.a.</td>
+                                <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(totalSum, 2, 'EUR')}"></td>
+                                <td th:class="${@thymeleafService.getNumberClass(totalChange)}" th:text="${@thymeleafService.formatNumber(totalChange, 2, 'EUR')}"></td>
+                                <td th:class="${@thymeleafService.getNumberClass(totalDividend)}" th:text="${@thymeleafService.formatNumber(totalDividend, 2, 'EUR')}"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -59,15 +59,10 @@
                     <h4 class="card-title">Sparpl&auml;ne</h4>
                     <table class="table table-borderless table-sm">
                         <tbody>
-                        <tr>
-                            <td>MSCI World (AKJHD89899DFD)</td>
-                            <td>monatlich</td>
-                            <td style="text-align: right">100 €</td>
-                        </tr>
-                        <tr>
-                            <td>MSCI Nasdaq (AKJHD89899DFD)</td>
-                            <td>quartalsm&auml;&szlig;ig</td>
-                            <td style="text-align: right">100 €</td>
+                        <tr th:each="savingsPlan: ${savingsPlans}">
+                            <td>[[${savingsPlan.financialProduct.name}]]</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatInterval(savingsPlan.interval)}"></td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(savingsPlan.amount, 0, 'EUR')}"></td>
                         </tr>
                         </tbody>
                     </table>
@@ -85,38 +80,27 @@
                         <thead>
                             <tr>
                                 <th style="text-align: center">Name</th>
-                                <th style="text-align: center">ISIN</th>
                                 <th style="text-align: center">Anzahl</th>
                                 <th style="text-align: center">Kurs</th>
                                 <th style="text-align: center">Summe</th>
-                                <th style="text-align: center">Ertrag gesamt</th>
-                                <th style="text-align: center">Dividende gesamt</th>
-                                <th style="text-align: center">Ertrag prozentuell</th>
-                                <th style="text-align: center">Ertrag j&auml;hrlich</th>
+                                <th style="text-align: center">Ertrag</th>
+                                <th style="text-align: center">Dividenden</th>
+                                <th style="text-align: center">Prozent heute</th>
+                                <th style="text-align: center">Prozent gesamt</th>
+                                <th style="text-align: center">Prozent j&auml;hrlich</th>
                             </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>Bayer</td>
-                            <td>BAY00324320</td>
-                            <td style="text-align: right">12</td>
-                            <td style="text-align: right">345.67 €</td>
-                            <td style="text-align: right">32.423 €</td>
-                            <td class="financial-value-positive">568 €</td>
-                            <td class="financial-value-positive">12 €</td>
-                            <td class="financial-value-positive">4.54 %</td>
-                            <td class="financial-value-positive">1.11 %</td>
-                        </tr>
-                        <tr>
-                            <td>Wienerberger</td>
-                            <td>AT234032fs</td>
-                            <td style="text-align: right">5</td>
-                            <td style="text-align: right">335.12 €</td>
-                            <td style="text-align: right">1.578 €</td>
-                            <td class="financial-value-negative">-123 €</td>
-                            <td class="financial-value-positive">12 €</td>
-                            <td class="financial-value-negative">-0.34 %</td>
-                            <td class="financial-value-negative">-0.04 %</td>
+                        <tr th:each="product: ${shareProducts}">
+                            <td>[[${product.name}]]</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentQuantity, 0, '')}"></td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentPrice, 2, 'EUR')}"></td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentAmount, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.changeTotal)}" th:text="${@thymeleafService.formatNumber(product.changeTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.dividendTotal)}" th:text="${@thymeleafService.formatNumber(product.dividendTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeToday)}" th:text="${@thymeleafService.formatNumber(product.percentChangeToday, 2, '%')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeTotal)}" th:text="${@thymeleafService.formatNumber(product.percentChangeTotal, 2, '%')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeYearly)}" th:text="${@thymeleafService.formatNumber(product.percentChangeYearly, 2, '%')}"></td>
                         </tr>
                         </tbody>
                     </table>
@@ -134,38 +118,27 @@
                         <thead>
                         <tr>
                             <th style="text-align: center">Name</th>
-                            <th style="text-align: center">ISIN</th>
                             <th style="text-align: center">Anzahl</th>
                             <th style="text-align: center">Kurs</th>
                             <th style="text-align: center">Summe</th>
-                            <th style="text-align: center">Ertrag gesamt</th>
-                            <th style="text-align: center">Dividende gesamt</th>
-                            <th style="text-align: center">Ertrag prozentuell</th>
-                            <th style="text-align: center">Ertrag j&auml;hrlich</th>
+                            <th style="text-align: center">Ertrag</th>
+                            <th style="text-align: center">Dividenden</th>
+                            <th style="text-align: center">Prozent heute</th>
+                            <th style="text-align: center">Prozent gesamt</th>
+                            <th style="text-align: center">Prozent j&auml;hrlich</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>Bayer</td>
-                            <td>BAY00324320</td>
-                            <td style="text-align: right">12</td>
-                            <td style="text-align: right">345.67 €</td>
-                            <td style="text-align: right">32.423 €</td>
-                            <td class="financial-value-positive">568 €</td>
-                            <td class="financial-value-positive">12 €</td>
-                            <td class="financial-value-positive">4.54 %</td>
-                            <td class="financial-value-positive">1.11 %</td>
-                        </tr>
-                        <tr>
-                            <td>Wienerberger</td>
-                            <td>AT234032fs</td>
-                            <td style="text-align: right">5</td>
-                            <td style="text-align: right">335.12 €</td>
-                            <td style="text-align: right">1.578 €</td>
-                            <td class="financial-value-negative">-123 €</td>
-                            <td class="financial-value-positive">12 €</td>
-                            <td class="financial-value-negative">-0.34 %</td>
-                            <td class="financial-value-negative">-0.04 %</td>
+                        <tr th:each="product: ${fundProducts}">
+                            <td>[[${product.name}]]</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentQuantity, 0, '')}"></td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentPrice, 2, 'EUR')}"></td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentAmount, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.changeTotal)}" th:text="${@thymeleafService.formatNumber(product.changeTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.dividendTotal)}" th:text="${@thymeleafService.formatNumber(product.dividendTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeToday)}" th:text="${@thymeleafService.formatNumber(product.percentChangeToday, 2, '%')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeTotal)}" th:text="${@thymeleafService.formatNumber(product.percentChangeTotal, 2, '%')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeYearly)}" th:text="${@thymeleafService.formatNumber(product.percentChangeYearly, 2, '%')}"></td>
                         </tr>
                         </tbody>
                     </table>
@@ -183,83 +156,27 @@
                         <thead>
                         <tr>
                             <th style="text-align: center">Name</th>
-                            <th style="text-align: center">ISIN</th>
                             <th style="text-align: center">Anzahl</th>
                             <th style="text-align: center">Kurs</th>
                             <th style="text-align: center">Summe</th>
-                            <th style="text-align: center">Ertrag gesamt</th>
-                            <th style="text-align: center">Dividende gesamt</th>
-                            <th style="text-align: center">Ertrag prozentuell</th>
-                            <th style="text-align: center">Ertrag j&auml;hrlich</th>
+                            <th style="text-align: center">Ertrag</th>
+                            <th style="text-align: center">Dividenden</th>
+                            <th style="text-align: center">Prozent heute</th>
+                            <th style="text-align: center">Prozent gesamt</th>
+                            <th style="text-align: center">Prozent j&auml;hrlich</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>Bayer</td>
-                            <td>BAY00324320</td>
-                            <td style="text-align: right">12</td>
-                            <td style="text-align: right">345.67 €</td>
-                            <td style="text-align: right">32.423 €</td>
-                            <td class="financial-value-positive">568 €</td>
-                            <td class="financial-value-positive">12 €</td>
-                            <td class="financial-value-positive">4.54 %</td>
-                            <td class="financial-value-positive">1.11 %</td>
-                        </tr>
-                        <tr>
-                            <td>Wienerberger</td>
-                            <td>AT234032fs</td>
-                            <td style="text-align: right">5</td>
-                            <td style="text-align: right">335.12 €</td>
-                            <td style="text-align: right">1.578 €</td>
-                            <td class="financial-value-negative">-123 €</td>
-                            <td class="financial-value-positive">12 €</td>
-                            <td class="financial-value-negative">-0.34 %</td>
-                            <td class="financial-value-negative">-0.04 %</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-0">
-                <div class="card-body">
-                    <h4 class="card-title">Archiv</h4>
-                    <table class="table table-borderless table-hover table-sm table-sortable">
-                        <thead>
-                        <tr>
-                            <th style="text-align: center">Name</th>
-                            <th style="text-align: center">ISIN</th>
-                            <th style="text-align: center">Typ</th>
-                            <th style="text-align: center">Ertrag gesamt</th>
-                            <th style="text-align: center">Dividende gesamt</th>
-                            <th style="text-align: center">Ertrag prozentuell</th>
-                            <th style="text-align: center">Ertrag j&auml;hrlich</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>Bayer</td>
-                            <td>BAY00324320</td>
-                            <td>Aktie</td>
-                            <td class="financial-value-positive">568 €</td>
-                            <td class="financial-value-positive">12 €</td>
-                            <td class="financial-value-positive">4.54 %</td>
-                            <td class="financial-value-positive">1.11 %</td>
-                        </tr>
-                        <tr>
-                            <td>Wienerberger</td>
-                            <td>AT234032fs</td>
-                            <td>Aktie</td>
-                            <td class="financial-value-negative">-123 €</td>
-                            <td class="financial-value-positive">12 €</td>
-                            <td class="financial-value-negative">-0.34 %</td>
-                            <td class="financial-value-negative">-0.04 %</td>
+                        <tr th:each="product: ${etfProducts}">
+                            <td>[[${product.name}]]</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentQuantity, 0, '')}"></td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentPrice, 2, 'EUR')}"></td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentAmount, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.changeTotal)}" th:text="${@thymeleafService.formatNumber(product.changeTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.dividendTotal)}" th:text="${@thymeleafService.formatNumber(product.dividendTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeToday)}" th:text="${@thymeleafService.formatNumber(product.percentChangeToday, 2, '%')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeTotal)}" th:text="${@thymeleafService.formatNumber(product.percentChangeTotal, 2, '%')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.percentChangeYearly)}" th:text="${@thymeleafService.formatNumber(product.percentChangeYearly, 2, '%')}"></td>
                         </tr>
                         </tbody>
                     </table>

@@ -25,5 +25,6 @@ public class SavingsPlan {
     private BigDecimal amount;
 
     @OneToOne
+    @JoinColumn(name = "financial_product_id")
     private FinancialProduct financialProduct;
 }

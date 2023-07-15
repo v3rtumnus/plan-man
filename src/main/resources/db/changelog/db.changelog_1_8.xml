@@ -1,0 +1,32 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_8.xml" xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <changeSet author="michael" id="create financial product stock quote table">
+        <dropNotNullConstraint  columnDataType="VARCHAR(64)"
+                                columnName="type"
+                                tableName="financial_product"/>
+        <createTable tableName="financial_product_stock_quote">
+            <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="quote" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_today" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_in_percent" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated_at" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR2(15)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="financial_product_id" type="VARCHAR(12)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="financial_product_id" baseTableName="financial_product_stock_quote" constraintName="fk_stock_quote_product" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="isin" referencedTableName="financial_product" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
