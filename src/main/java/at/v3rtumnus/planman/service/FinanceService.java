@@ -1,15 +1,16 @@
 package at.v3rtumnus.planman.service;
 
 import at.v3rtumnus.planman.dao.*;
-import at.v3rtumnus.planman.dto.finance.FinancialOverviewDTO;
+import at.v3rtumnus.planman.dto.credit.CreditPlanRow;
 import at.v3rtumnus.planman.dto.finance.FinancialProductDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialTransactionDTO;
 import at.v3rtumnus.planman.dto.finance.SavingsPlanDto;
 import at.v3rtumnus.planman.entity.finance.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
-import yahoofinance.quotes.fx.FxQuote;
 import yahoofinance.quotes.fx.FxSymbols;
 
 import jakarta.transaction.Transactional;
@@ -30,7 +30,6 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -44,6 +43,8 @@ public class FinanceService {
     private final FinancialProductStockQuoteRepository quoteRepository;
     private final DividendRepository dividendRepository;
     private final SavingsPlanRepository savingsPlanRepository;
+    private final FinancialSnapshotRepository snapshotRepository;
+    private final CreditService creditService;
 
     @Value("${financial.shares.quote.threshold.hours}")
     private long quoteThresholdInHours;
@@ -200,5 +201,58 @@ public class FinanceService {
                 .stream()
                 .map(SavingsPlanDto::fromEntity)
                 .toList();
+    }
+
+    @Cacheable("snapshots")
+    public List<FinancialSnapshot> getFinancialSnapshots() {
+        return snapshotRepository.findAllByOrderBySnapshotDate();
+    }
+
+    @CacheEvict(value = "snapshots", allEntries = true)
+    @Scheduled(fixedRateString = "${caching.spring.snapshotTTL}")
+    public void emptySnapshotCache() {
+        log.info("Emptying snapshot cache");
+    }
+
+
+    @Scheduled(cron = "${financial.shares.snapshot.persistence}")
+    @Transactional
+    public void persistFinancialSnapshots() {
+        log.info("Starting persistence of financial snapshot");
+
+        List<FinancialProductDTO> products = new LinkedList<>(this.retrieveFinancialProducts());
+        List<FinancialSnapshot> snapshots = this.getFinancialSnapshots();
+        FinancialSnapshot currentSnapshot = snapshots.get(snapshots.size() - 1);
+
+
+        List<FinancialProductDTO> archivedProducts = products
+                .stream().filter(p -> p.getCurrentQuantity().compareTo(BigDecimal.ZERO) == 0).toList();
+
+        products.removeAll(archivedProducts);
+
+        BigDecimal shareSum = BigDecimal.valueOf(calculateSumForFinancialType(products, FinancialProductType.SHARE));
+        BigDecimal fundSum = BigDecimal.valueOf(calculateSumForFinancialType(products, FinancialProductType.FUND));
+        BigDecimal etfSum = BigDecimal.valueOf(calculateSumForFinancialType(products, FinancialProductType.ETF));
+        BigDecimal savingsSum = currentSnapshot.getSavingsSum();
+        BigDecimal creditSum = BigDecimal.ZERO;
+
+        List<CreditPlanRow> creditPlanRows = creditService.generateCurrentCreditPlan();
+
+        for (int i = 0; i < creditPlanRows.size(); i++) {
+            if (creditPlanRows.get(i).getDate().isAfter(LocalDate.now())) {
+                creditSum = creditPlanRows.get(i - 1).getNewBalance();
+            }
+        }
+
+        snapshotRepository.save(new FinancialSnapshot(LocalDate.now(), shareSum, fundSum, etfSum, savingsSum, creditSum));
+
+        log.info("Finished persistence of financial snapshot");
+    }
+
+    private double calculateSumForFinancialType(List<FinancialProductDTO> products, FinancialProductType type) {
+        return products
+                .stream().filter(p -> p.getType() == type)
+                .mapToDouble(p -> p.getCurrentAmount().doubleValue())
+                .sum();
     }
 }

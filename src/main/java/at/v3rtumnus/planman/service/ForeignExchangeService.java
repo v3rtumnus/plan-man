@@ -45,7 +45,7 @@ public class ForeignExchangeService {
 
     @CacheEvict(value = "fx", allEntries = true)
     @Scheduled(fixedRateString = "${caching.spring.fxTTL}")
-    public void emptyHotelsCache() {
+    public void emptyFxCache() {
         log.info("Emptying FX cache");
     }
 }

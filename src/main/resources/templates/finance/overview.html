@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <div th:replace="~{fragments/header :: header-css}"/>
+
+    <div th:replace="~{fragments/footer :: footer-js}"/>
 </head>
 <body>
 
@@ -14,8 +16,108 @@
     <div class="pagetitle">
         <h1>Finanzen</h1>
     </div>
-</main>
 
-<div th:replace="~{fragments/footer :: footer-js}"/>
+
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card h-100 mb-0">
+                <div class="card-body">
+                    <h4 class="card-title">Zusammenfassung</h4>
+                    <table class="table table-borderless table-sm">
+                        <tbody>
+                        <tr>
+                            <td>Aktien</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(shareSum, 2, 'EUR')}"></td>
+                        </tr>
+                        <tr>
+                            <td>Aktienfonds</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(fundSum, 2, 'EUR')}"></td>
+                        </tr>
+                        <tr>
+                            <td>ETFs</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(etfSum, 2, 'EUR')}"></td>
+                        </tr>
+                        <tr>
+                            <td>Sparen</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(savingsSum, 2, 'EUR')}"></td>
+                        </tr>
+                        <tr style="border-top: 1em; font-weight: bold">
+                            <td>Verm&ouml;gen</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(grossAssets, 2, 'EUR')}"></td>
+                        </tr>
+                        <tr>
+                            <td>Kredit</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(creditSum, 2, 'EUR')}"></td>
+                        </tr>
+                        <tr style="border-top: 1em; font-weight: bold">
+                            <td>Nettoverm&ouml;gen</td>
+                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(netAssets, 2, 'EUR')}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h4 class="card-title">Anteil am Verm&ouml;gen</h4>
+                    <canvas id="assets-pie" width="200" height="200"></canvas>
+                    <script th:inline="javascript">
+                        new Chart(document.getElementById("assets-pie"), {
+                            type: 'pie',
+                            data: {
+                                labels: [(${categoriesPie})],
+                                datasets: [{
+                                    label: "Anteil am Vermögen",
+                                    backgroundColor: [(${colorsPie})],
+                                    data: [[${amountsPie}]]
+                                }]
+                            },
+                            options: {
+                                aspectRatio:2.5
+                            }
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-0">
+                <div class="card-body">
+                    <h4 class="card-title">Zeitlicher Verlauf</h4>
+                    <canvas id="assets-flow"></canvas>
+                    <script>
+                        var datasetValue = [];
+                        var amounts = [[${amountsGraph}]]
+                        var categories = [(${categoriesGraph})]
+                        var colors = [(${colorsGraph})]
+                        var count = [[${colorsGraph.size()}]]
+                        for (var j=0; j<count; j++) {
+                            datasetValue[j] = {
+                                data: amounts[j],
+                                label: categories[j],
+                                borderColor: colors[j],
+                                fill: false
+                            }
+                        }
+
+                        new Chart(document.getElementById("assets-flow"), {
+                            type: 'line',
+                            data: {
+                                labels: [(${datesGraph})],
+                                datasets: datasetValue
+                            }
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 </body>
 </html>
