@@ -96,8 +96,7 @@ public class FinanceService {
 
         List<FinancialProduct> financialProducts = financialProductRepository.findAll().stream().filter(FinancialProduct::isActive).toList();
 
-        Map<String, Stock> stocks = YahooFinance.get(financialProducts.stream().map(FinancialProduct::getSymbol).filter(Objects::nonNull).toList().toArray(new String[0]));
-
+        List<FinancialProduct> productsToBeUpdated = new LinkedList<>();
         LocalDate now = LocalDate.now();
 
         for (FinancialProduct financialProduct : financialProducts) {
@@ -113,16 +112,24 @@ public class FinanceService {
             if (Duration.between(lastUpdated.atStartOfDay(), now.atStartOfDay()).toHours() < quoteThresholdInHours) {
                 log.debug("Ignoring quote because last one is still valid");
                 continue;
+            } else {
+                productsToBeUpdated.add(financialProduct);
             }
+        }
 
-            Stock stock = stocks.get(financialProduct.getSymbol());
-            StockQuote stockQuote = stock.getQuote();
+        if (productsToBeUpdated.size() > 0) {
+            Map<String, Stock> stocks = YahooFinance.get(productsToBeUpdated.stream().map(FinancialProduct::getSymbol).filter(Objects::nonNull).toList().toArray(new String[0]));
 
-            FinancialProductStockQuote quote = new FinancialProductStockQuote(now, stockQuote.getPrice(), stockQuote.getChange(), stockQuote.getChangeInPercent(), stock.getCurrency(), financialProduct);
+            for (FinancialProduct financialProduct : productsToBeUpdated) {
+                Stock stock = stocks.get(financialProduct.getSymbol());
+                StockQuote stockQuote = stock.getQuote();
 
-            quoteRepository.save(quote);
+                FinancialProductStockQuote quote = new FinancialProductStockQuote(now, stockQuote.getPrice(), stockQuote.getChange(), stockQuote.getChangeInPercent(), stock.getCurrency(), financialProduct);
 
-            log.info("Successfully saved new quote for {}", financialProduct.getName());
+                quoteRepository.save(quote);
+
+                log.info("Successfully saved new quote for {}", financialProduct.getName());
+            }
         }
     }
 
