@@ -254,6 +254,7 @@ public class FinanceService {
         for (int i = 0; i < creditPlanRows.size(); i++) {
             if (creditPlanRows.get(i).getDate().isAfter(LocalDate.now())) {
                 creditSum = creditPlanRows.get(i - 1).getNewBalance();
+                break;
             }
         }
 

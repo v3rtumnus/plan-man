@@ -33,6 +33,8 @@ public class FinancialSnapshotDto {
 
         BeanUtils.copyProperties(snapshot, dto);
 
+        dto.setDate(snapshot.getSnapshotDate());
+
         return dto;
     }
 }
