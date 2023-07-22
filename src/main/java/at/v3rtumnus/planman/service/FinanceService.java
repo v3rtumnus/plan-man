@@ -229,7 +229,13 @@ public class FinanceService {
 
         List<FinancialProductDTO> products = new LinkedList<>(this.retrieveFinancialProducts());
         List<FinancialSnapshot> snapshots = this.getFinancialSnapshots();
-        FinancialSnapshot currentSnapshot = snapshots.get(snapshots.size() - 1);
+        FinancialSnapshot currentSnapshot;
+
+        if (!snapshots.isEmpty()) {
+            currentSnapshot = snapshots.get(snapshots.size() - 1);
+        } else {
+            currentSnapshot = new FinancialSnapshot();
+        }
 
 
         List<FinancialProductDTO> archivedProducts = products
@@ -240,7 +246,7 @@ public class FinanceService {
         BigDecimal shareSum = BigDecimal.valueOf(calculateSumForFinancialType(products, FinancialProductType.SHARE));
         BigDecimal fundSum = BigDecimal.valueOf(calculateSumForFinancialType(products, FinancialProductType.FUND));
         BigDecimal etfSum = BigDecimal.valueOf(calculateSumForFinancialType(products, FinancialProductType.ETF));
-        BigDecimal savingsSum = currentSnapshot.getSavingsSum();
+        BigDecimal savingsSum = currentSnapshot.getSavingsSum() != null ? currentSnapshot.getSavingsSum() : BigDecimal.ZERO;
         BigDecimal creditSum = BigDecimal.ZERO;
 
         List<CreditPlanRow> creditPlanRows = creditService.generateCurrentCreditPlan();
