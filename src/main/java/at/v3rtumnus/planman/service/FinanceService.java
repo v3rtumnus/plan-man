@@ -9,6 +9,7 @@ import at.v3rtumnus.planman.entity.finance.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -45,6 +46,7 @@ public class FinanceService {
     private final SavingsPlanRepository savingsPlanRepository;
     private final FinancialSnapshotRepository snapshotRepository;
     private final CreditService creditService;
+    private final CacheManager cacheManager;
 
     @Value("${financial.shares.quote.threshold.hours}")
     private long quoteThresholdInHours;
@@ -268,5 +270,18 @@ public class FinanceService {
                 .stream().filter(p -> p.getType() == type)
                 .mapToDouble(p -> p.getCurrentAmount().doubleValue())
                 .sum();
+    }
+
+    public void updateSavingsAmount(String savingsAmount) {
+        log.info("Updating savings amount to {}", savingsAmount);
+
+        List<FinancialSnapshot> snapshots = this.getFinancialSnapshots();
+        FinancialSnapshot currentSnapshot = snapshots.get(snapshots.size() - 1);
+
+        currentSnapshot.setSavingsSum(new BigDecimal(savingsAmount));
+
+        snapshotRepository.save(currentSnapshot);
+
+        Objects.requireNonNull(cacheManager.getCache("snapshots")).clear();
     }
 }

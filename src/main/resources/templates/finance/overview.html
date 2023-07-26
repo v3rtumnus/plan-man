@@ -40,7 +40,26 @@
                         </tr>
                         <tr>
                             <td>Sparen</td>
-                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(savingsSum, 2, 'EUR')}"></td>
+                            <td style="text-align: right; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#savingsModal" th:text="${@thymeleafService.formatNumber(savingsSum, 2, 'EUR')}"></td>
+                            <div class="modal fade" id="savingsModal" tabindex="-1" style="display: none;" aria-hidden="true">
+                                <form th:action="@{/finance/savingsAmount}" method="post">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Neuen Sparbetrag eingeben</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="number" name="savingsAmount" class="form-control"
+                                                       id="savingsAmount" required>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Speichern</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
                         </tr>
                         <tr style="border-top: 1em; font-weight: bold">
                             <td>Verm&ouml;gen</td>

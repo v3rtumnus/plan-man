@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.controller.ui;
 
+import at.v3rtumnus.planman.dto.credit.Payment;
 import at.v3rtumnus.planman.dto.expense.ExpenseGraphItem;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
 import at.v3rtumnus.planman.dto.finance.FinancialSnapshotDto;
@@ -8,9 +9,9 @@ import at.v3rtumnus.planman.service.FinanceService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -96,5 +97,12 @@ public class FinanceController {
         modelAndView.addObject("colorsGraph", COLORS.subList(0, LABELS_GRAPH.size()));
 
         return modelAndView;
+    }
+
+    @PostMapping(path = "/savingsAmount")
+    public RedirectView saveSavingsAmount(@RequestParam(name = "savingsAmount") String savingsAmount) {
+        financeService.updateSavingsAmount(savingsAmount);
+
+        return new RedirectView("overview");
     }
 }
