@@ -1,0 +1,44 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_10.xml" xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <changeSet author="michael" id="create balance tables">
+        <createTable tableName="monthly_balance_group">
+            <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR2(30)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="type" type="VARCHAR2(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="monthly_balance_item">
+            <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR2(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="balance_group_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="balance_group_id" baseTableName="monthly_balance_item" constraintName="fk_balance_group_id" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id" referencedTableName="monthly_balance_group" validate="true"/>
+        <createTable tableName="monthly_balance_item_details">
+            <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="amount" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="begin" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end" type="DATE" />
+            <column name="balance_item_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="balance_item_id" baseTableName="monthly_balance_item_details" constraintName="fk_balance_item_id" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id" referencedTableName="monthly_balance_item" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

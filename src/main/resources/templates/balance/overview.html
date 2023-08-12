@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/header :: header-css}"/>
+
+    <script>
+        function retrieveMonthlyBalance() {
+            var monthlyUrl = '/balance/detail';
+
+            $("#monthlyContainer").load(monthlyUrl);
+        }
+
+        function handleNewIncomeOrExpense() {
+            var date = $('#date').val();
+            var name = $('#name').val() != '' ? $('#name').val() : null;
+            var group = $('#group').val();
+            var type = $('#type').val();
+            var amount = $('#amount').val();
+
+            $.ajax({
+                url:"/api/balance",
+                type:"POST",
+                data:JSON.stringify ({ date: date, name: name, amount: amount, group: group, type: type}),
+                contentType:"application/json; charset=utf-8",
+                success: function() {
+                    $("#successNotification").show();
+                    $("#errorNotification").hide();
+
+                    $('#name').val('');
+                    $('#amount').val('');
+                    $('#name').focus();
+
+                    retrieveMonthlyBalance();
+                },
+                error: function(jqXHR, exception) {
+                    $("#successNotification").hide();
+                    $("#errorNotification").show();
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            retrieveMonthlyBalance();
+
+            var now = new Date();
+            var month = (now.getMonth() + 1);
+            var day = now.getDate();
+            if (month < 10)
+                month = "0" + month;
+            if (day < 10)
+                day = "0" + day;
+            var today = now.getFullYear() + '-' + month + '-' + day;
+            $('#date').val(today);
+        });
+    </script>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Monatsbilanz</h1>
+    </div>
+
+
+    <div id="successNotification" class="alert alert-primary" role="alert" style="display: none">Eintrag erfolgreich gespeichert</div>
+    <div id="errorNotification" class="alert alert-danger" role="alert" style="display: none">Leider ist ein Fehler aufgetreten</div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Neuer Eintrag</h4>
+                    <form class="row g-3" method="post">
+                        <div class="col-md-2">
+                            <input class="form-control" id="date" name="date" placeholder="Datum"
+                                   type="date">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-control" id="type" name="type">
+                                <option value="INCOME">Einkommen</option>
+                                <option value="EXPENDITURE">Ausgabe</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input class="form-control" id="group" name="group" placeholder="Gruppe"
+                                   type="text"/>
+                        </div>
+                        <div class="col-md-2">
+                            <input class="form-control" id="name" name="name" placeholder="Name"
+                                   type="text"/>
+                        </div>
+                        <div class="col-md-2">
+                            <input class="form-control" id="amount" name="amount" placeholder="Betrag" required
+                                   type="number"/>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary" type="submit" onclick="handleNewIncomeOrExpense(); return false;">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div id="monthlyContainer">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>
