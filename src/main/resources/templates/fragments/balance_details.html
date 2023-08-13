@@ -1,6 +1,15 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
-<head/>
+<head>
+    <script>
+        $( document ).ready(function() {
+            $('.expenditureGroupRow').nextAll().hide();
+        });
+        $(document).on("click",".expenditureGroupRow", function () {
+            $(this).nextAll().toggle();
+        });
+    </script>
+</head>
 <body>
 <div th:fragment="monthlySection"  class="container">
     <div class="row" style="--bs-gutter-x: 5rem;">
@@ -35,7 +44,7 @@
         <div class="col-md-6">
             <table class="table table-borderless table-sm">
                 <tbody th:each="expenditureGroup: ${expenditureGroups}">
-                <tr>
+                <tr class="expenditureGroupRow" style="cursor: pointer;">
                     <td style="font-weight: bold">[[${expenditureGroup.name}]]</td>
                     <td style="text-align: right; font-weight: bold" th:text="${@thymeleafService.formatNumber(expenditureGroup.sum, 2, 'EUR')}"></td>
                 </tr>

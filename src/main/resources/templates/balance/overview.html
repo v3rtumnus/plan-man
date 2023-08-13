@@ -6,8 +6,10 @@
     <script>
         function retrieveMonthlyBalance() {
             var monthlyUrl = '/balance/detail';
+            var monthlyComparisonUrl = '/balance/comparison';
 
             $("#monthlyContainer").load(monthlyUrl);
+            $("#monthlyComparisonContainer").load(monthlyComparisonUrl);
         }
 
         function handleNewIncomeOrExpense() {
@@ -112,6 +114,18 @@
             <div class="card">
                 <div class="card-body">
                     <div id="monthlyContainer">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div id="monthlyComparisonContainer">
 
                     </div>
                 </div>

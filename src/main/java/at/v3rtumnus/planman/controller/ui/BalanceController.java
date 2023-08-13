@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.controller.ui;
 
+import at.v3rtumnus.planman.dto.balance.BalanceComparisonDto;
 import at.v3rtumnus.planman.dto.balance.BalanceGroupDto;
 import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
 import at.v3rtumnus.planman.dto.expense.ExpenseGraphItem;
@@ -60,6 +61,19 @@ public class BalanceController {
         modelAndView.addObject("incomeSum", incomeSum);
         modelAndView.addObject("expenditureSum", expenditureSum);
         modelAndView.addObject("totalSum", incomeSum.subtract(expenditureSum));
+
+        return modelAndView;
+    }
+
+    @GetMapping(path = "/comparison")
+    public ModelAndView getBalanceComparison() {
+        ModelAndView modelAndView = new ModelAndView("fragments/balance_comparison");
+
+        List<BalanceComparisonDto> balanceComparisons = balanceService.getBalanceComparisons();
+
+        Collections.reverse(balanceComparisons);
+
+        modelAndView.addObject("monthlyComparisons", balanceComparisons);
 
         return modelAndView;
     }

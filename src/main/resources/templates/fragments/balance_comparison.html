@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+<div th:fragment="monthlyComparisonSection"  class="container">
+    <div class="row">
+        <div class="col">
+            <table class="table table-borderless table-sm">
+                <thead>
+                    <tr>
+                        <th>Monat</th>
+                        <th>Liquide Mittel</th>
+                        <th>Variable Ausgaben</th>
+                        <th>Netto-Ergebnis</th>
+                    </tr>
+                </thead>
+                <tr th:each="monthlyComparison: ${monthlyComparisons}">
+                    <td>[[${#temporals.format(monthlyComparison.date, 'MMMM yyyy', new java.util.Locale("de"))}]]</td>
+                    <td th:text="${@thymeleafService.formatNumber(monthlyComparison.balanceSum, 2, 'EUR')}"></td>
+                    <td th:text="${@thymeleafService.formatNumber(monthlyComparison.expenses, 2, 'EUR')}"></td>
+                    <td th:class="${@thymeleafService.getNumberClass(monthlyComparison.netSum)}" th:text="${@thymeleafService.formatNumber(monthlyComparison.netSum, 2, 'EUR')}"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
