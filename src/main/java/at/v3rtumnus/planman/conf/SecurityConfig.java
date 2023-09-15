@@ -32,7 +32,7 @@ public class SecurityConfig {
 
         http.csrf().disable()
                 .authorizeRequests()
-                .requestMatchers("/login", "/resources/**").permitAll()
+                .requestMatchers("/login", "/resources/**", "/favicon.ico").permitAll()
                 .requestMatchers("/credit/**").hasAnyRole("USER")
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN")
                 .anyRequest().authenticated()
