@@ -30,7 +30,8 @@ public class SecurityConfig {
     @Bean
     protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.csrf().disable()
+        http.headers().frameOptions().and().contentSecurityPolicy("frame-ancestors 'self' https://home.altenburger.io").and().and()
+                .csrf().disable()
                 .authorizeRequests()
                 .requestMatchers("/login", "/resources/**", "/favicon.ico").permitAll()
                 .requestMatchers("/credit/**").hasAnyRole("USER")
