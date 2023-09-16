@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/resources/**", "/favicon.ico").permitAll()
                 .requestMatchers("/credit/**").hasAnyRole("USER")
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN")
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
                 .and()
                 .formLogin()
                 .loginPage("/login")
