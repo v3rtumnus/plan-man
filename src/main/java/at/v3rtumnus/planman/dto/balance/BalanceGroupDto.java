@@ -42,4 +42,10 @@ public class BalanceGroupDto {
                 .mapToDouble(d -> d.getAmount().doubleValue())
                 .sum());
     }
+
+    public List<BalanceItemDto> getActiveItems() {
+        return items.stream().filter(
+                i -> i.getActiveDetail().isPresent()
+        ).toList();
+    }
 }

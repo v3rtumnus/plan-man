@@ -48,7 +48,7 @@
                     <td style="font-weight: bold">[[${expenditureGroup.name}]]</td>
                     <td style="text-align: right; font-weight: bold" th:text="${@thymeleafService.formatNumber(expenditureGroup.sum, 2, 'EUR')}"></td>
                 </tr>
-                <tr th:each="expenditureItem: ${expenditureGroup.items}">
+                <tr th:each="expenditureItem: ${expenditureGroup.activeItems}">
                     <td>[[${expenditureItem.name}]]</td>
                     <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(expenditureItem.activeDetail.get().amount, 2, 'EUR')}"></td>
                 </tr>
