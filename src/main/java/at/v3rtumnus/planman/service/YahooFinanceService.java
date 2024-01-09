@@ -22,6 +22,7 @@ public class YahooFinanceService {
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(true);
         options.addArguments("--remote-allow-origins=*");
+        options.addArguments("no-sandbox");
         WebDriver driver = new ChromeDriver(options);
 
         try {
