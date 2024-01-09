@@ -13,12 +13,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class PlanManApplication {
 
 	public static void main(String[] args) {
-		String suffix = "";
 		if (SystemUtils.OS_NAME.startsWith("Windows")) {
-			suffix = ".exe";
+			System.setProperty("webdriver.chrome.driver", PlanManApplication.class.getClassLoader().getResource("webdriver/chromedriver.exe").getPath());
+		} else {
+			System.setProperty("webdriver.chrome.driver", "/tmp/chromedriver");
 		}
 
-		System.setProperty("webdriver.chrome.driver", PlanManApplication.class.getClassLoader().getResource("webdriver/chromedriver" + suffix).getPath());
 
 		SpringApplication.run(PlanManApplication.class, args);
 	}
