@@ -1,6 +1,7 @@
 package at.v3rtumnus.planman.service;
 
 import at.v3rtumnus.planman.dao.*;
+import at.v3rtumnus.planman.dto.StockInfo;
 import at.v3rtumnus.planman.dto.credit.CreditPlanRow;
 import at.v3rtumnus.planman.dto.finance.FinancialProductDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialTransactionDTO;
@@ -18,12 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
-import yahoofinance.Stock;
-import yahoofinance.YahooFinance;
-import yahoofinance.quotes.fx.FxSymbols;
-
 import jakarta.transaction.Transactional;
-import yahoofinance.quotes.stock.StockQuote;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -46,6 +42,7 @@ public class FinanceService {
     private final SavingsPlanRepository savingsPlanRepository;
     private final FinancialSnapshotRepository snapshotRepository;
     private final CreditService creditService;
+    private final YahooFinanceService yahooFinanceService;
     private final CacheManager cacheManager;
 
     @Value("${financial.shares.quote.threshold.hours}")
@@ -119,14 +116,11 @@ public class FinanceService {
             }
         }
 
-        if (productsToBeUpdated.size() > 0) {
-            Map<String, Stock> stocks = YahooFinance.get(productsToBeUpdated.stream().map(FinancialProduct::getSymbol).filter(Objects::nonNull).toList().toArray(new String[0]));
-
+        if (!productsToBeUpdated.isEmpty()) {
             for (FinancialProduct financialProduct : productsToBeUpdated) {
-                Stock stock = stocks.get(financialProduct.getSymbol());
-                StockQuote stockQuote = stock.getQuote();
+                StockInfo stockInfo = yahooFinanceService.getStockInfo(financialProduct.getSymbol());
 
-                FinancialProductStockQuote quote = new FinancialProductStockQuote(now, stockQuote.getPrice(), stockQuote.getChange(), stockQuote.getChangeInPercent(), stock.getCurrency(), financialProduct);
+                FinancialProductStockQuote quote = new FinancialProductStockQuote(now, stockInfo.getQuote(), stockInfo.getChangeToday(), stockInfo.getChangeInPercent(), stockInfo.getCurrency(), financialProduct);
 
                 quoteRepository.save(quote);
 
@@ -165,9 +159,9 @@ public class FinanceService {
                             BigDecimal euroConversion;
                             try {
                                 if (quote.getCurrency().equals("USD")) {
-                                    euroConversion = foreignExchangeService.getFxRate(FxSymbols.USDEUR);
+                                    euroConversion = foreignExchangeService.getFxRate("EUR=X");
                                 } else {
-                                    euroConversion = foreignExchangeService.getFxRate(FxSymbols.CADEUR);
+                                    euroConversion = foreignExchangeService.getFxRate("CADEUR=X");
                                 }
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
