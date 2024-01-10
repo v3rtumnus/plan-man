@@ -104,7 +104,7 @@ public class FinanceService {
         String os = System.getProperty("os.name");
         String remoteHost = os.startsWith("Windows") ? "localhost" : "selenium-chrome";
 
-        RemoteWebDriver webDriver = new RemoteWebDriver(new URL("http://" + remoteHost + ":4444"), new ChromeOptions();
+        RemoteWebDriver webDriver = new RemoteWebDriver(new URL("http://" + remoteHost + ":4444"), new ChromeOptions());
 
         for (FinancialProduct financialProduct : financialProducts) {
             Page<FinancialProductStockQuote> latestQuote = quoteRepository.findByProduct(financialProduct.getIsin(),
