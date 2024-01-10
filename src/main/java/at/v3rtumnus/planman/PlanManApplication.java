@@ -14,8 +14,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class PlanManApplication {
 
 	public static void main(String[] args) {
-		WebDriverManager.chromedriver().setup();
-
 		SpringApplication.run(PlanManApplication.class, args);
 	}
 }
