@@ -9,6 +9,8 @@ import at.v3rtumnus.planman.dto.finance.SavingsPlanDto;
 import at.v3rtumnus.planman.entity.finance.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,6 +26,7 @@ import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
@@ -98,6 +101,11 @@ public class FinanceService {
         List<FinancialProduct> productsToBeUpdated = new LinkedList<>();
         LocalDate now = LocalDate.now();
 
+        String os = System.getProperty("os.name");
+        String remoteHost = os.startsWith("Windows") ? "localhost" : "selenium-chrome";
+
+        RemoteWebDriver webDriver = new RemoteWebDriver(new URL("http://" + remoteHost + ":4444"), new ChromeOptions();
+
         for (FinancialProduct financialProduct : financialProducts) {
             Page<FinancialProductStockQuote> latestQuote = quoteRepository.findByProduct(financialProduct.getIsin(),
                     PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "lastUpdatedAt")));
@@ -118,7 +126,7 @@ public class FinanceService {
 
         if (!productsToBeUpdated.isEmpty()) {
             for (FinancialProduct financialProduct : productsToBeUpdated) {
-                StockInfo stockInfo = yahooFinanceService.getStockInfo(financialProduct.getSymbol());
+                StockInfo stockInfo = yahooFinanceService.getStockInfo(webDriver, financialProduct.getSymbol());
 
                 FinancialProductStockQuote quote = new FinancialProductStockQuote(now, stockInfo.getQuote(), stockInfo.getChangeToday(), stockInfo.getChangeInPercent(), stockInfo.getCurrency(), financialProduct);
 

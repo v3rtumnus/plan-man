@@ -13,9 +13,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class YahooFinanceService {
 
-    private final WebDriver webDriver;
-
-    public StockInfo getStockInfo(String quote) {
+    public StockInfo getStockInfo(WebDriver webDriver, String quote) {
         try {
             gotoStockPage(webDriver, quote);
 
@@ -33,7 +31,7 @@ public class YahooFinanceService {
         }
     }
 
-    public BigDecimal getQuotePrice(String quote) {
+    public BigDecimal getQuotePrice(WebDriver webDriver, String quote) {
         try {
             gotoStockPage(webDriver, quote);
 
@@ -50,7 +48,7 @@ public class YahooFinanceService {
 
         //check if consent window opens
         try {
-            webDriver.findElement(By.xpath("//fin-streamer[@data-symbol='" + quote +"']"));
+            driver.findElement(By.xpath("//fin-streamer[@data-symbol='" + quote +"']"));
             return;
         } catch (NoSuchElementException | ElementNotInteractableException e) {
             //element not accessible, consent window needs to be confirmed
