@@ -15,7 +15,7 @@ public class WebdriverConfig {
     @Bean
     public WebDriver webDriver() throws MalformedURLException {
         String os = System.getProperty("os.name");
-        String remoteHost = os.startsWith("Windows") ? "localhost" : "docker-selenium";
+        String remoteHost = os.startsWith("Windows") ? "localhost" : "selenium-chrome";
 
         return new RemoteWebDriver(new URL("http://" + remoteHost + ":4444"), new ChromeOptions());
     }
