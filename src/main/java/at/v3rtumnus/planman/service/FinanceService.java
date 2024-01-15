@@ -7,10 +7,9 @@ import at.v3rtumnus.planman.dto.finance.FinancialProductDTO;
 import at.v3rtumnus.planman.dto.finance.FinancialTransactionDTO;
 import at.v3rtumnus.planman.dto.finance.SavingsPlanDto;
 import at.v3rtumnus.planman.entity.finance.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,12 +20,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
-import jakarta.transaction.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
@@ -45,7 +42,7 @@ public class FinanceService {
     private final SavingsPlanRepository savingsPlanRepository;
     private final FinancialSnapshotRepository snapshotRepository;
     private final CreditService creditService;
-    private final YahooFinanceService yahooFinanceService;
+    private final OnVistaFinancialService onVistaFinancialService;
     private final CacheManager cacheManager;
 
     @Value("${financial.shares.quote.threshold.hours}")
@@ -101,11 +98,6 @@ public class FinanceService {
         List<FinancialProduct> productsToBeUpdated = new LinkedList<>();
         LocalDate now = LocalDate.now();
 
-        String os = System.getProperty("os.name");
-        String remoteHost = os.startsWith("Windows") ? "localhost" : "selenium-chrome";
-
-        RemoteWebDriver webDriver = new RemoteWebDriver(new URL("http://" + remoteHost + ":4444"), new ChromeOptions());
-
         for (FinancialProduct financialProduct : financialProducts) {
             Page<FinancialProductStockQuote> latestQuote = quoteRepository.findByProduct(financialProduct.getIsin(),
                     PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "lastUpdatedAt")));
@@ -126,7 +118,7 @@ public class FinanceService {
 
         if (!productsToBeUpdated.isEmpty()) {
             for (FinancialProduct financialProduct : productsToBeUpdated) {
-                StockInfo stockInfo = yahooFinanceService.getStockInfo(webDriver, financialProduct.getSymbol());
+                StockInfo stockInfo = onVistaFinancialService.getStockInfo(financialProduct.getUrl());
 
                 FinancialProductStockQuote quote = new FinancialProductStockQuote(now, stockInfo.getQuote(), stockInfo.getChangeToday(), stockInfo.getChangeInPercent(), stockInfo.getCurrency(), financialProduct);
 
@@ -163,14 +155,10 @@ public class FinanceService {
                         BigDecimal currentPrice = quote.getQuote();
                         BigDecimal change = quote.getChangeToday();
 
-                        if (quote.getCurrency().equals("USD") || quote.getCurrency().equals("CAD")) {
+                        if (quote.getCurrency().equals("USD")) {
                             BigDecimal euroConversion;
                             try {
-                                if (quote.getCurrency().equals("USD")) {
-                                    euroConversion = foreignExchangeService.getFxRate("EUR=X");
-                                } else {
-                                    euroConversion = foreignExchangeService.getFxRate("CADEUR=X");
-                                }
+                                euroConversion = foreignExchangeService.getFxRate("EUR=X");
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }

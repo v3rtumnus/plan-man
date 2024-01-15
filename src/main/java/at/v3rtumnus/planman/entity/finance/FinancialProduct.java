@@ -21,7 +21,7 @@ public class FinancialProduct {
     @Id
     private String isin;
 
-    private String symbol;
+    private String url;
     private String name;
 
     @Enumerated(EnumType.STRING)
