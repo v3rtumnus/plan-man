@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ExpenseService {
 
+    public static final String LABEL_OVERALL = "Gesamt";
     @Autowired
     private ExpenseRepository expenseRepository;
 
@@ -52,8 +54,16 @@ public class ExpenseService {
         }
 
         while (currentDate.isBefore(LocalDate.now().minusMonths(1))) {
-            expenseSummaries.put(currentDate,
-                    expenseRepository.getExpenseSummaryForMonth(currentDate.getYear(), currentDate.getMonthValue()));
+            List<ExpenseSummary> expenseSummaryForMonth = expenseRepository.getExpenseSummaryForMonth(currentDate.getYear(), currentDate.getMonthValue());
+
+            BigDecimal monthSum = BigDecimal.valueOf(expenseSummaryForMonth
+                    .stream()
+                    .mapToDouble(expenseSummary -> expenseSummary.getAmount().doubleValue())
+                    .sum());
+
+            expenseSummaryForMonth.add(new ExpenseSummary(LABEL_OVERALL, monthSum));
+
+            expenseSummaries.put(currentDate, expenseSummaryForMonth);
 
             currentDate = currentDate.plusMonths(1);
         }
