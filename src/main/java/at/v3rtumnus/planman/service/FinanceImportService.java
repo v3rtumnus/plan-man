@@ -319,7 +319,7 @@ public class FinanceImportService {
     }
 
     private FinancialProduct getOrCreateFinancialProduct(String isin) {
-        return productRepository.findById(isin).orElse(
+        return productRepository.findById(isin).orElseGet(() ->
                 //TODO add notification for new product
                 productRepository.save(new FinancialProduct(isin))
         );
