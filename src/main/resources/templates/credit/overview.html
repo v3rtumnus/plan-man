@@ -58,7 +58,7 @@
             <div class="card" style="height: 100%">
                 <div class="card-body">
                     <h4 class="card-title">Sonderzahlungen bisher</h4>
-                    <h5 class="card-subtitle mb-2 text-muted">[[${#numbers.formatDecimal(additionalPaymentsSum, 0, 'POINT', 2, 'COMMA')}]] &euro;</h5>
+                    <h5 class="card-subtitle mb-2 text-muted" th:if="${additionalPaymentsSum > 0}">[[${#numbers.formatDecimal(additionalPaymentsSum, 0, 'POINT', 2, 'COMMA')}]] &euro;</h5>
                     <div style="float: left">
                         <p class="card-text" th:each="additionalPayment: ${additionalPayments.subList(0, additionalPayments.size() / 2)}">[[${#temporals.format(additionalPayment.date, 'dd.MM.YYYY')}]] - [[${#numbers.formatDecimal(additionalPayment.balanceChange, 0, 'POINT', 2, 'COMMA')}]] &euro;</p>
                     </div>

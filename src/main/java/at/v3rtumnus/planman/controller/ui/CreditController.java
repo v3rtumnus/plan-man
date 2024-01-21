@@ -4,6 +4,7 @@ import at.v3rtumnus.planman.dto.credit.CreditPlanRow;
 import at.v3rtumnus.planman.dto.credit.Payment;
 import at.v3rtumnus.planman.dto.credit.RowType;
 import at.v3rtumnus.planman.entity.credit.CreditSingleTransaction;
+import at.v3rtumnus.planman.entity.credit.TransactionType;
 import at.v3rtumnus.planman.service.CreditService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,8 @@ public class CreditController {
         String successMessage = null;
         String errorMessage = null;
         try {
-            creditService.saveSingleTransaction(new CreditSingleTransaction(payment.getDate(), payment.getDescription(), payment.getAmount()));
+            creditService.saveSingleTransaction(new CreditSingleTransaction(payment.getDate(), payment.getDescription(),
+                    payment.getAmount(), TransactionType.EARLY_REPAYMENT));
             successMessage = "Zahlung erfolgreich gespeichert";
         } catch (Exception e) {
             log.error("Error when saving single transaction", e);
@@ -71,7 +73,8 @@ public class CreditController {
         LocalDate originalLastDate = originalCreditPlan.get(originalCreditPlan.size() - 1).getDate();
 
         List<CreditPlanRow> additionalPayments = currentCreditPlan.stream()
-                .filter(row -> row.getRowType() == RowType.ADDITIONAL_PAYMENT && row.getBalanceChange().compareTo(BigDecimal.ZERO) > 0)
+                .filter(row -> row.getRowType() == RowType.EARLY_REPAYMENT
+                        && row.getBalanceChange().compareTo(BigDecimal.ZERO) > 0)
                 .collect(Collectors.toList());
 
         Collections.reverse(additionalPayments);

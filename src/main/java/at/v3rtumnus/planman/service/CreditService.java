@@ -5,6 +5,7 @@ import at.v3rtumnus.planman.dto.credit.*;
 import at.v3rtumnus.planman.entity.credit.CreditInterval;
 import at.v3rtumnus.planman.entity.credit.CreditSingleTransaction;
 import at.v3rtumnus.planman.dao.CreditSinglePaymentRepository;
+import at.v3rtumnus.planman.entity.credit.TransactionType;
 import at.v3rtumnus.planman.util.DateUtil;
 import at.v3rtumnus.planman.util.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,11 +80,12 @@ public class CreditService {
                     currentAmount = currentAmount.add(paymentAmount);
                     planRows.add(new CreditPlanRow(rowId++, nextBalanceChanging.x, paymentAmount, currentAmount, RowType.INSTALLMENT));
                     break;
-                case ADDITIONAL_PAYMENT:
+                case SETUP_INSTALLMENT:
+                case EARLY_REPAYMENT:
                     paymentAmount = additionalTransactions.get(0).getAmount();
 
                     //ignore additional payments if original credit plan is requested
-                    if (original && paymentAmount.doubleValue() > 0) {
+                    if (original && paymentAmount.doubleValue() > 0 && additionalTransactions.get(0).getType() == TransactionType.EARLY_REPAYMENT) {
                         additionalTransactions.remove(0);
                         break;
                     }
@@ -92,7 +94,7 @@ public class CreditService {
                     paymentAmount = paymentAmount.min(currentAmount.abs());
 
                     currentAmount = currentAmount.add(paymentAmount);
-                    planRows.add(new CreditPlanRow(rowId++, nextBalanceChanging.x, description, paymentAmount, currentAmount, RowType.ADDITIONAL_PAYMENT, additionalTransactions.get(0).getId()));
+                    planRows.add(new CreditPlanRow(rowId++, nextBalanceChanging.x, description, paymentAmount, currentAmount, mapToRowType(additionalTransactions.get(0).getType()), additionalTransactions.get(0).getId()));
 
                     additionalTransactions.remove(0);
                     break;
@@ -257,11 +259,19 @@ public class CreditService {
             nextBalanceChangingDate = new Tuple<>(endOfQuarterDate, RowType.END_OF_QUARTER);
         }
 
-        LocalDate nextAdditionalTransactionDate = additionalTransactions.size() > 0 ?
+        LocalDate nextAdditionalTransactionDate = !additionalTransactions.isEmpty() ?
                 additionalTransactions.get(0).getTransactionDate() : LocalDate.MAX;
 
         return nextAdditionalTransactionDate.isBefore(nextBalanceChangingDate.x) ?
-                new Tuple<>(nextAdditionalTransactionDate, RowType.ADDITIONAL_PAYMENT) : nextBalanceChangingDate;
+                new Tuple<>(nextAdditionalTransactionDate, mapToRowType(additionalTransactions.get(0).getType())) : nextBalanceChangingDate;
+    }
+
+    private RowType mapToRowType(TransactionType transactionType) {
+        if (transactionType == TransactionType.EARLY_REPAYMENT) {
+            return RowType.EARLY_REPAYMENT;
+        } else {
+            return RowType.SETUP_INSTALLMENT;
+        }
     }
 
     public void saveSingleTransaction(CreditSingleTransaction transaction) {

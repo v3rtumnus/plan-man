@@ -26,14 +26,19 @@ public class CreditSingleTransaction {
     @Column
     private BigDecimal amount;
 
+    @Column(name = "transaction_type")
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
+
     public CreditSingleTransaction(LocalDate transactionDate, BigDecimal amount) {
         this.transactionDate = transactionDate;
         this.amount = amount;
     }
 
-    public CreditSingleTransaction(LocalDate transactionDate, String description, BigDecimal amount) {
+    public CreditSingleTransaction(LocalDate transactionDate, String description, BigDecimal amount, TransactionType type) {
         this.transactionDate = transactionDate;
         this.description = description;
         this.amount = amount;
+        this.type = type;
     }
 }
