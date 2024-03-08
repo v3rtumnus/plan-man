@@ -1,0 +1,59 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_13.xml" xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <changeSet author="michael" id="create insurance tables">
+        <createTable tableName="insurance_person">
+            <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR2(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+
+        <insert tableName="insurance_person">
+            <column name="name" value="Michael" />
+        </insert>
+        <insert tableName="insurance_person">
+            <column name="name" value="Aga" />
+        </insert>
+        <insert tableName="insurance_person">
+            <column name="name" value="Benjamin" />
+        </insert>
+        <insert tableName="insurance_person">
+            <column name="name" value="Valerie" />
+        </insert>
+        <insert tableName="insurance_person">
+            <column name="name" value="Amelie" />
+        </insert>
+        <createTable tableName="insurance_entry">
+            <column autoIncrement="true" name="id" type="BIGINT UNSIGNED">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="entry_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="insurance_person_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR2(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state" type="VARCHAR2(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR2(100)" />
+            <column name="invoice_filename" type="VARCHAR2(100)" />
+            <column name="invoice_data" type="LONGBLOB" />
+            <column name="health_insurance_filename" type="VARCHAR2(100)" />
+            <column name="health_insurance_data" type="LONGBLOB" />
+            <column name="health_insurance_amount" type="DECIMAL(10, 2)"/>
+            <column name="private_insurance_filename" type="VARCHAR2(100)" />
+            <column name="private_insurance_data" type="LONGBLOB" />
+            <column name="private_insurance_amount" type="DECIMAL(10, 2)"/>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="insurance_person_id" baseTableName="insurance_entry" constraintName="fk_insurance_person_id" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id" referencedTableName="insurance_person" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

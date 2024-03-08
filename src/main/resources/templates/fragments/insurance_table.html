@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script>
+        $('.table-sortable th').on('click', function(){
+            var table = $(this).parents('table').eq(0)
+            var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+            this.asc = !this.asc
+            if (!this.asc){rows = rows.reverse()}
+            for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+        })
+
+        function comparer(index) {
+            return function(a, b) {
+                var valA = getCellValue(a, index), valB = getCellValue(b, index)
+                return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+            }
+        }
+        function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
+    </script>
+</head>
+<body>
+<div th:fragment="insuranceTable"  class="container">
+
+    <form id="insuranceEntryForm">
+    <table class="table table-sortable">
+        <thead>
+        <tr>
+            <th id="td" scope="col">Datum</th>
+            <th scope="col">Person</th>
+            <th scope="col">Arzt/Apo</th>
+            <th scope="col">Rechnung</th>
+            <th scope="col">ÖGK</th>
+            <th scope="col">Uniqa</th>
+            <th scope="col">Selbstbehalt</th>
+            <th scope="col">Status</th>
+            <th scope="col">Dateien</th>
+            <th scope="col">Aktionen</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entry: ${entries}">
+                <td th:text="${#temporals.format(entry.entryDate, 'dd.MM.yyyy')}">
+                    <input type="hidden" th:id="insuranceEntryId_${entry.id}" th:value="${entry.id}"/>
+                    <input type="hidden" th:id="insuranceEntryState_${entry.id}" th:value=""/>
+                </td>
+                <td th:text="${entry.person}"></td>
+                <td th:text="${entry.doctor}"></td>
+                <td th:text="${#numbers.formatDecimal(entry.amount, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td th:text="${#numbers.formatDecimal(entry.healthInsuranceAmount, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td th:text="${#numbers.formatDecimal(entry.privateInsuranceAmount, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td th:text="${#numbers.formatDecimal(entry.retention, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td th:text="${entry.state.label}"></td>
+                <td>
+                    <a th:href="@{/insurance/file/invoice/{id}(id=${entry.id})}">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                    </a>
+                    <a th:if="${entry.state.order >= T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).RECORDED.order}"
+                       th:href="@{/insurance/file/health/{id}(id=${entry.id})}">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                    </a>
+                    <a th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).DONE}"
+                       th:href="@{/insurance/file/private/{id}(id=${entry.id})}">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                    </a>
+                </td>
+                <td th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).RECORDED}">
+                   <input type="button" th:attr="onclick=|updateInsuranceEntry('${entry.id}', '${entry.state}')|"
+                          class="btn btn-primary" value="ÖGK eingereicht" />
+                </td>
+                <td th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).HEALH_INSURANCE_RECEIVED}">
+                   <input type="button" th:attr="onclick=|updateInsuranceEntry('${entry.id}', '${entry.state}')|"
+                          class="btn btn-primary" value="Uniqa eingereicht" />
+                </td>
+                <td th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).WAITING_FOR_HEALTH_INSURANCE ||
+                             entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).WAITING_FOR_PRIVATE_INSURANCE}">
+                    <div class="modal fade" th:id="'modal_' + ${entry.id}" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).WAITING_FOR_HEALTH_INSURANCE}">&OumlGK-Einreichung</h5>
+                                    <h5 class="modal-title" th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).WAITING_FOR_PRIVATE_INSURANCE}">Uniqa-Einreichung</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <input th:id="'id_' + ${entry.id}" placeholder="Betrag" th:value="${entry.id}"
+                                           type="hidden">
+                                    <div class="form-group" style="margin-bottom: 1rem;">
+                                        <label th:for="'amount_' + ${entry.id}">Betrag</label>
+                                        <input type="number" class="form-control" th:id="'amount_' + ${entry.id}" placeholder="Betrag">
+                                    </div>
+                                    <div class="form-group">
+                                        <label th:for="'file_' + ${entry.id}">Beleg</label>
+                                        <input type="file" class="form-control" th:id="'file_' + ${entry.id}" placeholder="Beleg">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                            th:attr="onclick=|updateInsuranceEntry('${entry.id}', '${entry.state}', 'amount_${entry.id}', 'file_${entry.id}', 'modal_${entry.id}' )|">Speichern</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).WAITING_FOR_HEALTH_INSURANCE}"
+                            th:attr="data-bs-target='#modal_'+${entry.id }">
+                        &Ouml;GK erhalten
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).WAITING_FOR_PRIVATE_INSURANCE}"
+                            th:attr="data-bs-target='#modal_'+${entry.id }">
+                        Uniqa erhalten
+                    </button>
+                </td>
+        </tbody>
+    </table>
+    </form>
+</div>
+</body>
+</html>
