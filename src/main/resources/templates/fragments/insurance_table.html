@@ -26,7 +26,7 @@
     <table class="table table-sortable">
         <thead>
         <tr>
-            <th id="td" scope="col">Datum</th>
+            <th scope="col">Datum</th>
             <th scope="col">Person</th>
             <th scope="col">Arzt/Apo</th>
             <th scope="col">Rechnung</th>
@@ -113,6 +113,20 @@
                     </button>
                 </td>
         </tbody>
+        <tfoot>
+            <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th th:text="${sumInvoice}"></th>
+                <th th:text="${sumHealthInsurance}"></th>
+                <th th:text="${sumPrivateInsurance}"></th>
+                <th th:text="${sumRetention}"></th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </tfoot>
     </table>
     </form>
 </div>

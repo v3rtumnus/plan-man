@@ -66,9 +66,36 @@ public class InsuranceController {
                                                   @RequestParam(value = "state", required = false) String state) {
         ModelAndView modelAndView = new ModelAndView("fragments/insurance_table");
 
-        modelAndView.addObject("entries", insuranceService.getInsuranceEntries(!year.equals("ALL") ? year : null,
-                                             !person.equals("ALL") ? person : null,
-                                             !state.equals("ALL") ? InsuranceEntryState.fromString(state) : null));
+        List<InsuranceEntryDTO> insuranceEntries = insuranceService.getInsuranceEntries(!year.equals("ALL") ? year : null,
+                !person.equals("ALL") ? person : null,
+                !state.equals("ALL") ? InsuranceEntryState.fromString(state) : null);
+
+        modelAndView.addObject("entries", insuranceEntries);
+
+        double sumInvoice = insuranceEntries
+                .stream()
+                .mapToDouble(e -> e.getAmount().doubleValue())
+                .sum();
+
+        double sumHealthInsurance = insuranceEntries
+                .stream()
+                .mapToDouble(e -> e.getHealthInsuranceAmount() == null ? 0.0 : e.getHealthInsuranceAmount().doubleValue())
+                .sum();
+
+        double sumPrivateInsurance = insuranceEntries
+                .stream()
+                .mapToDouble(e -> e.getPrivateInsuranceAmount() == null ? 0.0 : e.getPrivateInsuranceAmount().doubleValue())
+                .sum();
+
+        double sumRetention = insuranceEntries
+                .stream()
+                .mapToDouble(e -> e.getRetention() == null ? 0.0 : e.getRetention().doubleValue())
+                .sum();
+
+        modelAndView.addObject("sumInvoice", sumInvoice);
+        modelAndView.addObject("sumHealthInsurance", sumHealthInsurance);
+        modelAndView.addObject("sumPrivateInsurance", sumPrivateInsurance);
+        modelAndView.addObject("sumRetention", sumRetention);
 
         return modelAndView;
     }
