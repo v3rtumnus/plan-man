@@ -20,7 +20,7 @@
                     <td style="font-weight: bold">[[${incomeGroup.name}]]</td>
                     <td style="text-align: right; font-weight: bold" th:text="${@thymeleafService.formatNumber(incomeGroup.sum, 2, 'EUR')}"></td>
                 </tr>
-                <tr th:each="incomeItem: ${incomeGroup.items}">
+                <tr th:each="incomeItem: ${incomeGroup.activeItems}">
                     <td>[[${incomeItem.name}]]</td>
                     <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(incomeItem.activeDetail.get().amount, 2, 'EUR')}"></td>
                 </tr>
