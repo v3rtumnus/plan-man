@@ -33,7 +33,7 @@ public class InsuranceService {
                 .orElseThrow(() -> new RuntimeException("Person not found"));
 
         insuranceEntryRepository.saveAndFlush(new InsuranceEntry(insuranceEntry.getEntryDate(),
-                person, insuranceEntry.getType(), insuranceEntry.getDoctor(), insuranceEntry.getState(),
+                person, insuranceEntry.getType(), insuranceEntry.getInsuranceType(), insuranceEntry.getDoctor(), insuranceEntry.getState(),
                 insuranceEntry.getAmount(), insuranceEntry.getInvoiceFilename(), insuranceEntry.getInvoiceData()));
 
         log.info("Insurance entry successfully saved");

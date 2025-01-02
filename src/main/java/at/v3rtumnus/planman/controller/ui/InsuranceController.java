@@ -8,6 +8,7 @@ import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryType;
 import at.v3rtumnus.planman.entity.insurance.InsurancePerson;
+import at.v3rtumnus.planman.entity.insurance.InsuranceType;
 import at.v3rtumnus.planman.service.ExpenseService;
 import at.v3rtumnus.planman.service.InsuranceService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -44,11 +45,16 @@ public class InsuranceController {
                             @RequestParam("date") LocalDate date,
                             @RequestParam("person") String person,
                             @RequestParam("doctor") String doctor,
+                            @RequestParam("type") InsuranceType insuranceType,
                             @RequestParam("amount") BigDecimal amount) {
         try {
             InsuranceEntryDTO newEntry = new InsuranceEntryDTO(
-                    date, person, doctor.isEmpty() ? InsuranceEntryType.PHARMACY : InsuranceEntryType.DOCTOR,
-                    doctor, InsuranceEntryState.RECORDED, amount, invoice.getOriginalFilename(), invoice.getBytes()
+                    date, person,
+                    doctor.isEmpty() ? InsuranceEntryType.PHARMACY : InsuranceEntryType.DOCTOR,
+                    insuranceType,
+                    doctor,
+                    insuranceType == InsuranceType.HEALTH ? InsuranceEntryState.RECORDED : InsuranceEntryState.HEALH_INSURANCE_RECEIVED,
+                    amount, invoice.getOriginalFilename(), invoice.getBytes()
             );
 
             insuranceService.saveInsuranceEntry(newEntry);
@@ -124,6 +130,12 @@ public class InsuranceController {
                     content = entry.getPrivateInsuranceData();
                     filename = entry.getPrivateInsuranceFilename();
                 }
+            }
+
+            if (filename.endsWith("jpg") || filename.endsWith("jpeg")) {
+                response.setContentType("image/jpeg");
+            } else {
+                response.setContentType("application/pdf");
             }
 
             response.setContentType("application/pdf");

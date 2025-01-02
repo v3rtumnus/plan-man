@@ -3,6 +3,7 @@ package at.v3rtumnus.planman.dto.insurance;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntry;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryType;
+import at.v3rtumnus.planman.entity.insurance.InsuranceType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ public class InsuranceEntryDTO {
     private LocalDate entryDate;
     private String person;
     private InsuranceEntryType type;
+    private InsuranceType insuranceType;
     private String doctor;
     private InsuranceEntryState state;
     private BigDecimal amount;
@@ -33,10 +35,11 @@ public class InsuranceEntryDTO {
     private BigDecimal privateInsuranceAmount;
     private BigDecimal retention;
 
-    public InsuranceEntryDTO(LocalDate entryDate, String person, InsuranceEntryType type, String doctor, InsuranceEntryState state, BigDecimal amount, String invoiceFilename, byte[] invoiceData) {
+    public InsuranceEntryDTO(LocalDate entryDate, String person, InsuranceEntryType type, InsuranceType insuranceType, String doctor, InsuranceEntryState state, BigDecimal amount, String invoiceFilename, byte[] invoiceData) {
         this.entryDate = entryDate;
         this.person = person;
         this.type = type;
+        this.insuranceType = insuranceType;
         this.doctor = doctor;
         this.state = state;
         this.amount = amount;
@@ -50,7 +53,7 @@ public class InsuranceEntryDTO {
 
 
         return new InsuranceEntryDTO(entry.getId(), entry.getEntryDate(), entry.getPerson().getName(),
-                entry.getType(), entry.getName(), entry.getState(), entry.getAmount(), entry.getInvoiceFilename(), entry.getInvoiceData(),
+                entry.getType(), entry.getInsuranceType(), entry.getName(), entry.getState(), entry.getAmount(), entry.getInvoiceFilename(), entry.getInvoiceData(),
                 entry.getHealthInsuranceFilename(), entry.getHealthInsuranceData(), entry.getHealthInsuranceAmount(), entry.getPrivateInsuranceFilename(),
                 entry.getPrivateInsuranceData(), entry.getPrivateInsuranceAmount(), retention);
     }

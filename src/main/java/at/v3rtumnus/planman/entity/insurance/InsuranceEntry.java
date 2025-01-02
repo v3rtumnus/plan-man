@@ -33,6 +33,10 @@ public class InsuranceEntry {
     @NotNull
     private InsuranceEntryType type;
 
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private InsuranceType insuranceType;
+
     @Column
     private String name;
 
@@ -71,11 +75,12 @@ public class InsuranceEntry {
     @Column
     private BigDecimal privateInsuranceAmount;
 
-    public InsuranceEntry(LocalDate entryDate, InsurancePerson person, InsuranceEntryType type, String doctor,
+    public InsuranceEntry(LocalDate entryDate, InsurancePerson person, InsuranceEntryType type, InsuranceType insuranceType, String doctor,
                           InsuranceEntryState state, BigDecimal amount, String invoiceFilename, byte[] invoiceData) {
         this.entryDate = entryDate;
         this.person = person;
         this.type = type;
+        this.insuranceType = insuranceType;
         this.name = doctor;
         this.state = state;
         this.amount = amount;

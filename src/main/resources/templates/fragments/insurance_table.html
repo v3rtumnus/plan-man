@@ -55,7 +55,8 @@
                     <a th:href="@{/insurance/file/invoice/{id}(id=${entry.id})}">
                         <i class="bi bi-file-earmark-pdf"></i>
                     </a>
-                    <a th:if="${entry.state.order >= T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).RECORDED.order}"
+                    <a th:if="${entry.state.order >= T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).HEALH_INSURANCE_RECEIVED.order
+                    && entry.insuranceType == T(at.v3rtumnus.planman.entity.insurance.InsuranceType).HEALTH}"
                        th:href="@{/insurance/file/health/{id}(id=${entry.id})}">
                         <i class="bi bi-file-earmark-pdf"></i>
                     </a>
