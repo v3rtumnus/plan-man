@@ -3,11 +3,11 @@
 <head>
     <script>
         $('.table-sortable th').on('click', function(){
-            var table = $(this).parents('table').eq(0)
-            var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+            var body = $(this).parents('table').eq(0).find('tbody')
+            var rows = body.find('tr').toArray().sort(comparer($(this).index()))
             this.asc = !this.asc
             if (!this.asc){rows = rows.reverse()}
-            for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+            for (var i = 0; i < rows.length; i++){body.append(rows[i])}
         })
 
         function comparer(index) {
@@ -50,7 +50,7 @@
                 <td th:text="${#numbers.formatDecimal(entry.healthInsuranceAmount, 0, 'POINT', 2, 'COMMA')}"></td>
                 <td th:text="${#numbers.formatDecimal(entry.privateInsuranceAmount, 0, 'POINT', 2, 'COMMA')}"></td>
                 <td th:text="${#numbers.formatDecimal(entry.retention, 0, 'POINT', 2, 'COMMA')}"></td>
-                <td th:text="${entry.state.label}"></td>
+                <td th:text="${entry.calculatedState.label}"></td>
                 <td>
                     <a th:href="@{/insurance/file/invoice/{id}(id=${entry.id})}">
                         <i class="bi bi-file-earmark-pdf"></i>

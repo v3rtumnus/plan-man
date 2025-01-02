@@ -57,4 +57,8 @@ public class InsuranceEntryDTO {
                 entry.getHealthInsuranceFilename(), entry.getHealthInsuranceData(), entry.getHealthInsuranceAmount(), entry.getPrivateInsuranceFilename(),
                 entry.getPrivateInsuranceData(), entry.getPrivateInsuranceAmount(), retention);
     }
+
+    public InsuranceEntryState getCalculatedState() {
+        return insuranceType == InsuranceType.PRIVATE && state == InsuranceEntryState.HEALH_INSURANCE_RECEIVED ? InsuranceEntryState.RECORDED : state;
+    }
 }
