@@ -19,7 +19,7 @@ public class InsuranceApiController {
 
     private final InsuranceService insuranceService;
 
-    @PostMapping(path = "{id}")
+    @PutMapping(path = "{id}")
     public @ResponseBody void editInsuranceEntry(@PathVariable("id") Long id,
                                                  @RequestParam("currentState") String stateString,
                                                  @RequestParam(value = "amount", required = false) BigDecimal amount,

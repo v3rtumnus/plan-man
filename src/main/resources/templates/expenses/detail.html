@@ -36,7 +36,7 @@
 
             $.ajax({
                 url:"/api/expenses",
-                type:"POST",
+                type:"PUT",
                 data:JSON.stringify(payload),
                 contentType:"application/json; charset=utf-8",
                 success: function() {

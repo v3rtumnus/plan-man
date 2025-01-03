@@ -28,7 +28,7 @@ public class ExpensesApiController {
         expenseService.deleteExpense(expenseId);
     }
 
-    @PostMapping
+    @PutMapping
     public @ResponseBody void updateExpenses(@RequestBody List<ExpenseDTO> expenses) {
         expenseService.updateExpenses(expenses);
     }

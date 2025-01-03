@@ -138,7 +138,6 @@ public class InsuranceController {
                 response.setContentType("application/pdf");
             }
 
-            response.setContentType("application/pdf");
             response.setContentLength(content.length);
 
             String headerKey = "Content-Disposition";
