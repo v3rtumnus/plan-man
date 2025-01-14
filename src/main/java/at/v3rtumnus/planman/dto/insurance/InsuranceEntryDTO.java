@@ -49,8 +49,8 @@ public class InsuranceEntryDTO {
     }
 
     public static InsuranceEntryDTO fromInsuranceEntry(InsuranceEntry entry) {
-        BigDecimal insuranceAmount = Optional.of(entry.getHealthInsuranceAmount()).orElse(BigDecimal.ZERO)
-                .add(Optional.of(entry.getPrivateInsuranceAmount()).orElse(BigDecimal.ZERO));
+        BigDecimal insuranceAmount = Optional.ofNullable(entry.getHealthInsuranceAmount()).orElse(BigDecimal.ZERO)
+                .add(Optional.ofNullable(entry.getPrivateInsuranceAmount()).orElse(BigDecimal.ZERO));
 
         BigDecimal retention = entry.getState() == InsuranceEntryState.DONE ?
                 entry.getAmount().subtract(insuranceAmount) : null;
