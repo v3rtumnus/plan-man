@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Data
 @NoArgsConstructor
@@ -48,8 +49,11 @@ public class InsuranceEntryDTO {
     }
 
     public static InsuranceEntryDTO fromInsuranceEntry(InsuranceEntry entry) {
+        BigDecimal insuranceAmount = Optional.of(entry.getHealthInsuranceAmount()).orElse(BigDecimal.ZERO)
+                .add(Optional.of(entry.getPrivateInsuranceAmount()).orElse(BigDecimal.ZERO));
+
         BigDecimal retention = entry.getState() == InsuranceEntryState.DONE ?
-                entry.getAmount().subtract(entry.getHealthInsuranceAmount()).subtract(entry.getPrivateInsuranceAmount()) : null;
+                entry.getAmount().subtract(insuranceAmount) : null;
 
 
         return new InsuranceEntryDTO(entry.getId(), entry.getEntryDate(), entry.getPerson().getName(),
