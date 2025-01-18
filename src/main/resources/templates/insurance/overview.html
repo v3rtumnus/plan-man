@@ -15,6 +15,40 @@
             $("#tableContainer").load(tableUrl);
         }
 
+        $(document).on('click', '.health-received', function () {
+            var id = $(this).parent().parent().get(0).id
+
+            updateAmountReceived(id, "HEALTH")
+        });
+
+        $(document).on('click', '.private-received', function () {
+            var id = $(this).parent().parent().get(0).id
+
+            updateAmountReceived(id, "PRIVATE")
+        });
+
+        function updateAmountReceived(id, type) {
+            var fd = new FormData();
+            fd.append( 'type', type);
+
+            $.ajax({
+                url:"/api/insurance/amount/" + id,
+                type:"PUT",
+                data:  fd,
+                contentType: false,
+                cache: false,
+                processData:false,
+                success: function() {
+                    retrieveTable();
+                },
+                error: function(jqXHR, exception) {
+                    $("#successNotification").hide();
+                    $("#errorNotification").show();
+                }
+            });
+            retrieveTable();
+        }
+
         function updateInsuranceEntry(id, state) {
             updateInsuranceEntry(id, state, null, null, null);
         }

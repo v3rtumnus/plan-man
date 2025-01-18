@@ -31,4 +31,11 @@ public interface InsuranceEntryRepository extends JpaRepository<InsuranceEntry, 
             "i.privateInsuranceFilename = :fileName, i.privateInsuranceData = :fileData WHERE i.id = :id")
     void updateStateWithPrivateInsurance(Long id, InsuranceEntryState state, BigDecimal amount, String fileName, byte[] fileData);
 
+    @Modifying
+    @Query("UPDATE InsuranceEntry i SET i.healthInsuranceAmountReceived = TRUE WHERE i.id = :id")
+    void updateHealthAmountReceived(Long id);
+
+    @Modifying
+    @Query("UPDATE InsuranceEntry i SET i.privateInsuranceAmountReceived = TRUE WHERE i.id = :id")
+    void updatePrivateAmountReceived(Long id);
 }

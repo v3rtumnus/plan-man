@@ -6,6 +6,7 @@ import at.v3rtumnus.planman.dto.insurance.InsuranceEntryDTO;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntry;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
 import at.v3rtumnus.planman.entity.insurance.InsurancePerson;
+import at.v3rtumnus.planman.entity.insurance.InsuranceType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -91,6 +92,16 @@ public class InsuranceService {
             insuranceEntryRepository.updateStateWithHealthInsurance(id, state, amount, fileName, fileData);
         } else {
             insuranceEntryRepository.updateStateWithPrivateInsurance(id, state, amount, fileName, fileData);
+        }
+    }
+
+    @Transactional
+    public void updateAmountReceived(Long id, InsuranceType insuranceType) {
+        if (insuranceType == InsuranceType.HEALTH) {
+            insuranceEntryRepository.updateHealthAmountReceived(id);
+
+        } else {
+            insuranceEntryRepository.updatePrivateAmountReceived(id);
         }
     }
 }

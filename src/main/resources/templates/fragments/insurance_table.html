@@ -31,7 +31,9 @@
             <th scope="col">Arzt/Apo</th>
             <th scope="col">Rechnung</th>
             <th scope="col">ÖGK</th>
+            <th scope="col"></th>
             <th scope="col">Uniqa</th>
+            <th scope="col"></th>
             <th scope="col">Selbstbehalt</th>
             <th scope="col">Status</th>
             <th scope="col">Dateien</th>
@@ -39,16 +41,21 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="entry: ${entries}">
-                <td th:text="${#temporals.format(entry.entryDate, 'dd.MM.yyyy')}">
-                    <input type="hidden" th:id="insuranceEntryId_${entry.id}" th:value="${entry.id}"/>
-                    <input type="hidden" th:id="insuranceEntryState_${entry.id}" th:value=""/>
-                </td>
+        <tr th:each="entry: ${entries}" th:id="${entry.id}">
+                <td th:text="${#temporals.format(entry.entryDate, 'dd.MM.yyyy')}"></td>
                 <td th:text="${entry.person}"></td>
                 <td th:text="${entry.doctor}"></td>
                 <td th:text="${#numbers.formatDecimal(entry.amount, 0, 'POINT', 2, 'COMMA')}"></td>
                 <td th:text="${#numbers.formatDecimal(entry.healthInsuranceAmount, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td>
+                    <i th:if="${entry.isHealthAmountOpen()}" class="bi bi-currency-euro health-received" style="cursor: pointer;"></i>
+                    <i th:if="${entry.isHealthInsuranceAmountReceived()}" class="bi bi-check"></i>
+                </td>
                 <td th:text="${#numbers.formatDecimal(entry.privateInsuranceAmount, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td>
+                    <i th:if="${entry.isPrivateAmountOpen()}" class="bi bi-currency-euro private-received" style="cursor: pointer;"></i>
+                    <i th:if="${entry.isPrivateInsuranceAmountReceived()}" class="bi bi-check"></i>
+                </td>
                 <td th:text="${#numbers.formatDecimal(entry.retention, 0, 'POINT', 2, 'COMMA')}"></td>
                 <td th:text="${entry.calculatedState.label}"></td>
                 <td>

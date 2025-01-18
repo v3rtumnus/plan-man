@@ -31,9 +31,11 @@ public class InsuranceEntryDTO {
     private String healthInsuranceFilename;
     private byte[] healthInsuranceData;
     private BigDecimal healthInsuranceAmount;
+    private boolean healthInsuranceAmountReceived;
     private String privateInsuranceFilename;
     private byte[] privateInsuranceData;
     private BigDecimal privateInsuranceAmount;
+    private boolean privateInsuranceAmountReceived;
     private BigDecimal retention;
 
     public InsuranceEntryDTO(LocalDate entryDate, String person, InsuranceEntryType type, InsuranceType insuranceType, String doctor, InsuranceEntryState state, BigDecimal amount, String invoiceFilename, byte[] invoiceData) {
@@ -58,11 +60,22 @@ public class InsuranceEntryDTO {
 
         return new InsuranceEntryDTO(entry.getId(), entry.getEntryDate(), entry.getPerson().getName(),
                 entry.getType(), entry.getInsuranceType(), entry.getName(), entry.getState(), entry.getAmount(), entry.getInvoiceFilename(), entry.getInvoiceData(),
-                entry.getHealthInsuranceFilename(), entry.getHealthInsuranceData(), entry.getHealthInsuranceAmount(), entry.getPrivateInsuranceFilename(),
-                entry.getPrivateInsuranceData(), entry.getPrivateInsuranceAmount(), retention);
+                entry.getHealthInsuranceFilename(), entry.getHealthInsuranceData(), entry.getHealthInsuranceAmount(), entry.isHealthInsuranceAmountReceived(), entry.getPrivateInsuranceFilename(),
+                entry.getPrivateInsuranceData(), entry.getPrivateInsuranceAmount(), entry.isPrivateInsuranceAmountReceived(), retention);
     }
 
     public InsuranceEntryState getCalculatedState() {
         return insuranceType == InsuranceType.PRIVATE && state == InsuranceEntryState.HEALH_INSURANCE_RECEIVED ? InsuranceEntryState.RECORDED : state;
+    }
+
+    public boolean isHealthAmountOpen() {
+        return insuranceType == InsuranceType.HEALTH && !healthInsuranceAmountReceived &&
+                (state == InsuranceEntryState.HEALH_INSURANCE_RECEIVED ||
+                        state == InsuranceEntryState.WAITING_FOR_PRIVATE_INSURANCE ||
+                        state == InsuranceEntryState.DONE);
+    }
+
+    public boolean isPrivateAmountOpen() {
+        return state == InsuranceEntryState.DONE && !privateInsuranceAmountReceived;
     }
 }

@@ -66,7 +66,13 @@ public class InsuranceEntry {
     private BigDecimal healthInsuranceAmount;
 
     @Column
+    private boolean healthInsuranceAmountReceived;
+
+    @Column
     private String privateInsuranceFilename;
+
+    @Column
+    private boolean privateInsuranceAmountReceived;
 
     @Lob
     @Column
