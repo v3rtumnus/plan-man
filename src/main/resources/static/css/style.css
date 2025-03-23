@@ -1236,6 +1236,10 @@ h6 {
   margin-bottom: 1em;
 }
 
+.financial-value {
+  text-align: right;
+}
+
 .financial-value-positive {
   color: #006600 !important;
   text-align: right;

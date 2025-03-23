@@ -4,12 +4,14 @@ import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
 import at.v3rtumnus.planman.entity.insurance.InsuranceType;
 import at.v3rtumnus.planman.service.InsuranceService;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/api/insurance")
@@ -27,11 +29,25 @@ public class InsuranceApiController {
         InsuranceEntryState state = InsuranceEntryState.fromString(stateString);
 
         try {
+            String filename = Optional.ofNullable(file)
+                    .map(MultipartFile::getOriginalFilename)
+                    .orElse(null);
+
+            byte[] bytes = Optional.ofNullable(file)
+                    .map(f -> {
+                        try {
+                            return f.getBytes();
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    })
+                    .orElse(null);
+
             switch (state) {
                 case RECORDED -> insuranceService.updateState(id, InsuranceEntryState.WAITING_FOR_HEALTH_INSURANCE);
-                case WAITING_FOR_HEALTH_INSURANCE -> insuranceService.updateState(id, InsuranceEntryState.HEALH_INSURANCE_RECEIVED, amount, file.getOriginalFilename(), file.getBytes());
+                case WAITING_FOR_HEALTH_INSURANCE -> insuranceService.updateState(id, InsuranceEntryState.HEALH_INSURANCE_RECEIVED, amount, filename, bytes);
                 case HEALH_INSURANCE_RECEIVED -> insuranceService.updateState(id, InsuranceEntryState.WAITING_FOR_PRIVATE_INSURANCE);
-                case WAITING_FOR_PRIVATE_INSURANCE -> insuranceService.updateState(id, InsuranceEntryState.DONE, amount, file.getOriginalFilename(), file.getBytes());
+                case WAITING_FOR_PRIVATE_INSURANCE -> insuranceService.updateState(id, InsuranceEntryState.DONE, amount, filename, bytes);
                 case DONE -> log.warn("Cannot edit insurance entry already marked as done");
             }
         } catch (Exception e) {

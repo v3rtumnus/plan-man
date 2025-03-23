@@ -36,6 +36,8 @@ public class FilterableInsuranceEntryRepositoryImpl implements FilterableInsuran
             queryString += !whereExists ? "WHERE " + clause : "AND " + clause;
         }
 
+        queryString += " ORDER BY e.entryDate DESC";
+
         Query query = entityManager.createQuery(queryString);
 
         if (year != null) {

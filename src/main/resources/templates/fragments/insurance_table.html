@@ -34,7 +34,6 @@
             <th scope="col"></th>
             <th scope="col">Uniqa</th>
             <th scope="col"></th>
-            <th scope="col">Selbstbehalt</th>
             <th scope="col">Status</th>
             <th scope="col">Dateien</th>
             <th scope="col">Aktionen</th>
@@ -45,30 +44,28 @@
                 <td th:text="${#temporals.format(entry.entryDate, 'dd.MM.yyyy')}"></td>
                 <td th:text="${entry.person}"></td>
                 <td th:text="${entry.doctor}"></td>
-                <td th:text="${#numbers.formatDecimal(entry.amount, 0, 'POINT', 2, 'COMMA')}"></td>
-                <td th:text="${#numbers.formatDecimal(entry.healthInsuranceAmount, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td class="financial-value" th:text="${@thymeleafService.formatNumber(entry.amount, 2, 'EUR')}" ></td>
+                <td class="financial-value" th:text="${@thymeleafService.formatNumber(entry.healthInsuranceAmount, 2, 'EUR')}"></td>
                 <td>
                     <i th:if="${entry.isHealthAmountOpen()}" class="bi bi-currency-euro health-received" style="cursor: pointer;"></i>
-                    <i th:if="${entry.isHealthInsuranceAmountReceived()}" class="bi bi-check"></i>
+                    <i th:if="${entry.isHealthAmountReceived()}" class="bi bi-check"></i>
                 </td>
-                <td th:text="${#numbers.formatDecimal(entry.privateInsuranceAmount, 0, 'POINT', 2, 'COMMA')}"></td>
+                <td class="financial-value" th:text="${@thymeleafService.formatNumber(entry.privateInsuranceAmount, 2, 'EUR')}"></td>
                 <td>
                     <i th:if="${entry.isPrivateAmountOpen()}" class="bi bi-currency-euro private-received" style="cursor: pointer;"></i>
-                    <i th:if="${entry.isPrivateInsuranceAmountReceived()}" class="bi bi-check"></i>
+                    <i th:if="${entry.isPrivateAmountReceived()}" class="bi bi-check"></i>
                 </td>
-                <td th:text="${#numbers.formatDecimal(entry.retention, 0, 'POINT', 2, 'COMMA')}"></td>
                 <td th:text="${entry.calculatedState.label}"></td>
                 <td>
-                    <a th:href="@{/insurance/file/invoice/{id}(id=${entry.id})}">
+                    <a th:href="@{/insurance/file/invoice/{id}(id=${entry.id})}" title="Rechnung">
                         <i class="bi bi-file-earmark-pdf"></i>
                     </a>
-                    <a th:if="${entry.state.order >= T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).HEALH_INSURANCE_RECEIVED.order
-                    && entry.insuranceType == T(at.v3rtumnus.planman.entity.insurance.InsuranceType).HEALTH}"
-                       th:href="@{/insurance/file/health/{id}(id=${entry.id})}">
+                    <a th:if="${entry.healthInsuranceFilename != null}"
+                       th:href="@{/insurance/file/health/{id}(id=${entry.id})}" title="&Ouml;GK Leistungsinformation">
                         <i class="bi bi-file-earmark-pdf"></i>
                     </a>
-                    <a th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).DONE}"
-                       th:href="@{/insurance/file/private/{id}(id=${entry.id})}">
+                    <a th:if="${entry.privateInsuranceFilename != null}"
+                       th:href="@{/insurance/file/private/{id}(id=${entry.id})}" title="Uniqa Leistungsinformation">
                         <i class="bi bi-file-earmark-pdf"></i>
                     </a>
                 </td>
@@ -126,10 +123,11 @@
                 <th></th>
                 <th></th>
                 <th></th>
-                <th th:text="${sumInvoice}"></th>
-                <th th:text="${sumHealthInsurance}"></th>
-                <th th:text="${sumPrivateInsurance}"></th>
-                <th th:text="${sumRetention}"></th>
+                <th class="financial-value" th:text="${@thymeleafService.formatNumber(sumInvoice, 2, 'EUR')}"></th>
+                <th class="financial-value" th:text="${@thymeleafService.formatNumber(sumHealthInsurance, 2, 'EUR')}"></th>
+                <th></th>
+                <th class="financial-value" th:text="${@thymeleafService.formatNumber(sumPrivateInsurance, 2, 'EUR')}"></th>
+                <th></th>
                 <th></th>
                 <th></th>
                 <th></th>

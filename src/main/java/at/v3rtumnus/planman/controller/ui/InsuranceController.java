@@ -53,7 +53,7 @@ public class InsuranceController {
                     doctor.isEmpty() ? InsuranceEntryType.PHARMACY : InsuranceEntryType.DOCTOR,
                     insuranceType,
                     doctor,
-                    insuranceType == InsuranceType.HEALTH ? InsuranceEntryState.RECORDED : InsuranceEntryState.HEALH_INSURANCE_RECEIVED,
+                    insuranceType == InsuranceType.HEALTH && !doctor.isEmpty() ? InsuranceEntryState.RECORDED : InsuranceEntryState.HEALH_INSURANCE_RECEIVED,
                     amount, invoice.getOriginalFilename(), invoice.getBytes()
             );
 

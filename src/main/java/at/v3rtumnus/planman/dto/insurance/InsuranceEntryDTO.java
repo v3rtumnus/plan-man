@@ -69,13 +69,18 @@ public class InsuranceEntryDTO {
     }
 
     public boolean isHealthAmountOpen() {
-        return insuranceType == InsuranceType.HEALTH && !healthInsuranceAmountReceived &&
-                (state == InsuranceEntryState.HEALH_INSURANCE_RECEIVED ||
-                        state == InsuranceEntryState.WAITING_FOR_PRIVATE_INSURANCE ||
-                        state == InsuranceEntryState.DONE);
+        return healthInsuranceAmount != null && healthInsuranceAmount.compareTo(BigDecimal.ZERO) > 0 && !healthInsuranceAmountReceived;
+    }
+
+    public boolean isHealthAmountReceived() {
+        return healthInsuranceAmount != null && healthInsuranceAmount.compareTo(BigDecimal.ZERO) > 0 && healthInsuranceAmountReceived;
     }
 
     public boolean isPrivateAmountOpen() {
-        return state == InsuranceEntryState.DONE && !privateInsuranceAmountReceived;
+        return privateInsuranceAmount != null && privateInsuranceAmount.compareTo(BigDecimal.ZERO) > 0 && !privateInsuranceAmountReceived;
+    }
+
+    public boolean isPrivateAmountReceived() {
+        return privateInsuranceAmount != null && privateInsuranceAmount.compareTo(BigDecimal.ZERO) > 0 && privateInsuranceAmountReceived;
     }
 }
