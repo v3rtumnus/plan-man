@@ -7,7 +7,6 @@ import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import at.v3rtumnus.planman.service.ExpenseService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -61,7 +60,7 @@ public class ExpensesController {
     @GetMapping(path = "/monthly")
     public ModelAndView getExpensesMonthlyOverview(@RequestParam(value = "year", required = false) Integer year,
                                                           @RequestParam(value = "month", required = false) Integer month) {
-        ModelAndView modelAndView = new ModelAndView("fragments/expenses_monthly");
+        ModelAndView modelAndView = new ModelAndView("expenses/fragments/monthly");
         List<ExpenseSummary> expenseSummaryForMonth = expenseService.getExpenseSummaryForMonth(
                 year, month);
 
@@ -80,7 +79,7 @@ public class ExpensesController {
     @GetMapping(path = "/pie")
     public ModelAndView getExpensesPie(@RequestParam(value = "year", required = false) Integer year,
                                               @RequestParam(value = "month", required = false) Integer month) {
-        ModelAndView modelAndView = new ModelAndView("fragments/expenses_pie");
+        ModelAndView modelAndView = new ModelAndView("expenses/fragments/pie");
         List<ExpenseSummary> expenseSummaryForMonth = expenseService.getExpenseSummaryForMonth(
                 year, month);
 
@@ -103,7 +102,7 @@ public class ExpensesController {
 
     @GetMapping(path = "/graph")
     public ModelAndView getExpensesGraph(@RequestParam(value = "lastMonths", required = false) Integer lastMonths) {
-        ModelAndView modelAndView = new ModelAndView("fragments/expenses_graph");
+        ModelAndView modelAndView = new ModelAndView("expenses/fragments/graph");
         Map<LocalDate, List<ExpenseSummary>> expenseSummaryForMonths = expenseService.getExpenseSummariesForLastMonths(lastMonths);
 
         List<ExpenseGraphItem> expenseGraphItems = new ArrayList<>();
@@ -194,7 +193,7 @@ public class ExpensesController {
     @GetMapping(path = "/detail/monthly")
     public ModelAndView getExpensesMonthlyDetails(@RequestParam(value = "year", required = false) Integer year,
                                                    @RequestParam(value = "month", required = false) Integer month) {
-        ModelAndView modelAndView = new ModelAndView("fragments/expenses_details");
+        ModelAndView modelAndView = new ModelAndView("expenses/fragments/details");
         List<ExpenseDTO> expensesForMonth = expenseService.getExpensesForMonth(year, month);
 
         modelAndView.addObject("expensesForMonth", expensesForMonth);

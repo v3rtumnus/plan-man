@@ -1,19 +1,11 @@
 package at.v3rtumnus.planman.controller.ui;
 
-import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
-import at.v3rtumnus.planman.dto.expense.ExpenseGraphItem;
-import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
 import at.v3rtumnus.planman.dto.insurance.InsuranceEntryDTO;
-import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryType;
-import at.v3rtumnus.planman.entity.insurance.InsurancePerson;
 import at.v3rtumnus.planman.entity.insurance.InsuranceType;
-import at.v3rtumnus.planman.service.ExpenseService;
 import at.v3rtumnus.planman.service.InsuranceService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import jakarta.websocket.server.PathParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -24,9 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/insurance")
@@ -70,7 +60,7 @@ public class InsuranceController {
     public ModelAndView getEntriesTable(@RequestParam(value = "year", required = false) String year,
                                                   @RequestParam(value = "person", required = false) String person,
                                                   @RequestParam(value = "state", required = false) String state) {
-        ModelAndView modelAndView = new ModelAndView("fragments/insurance_table");
+        ModelAndView modelAndView = new ModelAndView("insurance/fragments/table");
 
         List<InsuranceEntryDTO> insuranceEntries = insuranceService.getInsuranceEntries(!year.equals("ALL") ? year : null,
                 !person.equals("ALL") ? person : null,

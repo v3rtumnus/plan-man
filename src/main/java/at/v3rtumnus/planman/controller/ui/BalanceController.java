@@ -2,27 +2,17 @@ package at.v3rtumnus.planman.controller.ui;
 
 import at.v3rtumnus.planman.dto.balance.BalanceComparisonDto;
 import at.v3rtumnus.planman.dto.balance.BalanceGroupDto;
-import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
-import at.v3rtumnus.planman.dto.expense.ExpenseGraphItem;
-import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
 import at.v3rtumnus.planman.entity.balance.BalanceGroupType;
-import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import at.v3rtumnus.planman.service.BalanceService;
-import at.v3rtumnus.planman.service.ExpenseService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/balance")
@@ -39,7 +29,7 @@ public class BalanceController {
 
     @GetMapping(path = "/detail")
     public ModelAndView getExpensesMonthlyOverview() {
-        ModelAndView modelAndView = new ModelAndView("fragments/balance_details");
+        ModelAndView modelAndView = new ModelAndView("balance/fragments/details");
 
         Map<BalanceGroupType, List<BalanceGroupDto>> groups = balanceService.retrieveBalanceGroups();
 
@@ -67,7 +57,7 @@ public class BalanceController {
 
     @GetMapping(path = "/comparison")
     public ModelAndView getBalanceComparison() {
-        ModelAndView modelAndView = new ModelAndView("fragments/balance_comparison");
+        ModelAndView modelAndView = new ModelAndView("balance/fragments/comparison");
 
         List<BalanceComparisonDto> balanceComparisons = balanceService.getBalanceComparisons();
 
