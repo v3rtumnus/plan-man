@@ -1,5 +1,7 @@
 package at.v3rtumnus.planman.entity.insurance;
 
+import at.v3rtumnus.planman.entity.expense.Expense;
+import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -81,8 +83,12 @@ public class InsuranceEntry {
     @Column
     private BigDecimal privateInsuranceAmount;
 
+    @ManyToOne
+    @JoinColumn(name = "EXPENSE_ID")
+    private Expense expense;
+
     public InsuranceEntry(LocalDate entryDate, InsurancePerson person, InsuranceEntryType type, InsuranceType insuranceType, String doctor,
-                          InsuranceEntryState state, BigDecimal amount, String invoiceFilename, byte[] invoiceData) {
+                          InsuranceEntryState state, BigDecimal amount, String invoiceFilename, byte[] invoiceData, Expense expense) {
         this.entryDate = entryDate;
         this.person = person;
         this.type = type;
@@ -92,5 +98,6 @@ public class InsuranceEntry {
         this.amount = amount;
         this.invoiceFilename = invoiceFilename;
         this.invoiceData = invoiceData;
+        this.expense = expense;
     }
 }

@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_16.xml" xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <changeSet author="michael" id="add amount received columns">
+        <addColumn
+                tableName="insurance_entry" >
+            <column name="expense_id"
+                    type="BIGINT UNSIGNED">
+            </column>
+        </addColumn>
+        <insert tableName="expense">
+            <column name="id" value="10000000000000" />
+            <column name="transaction_date" valueDate="1970-01-01" />
+            <column name="amount" value="0" />
+            <column name="expense_category_id" value="1" />
+            <column name="user_profile_id" value="michael" />
+        </insert>
+        <update tableName="insurance_entry">
+            <column name="expense_id" value="10000000000000"/>
+        </update>
+        <addForeignKeyConstraint baseColumnNames="expense_id" baseTableName="insurance_entry" constraintName="insurance_fk_2" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id" referencedTableName="expense" validate="true"/>
+        <addNotNullConstraint columnDataType="BIGINT UNSIGNED"
+                              columnName="expense_id"
+                              constraintName="insurance_expense_nn"
+                              tableName="insurance_entry"
+                              validate="true"/>
+    </changeSet>
+</databaseChangeLog>

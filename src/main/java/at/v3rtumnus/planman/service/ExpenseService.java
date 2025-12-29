@@ -75,7 +75,7 @@ public class ExpenseService {
         return expenseCategoryRepository.findAllByOrderByName();
     }
 
-    public void saveExpense(ExpenseDTO expense) {
+    public Expense saveExpense(ExpenseDTO expense) {
         log.info("Saving expense for category {}", expense.getCategory());
 
         ExpenseCategory category = expenseCategoryRepository.findByName(expense.getCategory())
@@ -84,9 +84,11 @@ public class ExpenseService {
         UserProfile user = userProfileRepository.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new UsernameNotFoundException("Username could not be found"));
 
-        expenseRepository.saveAndFlush(new Expense(null, expense.getDate(), expense.getComment(), expense.getAmount(), category, user));
+        Expense savedExpense = expenseRepository.saveAndFlush(new Expense(null, expense.getDate(), expense.getComment(), expense.getAmount(), category, user));
 
         log.info("Expense successfully saved");
+
+        return savedExpense;
     }
 
     public void deleteExpense(long id) {

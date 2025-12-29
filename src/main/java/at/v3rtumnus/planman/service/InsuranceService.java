@@ -1,12 +1,12 @@
 package at.v3rtumnus.planman.service;
 
+import at.v3rtumnus.planman.dao.ExpenseRepository;
 import at.v3rtumnus.planman.dao.InsuranceEntryRepository;
 import at.v3rtumnus.planman.dao.InsurancePersonRepository;
+import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
 import at.v3rtumnus.planman.dto.insurance.InsuranceEntryDTO;
-import at.v3rtumnus.planman.entity.insurance.InsuranceEntry;
-import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
-import at.v3rtumnus.planman.entity.insurance.InsurancePerson;
-import at.v3rtumnus.planman.entity.insurance.InsuranceType;
+import at.v3rtumnus.planman.entity.expense.Expense;
+import at.v3rtumnus.planman.entity.insurance.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,16 +26,22 @@ public class InsuranceService {
 
     private final InsuranceEntryRepository insuranceEntryRepository;
     private final InsurancePersonRepository insurancePersonRepository;
+    private final ExpenseService expenseService;
+    private final ExpenseRepository expenseRepository;
 
     public void saveInsuranceEntry(InsuranceEntryDTO insuranceEntry) {
         log.info("Saving insurance entry");
+
+        String expenseCategory = insuranceEntry.getType() == InsuranceEntryType.DOCTOR ? "Arzt" : "Apotheke";
+        Expense expense = expenseService.saveExpense(new ExpenseDTO(null, insuranceEntry.getAmount(),
+                expenseCategory, insuranceEntry.getDoctor(), insuranceEntry.getEntryDate()));
 
         InsurancePerson person = insurancePersonRepository.findByName(insuranceEntry.getPerson())
                 .orElseThrow(() -> new RuntimeException("Person not found"));
 
         insuranceEntryRepository.saveAndFlush(new InsuranceEntry(insuranceEntry.getEntryDate(),
                 person, insuranceEntry.getType(), insuranceEntry.getInsuranceType(), insuranceEntry.getDoctor(), insuranceEntry.getState(),
-                insuranceEntry.getAmount(), insuranceEntry.getInvoiceFilename(), insuranceEntry.getInvoiceData()));
+                insuranceEntry.getAmount(), insuranceEntry.getInvoiceFilename(), insuranceEntry.getInvoiceData(), expense));
 
         log.info("Insurance entry successfully saved");
     }
@@ -47,6 +53,7 @@ public class InsuranceService {
                 .map(InsurancePerson::getName)
                 .toList();
     }
+
     public List<String> getYears() {
         LocalDate oldestEntryDate = insuranceEntryRepository.getOldestInsuranceEntryDate().orElse(LocalDate.now());
         List<String> years = new java.util.ArrayList<>(Collections.emptyList());
@@ -93,6 +100,14 @@ public class InsuranceService {
         } else {
             insuranceEntryRepository.updateStateWithPrivateInsurance(id, state, amount, fileName, fileData);
         }
+
+        insuranceEntryRepository.findById(id).ifPresent(insuranceEntry -> {
+            Expense expense = insuranceEntry.getExpense();
+
+            expense.setAmount(expense.getAmount().subtract(amount));
+
+            expenseRepository.save(expense);
+        });
     }
 
     @Transactional
