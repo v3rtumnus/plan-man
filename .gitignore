@@ -34,3 +34,4 @@ out/
 tmp
 
 src/main/resources/application-local.properties
+.claude

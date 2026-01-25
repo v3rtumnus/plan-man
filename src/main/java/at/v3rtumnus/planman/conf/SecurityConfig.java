@@ -30,31 +30,27 @@ public class SecurityConfig {
     @Bean
     protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.headers().frameOptions().and().contentSecurityPolicy("frame-ancestors 'self' home.altenburger.io").and().and()
-                .csrf().disable()
-                .authorizeRequests()
-                .requestMatchers("/login", "/resources/**", "/favicon.ico").permitAll()
-                .requestMatchers("/credit/**").hasAnyRole("USER")
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN")
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .loginPage("/login")
-                .permitAll()
-                .and()
-                .logout()
-                .permitAll()
-                .and()
-                .exceptionHandling().accessDeniedHandler(accessDeniedHandler)
-                .and()
-                .rememberMe()
-                .tokenRepository(persistentTokenRepository())
-                .rememberMeParameter("remember-me")
-                .rememberMeCookieName("plan-man-remember-me")
-                .and()
-                .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login");
+        http
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("frame-ancestors 'self' home.altenburger.io")))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/login", "/resources/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/credit/**").hasAnyRole("USER")
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN")
+                        .anyRequest().authenticated())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login")
+                        .permitAll())
+                .exceptionHandling(ex -> ex.accessDeniedHandler(accessDeniedHandler))
+                .rememberMe(remember -> remember
+                        .tokenRepository(persistentTokenRepository())
+                        .rememberMeParameter("remember-me")
+                        .rememberMeCookieName("plan-man-remember-me"));
 
         return http.build();
     }

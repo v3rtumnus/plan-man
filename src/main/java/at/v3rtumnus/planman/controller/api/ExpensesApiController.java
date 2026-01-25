@@ -18,7 +18,7 @@ public class ExpensesApiController {
 
     private final ExpenseService expenseService;
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody void saveExpense(@RequestBody ExpenseDTO expense) {
         expenseService.saveExpense(expense);
     }
