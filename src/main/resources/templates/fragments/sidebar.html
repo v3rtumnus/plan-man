@@ -1,4 +1,4 @@
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
 <body>
   <div th:fragment="sidebar">
@@ -7,24 +7,24 @@
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link collapsed" th:href="@{/}">
+          <a th:class="${currentPath == '/'} ? 'nav-link' : 'nav-link collapsed'" th:href="@{/}">
             <i class="bi bi-grid"></i>
             <span>Home</span>
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link " data-bs-target="#expenses-nav" data-bs-toggle="collapse" href="#">
+          <a th:class="${#strings.startsWith(currentPath, '/expenses')} ? 'nav-link' : 'nav-link collapsed'" data-bs-target="#expenses-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-cart2"></i><span>Ausgaben</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="expenses-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <ul id="expenses-nav" th:class="${#strings.startsWith(currentPath, '/expenses')} ? 'nav-content collapse show' : 'nav-content collapse'" data-bs-parent="#sidebar-nav">
             <li>
-              <a th:href="@{/expenses}">
+              <a th:href="@{/expenses}" th:class="${currentPath == '/expenses'} ? 'active' : ''">
                 <i class="bi bi-circle"></i><span>&Uuml;bersicht</span>
               </a>
             </li>
             <li>
-              <a th:href="@{/expenses/detail}">
+              <a th:href="@{/expenses/detail}" th:class="${currentPath == '/expenses/detail'} ? 'active' : ''">
                 <i class="bi bi-circle"></i><span>Detailansicht</span>
               </a>
             </li>
@@ -32,31 +32,31 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" th:href="@{/insurance/overview}">
+          <a th:class="${#strings.startsWith(currentPath, '/insurance')} ? 'nav-link' : 'nav-link collapsed'" th:href="@{/insurance/overview}">
             <i class="bi bi-bandaid"></i>
             <span>Privatversicherung</span>
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" th:href="@{/balance}">
+          <a th:class="${#strings.startsWith(currentPath, '/balance')} ? 'nav-link' : 'nav-link collapsed'" th:href="@{/balance}">
             <i class="bi bi-table"></i>
             <span>Monatsbilanz</span>
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#credit-nav" data-bs-toggle="collapse" href="#">
+          <a th:class="${#strings.startsWith(currentPath, '/credit')} ? 'nav-link' : 'nav-link collapsed'" data-bs-target="#credit-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-house"></i><span>Kredit</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="credit-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="credit-nav" th:class="${#strings.startsWith(currentPath, '/credit')} ? 'nav-content collapse show' : 'nav-content collapse'" data-bs-parent="#sidebar-nav">
             <li>
-              <a th:href="@{/credit/overview}">
+              <a th:href="@{/credit/overview}" th:class="${currentPath == '/credit/overview'} ? 'active' : ''">
                 <i class="bi bi-circle"></i><span>Kredit&uuml;bersicht</span>
               </a>
             </li>
             <li>
-              <a th:href="@{/credit/plan}">
+              <a th:href="@{/credit/plan}" th:class="${currentPath == '/credit/plan'} ? 'active' : ''">
                 <i class="bi bi-circle"></i><span>Tilgungsplan</span>
               </a>
             </li>
@@ -64,29 +64,29 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" th:href="@{/finance/overview}">
+          <a th:class="${#strings.startsWith(currentPath, '/finance')} ? 'nav-link' : 'nav-link collapsed'" th:href="@{/finance/overview}">
             <i class="bi bi-currency-euro"></i>
             <span>Finanz&uuml;bersicht</span>
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#finance-nav" data-bs-toggle="collapse" href="#">
+          <a th:class="${#strings.startsWith(currentPath, '/securities')} ? 'nav-link' : 'nav-link collapsed'" data-bs-target="#finance-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-graph-up"></i><span>Wertpapiere</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="finance-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="finance-nav" th:class="${#strings.startsWith(currentPath, '/securities')} ? 'nav-content collapse show' : 'nav-content collapse'" data-bs-parent="#sidebar-nav">
             <li>
-              <a th:href="@{/securities/overview}">
+              <a th:href="@{/securities/overview}" th:class="${currentPath == '/securities/overview'} ? 'active' : ''">
                 <i class="bi bi-circle"></i><span>&Uuml;bersicht</span>
               </a>
             </li>
             <li>
-              <a th:href="@{/securities/history}">
+              <a th:href="@{/securities/history}" th:class="${currentPath == '/securities/history'} ? 'active' : ''">
                 <i class="bi bi-circle"></i><span>Verlauf</span>
               </a>
             </li>
             <li>
-              <a th:href="@{/securities/upload}">
+              <a th:href="@{/securities/upload}" th:class="${currentPath == '/securities/upload'} ? 'active' : ''">
                 <i class="bi bi-circle"></i><span>Upload</span>
               </a>
             </li>
