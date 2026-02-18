@@ -1,0 +1,29 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_17.xml" xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <changeSet author="michael" id="add ai conversation tables">
+        <createTable tableName="ai_conversation">
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <createTable tableName="ai_message">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="conversation_id" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(20)"/>
+            <column name="content" type="LONGTEXT"/>
+            <column name="timestamp" type="DATETIME"/>
+            <column name="trace_id" type="VARCHAR(64)"/>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="ai_message" baseColumnNames="conversation_id"
+            referencedTableName="ai_conversation" referencedColumnNames="id"
+            constraintName="fk_ai_message_conversation"
+            onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

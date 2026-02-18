@@ -1,0 +1,112 @@
+package at.v3rtumnus.planman.service.anonymization;
+
+public enum EntityType {
+    EMAIL("EMAIL"),
+    PHONE("PHONE"),
+    NAME("NAME"),
+    FIRST_NAME("FNAME"),
+    LAST_NAME("LNAME"),
+    USERNAME("USER"),
+    FULL_NAME("FULLNAME"),
+
+    CREDIT_CARD("CC"),
+    DEBIT_CARD("DEBIT"),
+    IBAN("IBAN"),
+    BIC_SWIFT("BIC"),
+    BANK_ACCOUNT("ACCOUNT"),
+    CURRENCY_AMOUNT("AMOUNT"),
+    MONETARY_VALUE("MONEY"),
+
+    AUSTRIAN_SVN("AT_SVN"),
+    AUSTRIAN_STEUERNUMMER("AT_STEUER"),
+    AUSTRIAN_FIRMENBUCH("AT_FN"),
+    AUSTRIAN_ZVR("AT_ZVR"),
+    AUSTRIAN_UID("AT_UID"),
+    AUSTRIAN_PASSPORT("AT_PASS"),
+    AUSTRIAN_PERSONALAUSWEIS("AT_PERSO"),
+
+    GERMAN_SOZIALVERSICHERUNG("DE_SVN"),
+    GERMAN_STEUER_ID("DE_STEUER"),
+    GERMAN_PERSONALAUSWEIS("DE_PERSO"),
+
+    SSN("US_SSN"),
+    US_PASSPORT("US_PASS"),
+    US_DRIVERS_LICENSE("US_DL"),
+    US_TIN("US_TIN"),
+
+    PASSPORT("PASSPORT"),
+    NATIONAL_ID("NATIONAL_ID"),
+    DRIVERS_LICENSE("DL"),
+
+    STREET_ADDRESS("STREET"),
+    FULL_ADDRESS("ADDRESS"),
+    CITY("CITY"),
+    POSTAL_CODE("ZIP"),
+    COUNTRY("COUNTRY"),
+    COORDINATES("COORDS"),
+    GPS("GPS"),
+
+    LICENSE_PLATE("PLATE"),
+    AUSTRIAN_LICENSE_PLATE("AT_PLATE"),
+    GERMAN_LICENSE_PLATE("DE_PLATE"),
+    VIN("VIN"),
+
+    IP_ADDRESS("IP"),
+    IPV6_ADDRESS("IPV6"),
+    MAC_ADDRESS("MAC"),
+    URL("URL"),
+    DOMAIN("DOMAIN"),
+
+    HEALTH_INSURANCE_NUMBER("HEALTH_ID"),
+    AUSTRIAN_SVNR("AT_SVNR"),
+    GERMAN_KVNR("DE_KVNR"),
+
+    DATE_OF_BIRTH("DOB"),
+    DATE("DATE"),
+    TIME("TIME"),
+    DATETIME("DATETIME"),
+    AGE("AGE"),
+
+    QUANTITY("QTY"),
+    PERCENTAGE("PERCENT"),
+    GENERIC_NUMBER("NUM"),
+    LARGE_NUMBER("BIGNUM"),
+    DECIMAL_NUMBER("DECIMAL"),
+    ORDINAL("ORDINAL"),
+
+    FAX("FAX"),
+    MOBILE("MOBILE"),
+    LANDLINE("LANDLINE"),
+
+    EMPLOYEE_ID("EMP_ID"),
+    COMPANY_NAME("COMPANY"),
+
+    UUID("UUID"),
+    SERIAL_NUMBER("SERIAL"),
+    REFERENCE_NUMBER("REF"),
+    ORDER_NUMBER("ORDER"),
+    INVOICE_NUMBER("INVOICE"),
+    CUSTOMER_NUMBER("CUST_NUM"),
+    CONTRACT_NUMBER("CONTRACT"),
+    POLICY_NUMBER("POLICY"),
+
+    HOME_ROOM("ROOM"),
+    HOME_ZONE("ZONE"),
+    HOME_SCENE("SCENE"),
+
+    CUSTOM("CUSTOM");
+
+    private final String prefix;
+
+    EntityType(String prefix) {
+        this.prefix = prefix;
+    }
+
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public String createPlaceholder(int index) {
+        return "[" + prefix + "_" + index + "]";
+    }
+}

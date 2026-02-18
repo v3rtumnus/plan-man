@@ -92,6 +92,13 @@
             </li>
           </ul>
         </li>
+        <li class="nav-item">
+          <a th:class="${#strings.startsWith(currentPath, '/assistant')} ? 'nav-link' : 'nav-link collapsed'" th:href="@{/assistant}">
+            <i class="bi bi-robot"></i>
+            <span>KI-Assistent</span>
+          </a>
+        </li>
+
       </ul>
     </aside>
   </div>
