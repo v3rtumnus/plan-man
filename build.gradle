@@ -2,6 +2,7 @@ plugins {
 	id 'org.springframework.boot' version '4.0.1'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'java'
+	id 'jacoco'
 }
 
 group = 'at.v3rtumnus'
@@ -40,7 +41,7 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-liquibase'
 
-	implementation 'org.apache.pdfbox:pdfbox:3.0.0-RC1'
+	implementation 'org.apache.pdfbox:pdfbox:3.0.2'
 	implementation 'org.jsoup:jsoup:1.17.2'
 
 	// AI Assistant
@@ -54,7 +55,58 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok:1.18.42'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+	testImplementation 'com.h2database:h2'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation('org.wiremock:wiremock-standalone:3.9.2') {
+		exclude group: 'ch.qos.logback'
+		exclude group: 'org.slf4j', module: 'slf4j-api'
+	}
 }
+
+test {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+def jacocoExclusions = [
+	'**/PlanManApplication*',   // Spring Boot entry point – no testable logic
+	'**/entity/**',             // Lombok-generated JPA POJOs – no business logic
+	'**/dto/**',                // Lombok-generated DTOs – no business logic
+	'**/mcp/StdioMcpClient*',  // Spawns OS processes via stdio – cannot unit-test
+]
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+	}
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: jacocoExclusions)
+		}))
+	}
+}
+
+jacocoTestCoverageVerification {
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: jacocoExclusions)
+		}))
+	}
+	violationRules {
+		rule {
+			limit {
+				counter = 'LINE'
+				minimum = 0.90
+			}
+		}
+	}
+}
+
+check.dependsOn jacocoTestCoverageVerification
 
 dependencyManagement {
 	imports {

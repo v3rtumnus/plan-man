@@ -12,6 +12,7 @@ import at.v3rtumnus.planman.entity.finance.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.PDFTextStripperByArea;
@@ -71,7 +72,7 @@ public class FinanceImportService {
 
     private List<String> getTextFromPDF(MultipartFile file) {
         List<String> lines;
-        try (PDDocument document = Loader.loadPDF(file.getInputStream())) {
+        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBuffer(file.getBytes()))) {
             PDFTextStripperByArea stripper = new PDFTextStripperByArea();
             stripper.setSortByPosition(true);
 
