@@ -101,9 +101,9 @@
     <div id="successNotification" class="alert alert-primary" role="alert" style="display: none">&Auml;nderungen erfolgreich durchgef&uuml;hrt</div>
     <div id="errorNotification" class="alert alert-danger" role="alert" style="display: none">Leider ist ein Fehler aufgetreten</div>
 
-    <form class="form-inline">
-        <label for="monthSelection">Monat ausw&auml;hlen:&nbsp;&nbsp;&nbsp;</label>
-        <select id="monthSelection" style="text-align: center" onchange="retrieveMonthlyDetails()" name="monthSelection">
+    <form class="d-flex flex-wrap align-items-center gap-2">
+        <label for="monthSelection">Monat ausw&auml;hlen:</label>
+        <select id="monthSelection" class="form-select w-auto" onchange="retrieveMonthlyDetails()" name="monthSelection">
             <option th:each="dateOption: ${datesToSelect}" th:value="${#temporals.format(dateOption, 'M-yyyy')}">[[${#temporals.format(dateOption, 'MMMM yyyy', new java.util.Locale("de"))}]]</option>
         </select>
 

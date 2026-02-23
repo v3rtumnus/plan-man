@@ -12,8 +12,9 @@
 </head>
 <body>
 <div th:fragment="monthlySection"  class="container">
-    <div class="row" style="--bs-gutter-x: 5rem;">
+    <div class="row">
         <div class="col-md-6">
+            <div class="table-responsive">
             <table class="table table-borderless table-sm">
                 <tbody th:each="incomeGroup: ${incomeGroups}">
                 <tr>
@@ -40,8 +41,10 @@
                 </tr>
                 </tbody>
             </table>
+            </div>
         </div>
         <div class="col-md-6">
+            <div class="table-responsive">
             <table class="table table-borderless table-sm">
                 <tbody th:each="expenditureGroup: ${expenditureGroups}">
                 <tr class="expenditureGroupRow" style="cursor: pointer;">
@@ -58,6 +61,7 @@
                     <td style="text-align: right; font-weight: bold" th:text="${@thymeleafService.formatNumber(expenditureSum, 2, 'EUR')}"></td>
                 </tr>
             </table>
+            </div>
         </div>
     </div>
 </div>

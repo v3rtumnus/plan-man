@@ -5,6 +5,7 @@
 <div th:fragment="monthlyComparisonSection"  class="container">
     <div class="row">
         <div class="col">
+            <div class="table-responsive">
             <table class="table table-borderless table-sm">
                 <thead>
                     <tr>
@@ -21,6 +22,7 @@
                     <td th:class="${@thymeleafService.getNumberClass(monthlyComparison.netSum)}" th:text="${@thymeleafService.formatNumber(monthlyComparison.netSum, 2, 'EUR')}"></td>
                 </tr>
             </table>
+            </div>
         </div>
     </div>
 </div>
