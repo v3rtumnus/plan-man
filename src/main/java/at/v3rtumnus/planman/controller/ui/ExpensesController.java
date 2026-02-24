@@ -23,13 +23,22 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ExpensesController {
 
-    private static final List<String> COLORS = Arrays.asList(
-      "'#FF6F61'", "'#6B5B95'", "'#88B04B'", "'#F7CAC9'", "'#92A8D1'",
-            "'#955251'", "'#B565A7'", "'#009B77'", "'#DD4124'", "'#D65076'",
-            "'#45B8AC'", "'#EFC050'", "'#5B5EA6'", "'#9B2335'", "'#DFCFBE'"
-    );
-
     private final ExpenseService expenseService;
+
+    private Map<String, String> buildCategoryColorMap() {
+        List<String> sortedNames = expenseService.getExpenseCategories()
+                .stream()
+                .map(ExpenseCategory::getName)
+                .sorted()
+                .collect(Collectors.toList());
+        int total = Math.max(sortedNames.size(), 1);
+        Map<String, String> colorMap = new LinkedHashMap<>();
+        for (int i = 0; i < sortedNames.size(); i++) {
+            int hue = (int) Math.round(360.0 * i / total);
+            colorMap.put(sortedNames.get(i), "'hsl(" + hue + ", 65%, 50%)'");
+        }
+        return colorMap;
+    }
 
     @GetMapping
     public ModelAndView getExpenses() {
@@ -83,6 +92,8 @@ public class ExpensesController {
         List<ExpenseSummary> expenseSummaryForMonth = expenseService.getExpenseSummaryForMonth(
                 year, month);
 
+        Map<String, String> colorMap = buildCategoryColorMap();
+
         List<String> categories = expenseSummaryForMonth
                 .stream()
                 .map(es -> "'" + es.getCategory() + "'")
@@ -93,9 +104,14 @@ public class ExpensesController {
                 .map(ExpenseSummary::getAmount)
                 .collect(Collectors.toList());
 
+        List<String> colors = expenseSummaryForMonth
+                .stream()
+                .map(es -> colorMap.getOrDefault(es.getCategory(), "'hsl(0, 0%, 50%)'"))
+                .collect(Collectors.toList());
+
         modelAndView.addObject("categories", categories);
         modelAndView.addObject("amounts", amounts);
-        modelAndView.addObject("colors", COLORS.subList(0, categories.size()));
+        modelAndView.addObject("colors", colors);
 
         return modelAndView;
     }
@@ -119,6 +135,8 @@ public class ExpensesController {
                 }
         ));
 
+        Map<String, String> colorMap = buildCategoryColorMap();
+
         for (int i = 0; i < expenseGraphItems.size(); i++) {
             String category = expenseGraphItems.get(i).getCategory();
 
@@ -132,7 +150,7 @@ public class ExpensesController {
 
                 expenseGraphItems.get(i).getAmounts().add(amount);
             }
-            expenseGraphItems.get(i).setColor(COLORS.get(i % COLORS.size()));
+            expenseGraphItems.get(i).setColor(colorMap.getOrDefault(category, "'hsl(0, 0%, 50%)'"));
         }
 
         List<String> dates = expenseSummaryForMonths.keySet()

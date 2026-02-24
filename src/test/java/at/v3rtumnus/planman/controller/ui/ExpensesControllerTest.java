@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.controller.ui;
 
+import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import at.v3rtumnus.planman.service.ExpenseService;
 import at.v3rtumnus.planman.service.PlanManUserDetailsService;
 import org.junit.jupiter.api.Test;
@@ -66,6 +67,7 @@ class ExpensesControllerTest {
     @Test
     void getExpensesPie_withParams_returns200() throws Exception {
         when(expenseService.getExpenseSummaryForMonth(2024, 3)).thenReturn(List.of());
+        when(expenseService.getExpenseCategories()).thenReturn(List.of());
 
         mockMvc.perform(get("/expenses/pie").param("year", "2024").param("month", "3"))
                 .andExpect(status().isOk())
@@ -75,6 +77,7 @@ class ExpensesControllerTest {
     @Test
     void getExpensesGraph_returns200() throws Exception {
         when(expenseService.getExpenseSummariesForLastMonths(any())).thenReturn(new TreeMap<>());
+        when(expenseService.getExpenseCategories()).thenReturn(List.of());
 
         mockMvc.perform(get("/expenses/graph"))
                 .andExpect(status().isOk())
@@ -110,6 +113,10 @@ class ExpensesControllerTest {
         data.put(LocalDate.of(2024, 2, 1), List.of(groceries));
 
         when(expenseService.getExpenseSummariesForLastMonths(any())).thenReturn(data);
+        when(expenseService.getExpenseCategories()).thenReturn(List.of(
+                new ExpenseCategory(1L, "Groceries"),
+                new ExpenseCategory(2L, "Transport")
+        ));
 
         mockMvc.perform(get("/expenses/graph"))
                 .andExpect(status().isOk())
