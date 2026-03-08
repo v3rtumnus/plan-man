@@ -27,6 +27,16 @@
             updateAmountReceived(id, "PRIVATE")
         });
 
+        $(document).on('click', '.update-insurance-btn', function () {
+            var btn = $(this);
+            updateInsuranceEntry(btn.data('id'), btn.data('state'));
+        });
+
+        $(document).on('click', '.save-insurance-btn', function () {
+            var btn = $(this);
+            updateInsuranceEntry(btn.data('id'), btn.data('state'), btn.data('amountId'), btn.data('fileId'), btn.data('modalId'));
+        });
+
         function updateAmountReceived(id, type) {
             var fd = new FormData();
             fd.append( 'type', type);

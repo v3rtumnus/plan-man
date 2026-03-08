@@ -1,0 +1,55 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_23.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                                       http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <changeSet author="michael" id="update-exercise-videos-to-verified-ones">
+        <!-- Replace obscure/private videos with ones from reliable fitness channels that allow embedding -->
+        
+        <!-- RUNNING - Using a standard running technique video -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=VAuJvTYjWC8"/>
+            <where>category = 'RUNNING'</where>
+        </update>
+        
+        <!-- WARM_UP - Using a mobilization routine video -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=844f2w-I474"/>
+            <where>category = 'WARM_UP'</where>
+        </update>
+        
+        <!-- CORE - Using a reliable core exercise video -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=H2a-sJBYsBo"/>
+            <where>category = 'CORE' AND (video_url IS NULL OR video_url LIKE '%5_MsMS8_f-o%')</where>
+        </update>
+
+        <!-- UPPER_BODY - Using a push-up technique video -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=e_1BDnOVKso"/>
+            <where>category = 'UPPER_BODY' AND (video_url IS NULL OR video_url LIKE '%5_MsMS8_f-o%')</where>
+        </update>
+        
+        <!-- LOWER_BODY - Using a squat technique video -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=3X9j4IJQ8JU"/>
+            <where>category = 'LOWER_BODY' AND (video_url IS NULL OR video_url LIKE '%5_MsMS8_f-o%')</where>
+        </update>
+        
+        <!-- COOL_DOWN - Using a stretching video -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=7XG-z80G5iI"/>
+            <where>category = 'COOL_DOWN'</where>
+        </update>
+
+        <!-- Specific fixes for remaining suspect IDs -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=VAuJvTYjWC8"/>
+            <where>video_url LIKE '%L_C8Cg7j00g%' OR video_url LIKE '%5_MsMS8_f-o%'</where>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

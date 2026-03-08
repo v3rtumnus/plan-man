@@ -1,0 +1,338 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/header :: header-css}"/>
+    <script th:src="@{/resources/vendor/chart.js/chart.umd.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var progressData = /*[[${progress}]]*/ null;
+        /*]]>*/
+
+        $(document).ready(function () {
+            if (!progressData) return;
+
+            // Training days bar chart
+            new Chart(document.getElementById('trainingDaysChart'), {
+                type: 'bar',
+                data: {
+                    labels: progressData.weekLabels,
+                    datasets: [{
+                        label: 'Trainingstage',
+                        data: progressData.trainingDaysPerWeek,
+                        backgroundColor: 'rgba(13, 110, 253, 0.7)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+
+            // Running km line chart
+            new Chart(document.getElementById('runningKmChart'), {
+                type: 'line',
+                data: {
+                    labels: progressData.weekLabels,
+                    datasets: [{
+                        label: 'Gelaufene km',
+                        data: progressData.runningKmPerWeek,
+                        borderColor: 'rgba(25, 135, 84, 1)',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Difficulty line chart
+            new Chart(document.getElementById('difficultyChart'), {
+                type: 'line',
+                data: {
+                    labels: progressData.weekLabels,
+                    datasets: [{
+                        label: 'Ø Schwierigkeit',
+                        data: progressData.avgDifficultyPerWeek,
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: 5 } }
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Fitness &ndash; &Uuml;bersicht</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                <li class="breadcrumb-item active">Fitness</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Today's session -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card" th:if="${todaySession != null}">
+                <div class="card-body">
+                    <h5 class="card-title">Nächste Einheit</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <span th:if="${todaySession.sessionType.name() == 'RUNNING'}" class="badge bg-success me-2 fs-6">
+                            <i class="bi bi-person-walking me-1"></i>Laufen
+                        </span>
+                        <span th:if="${todaySession.sessionType.name() == 'BODYWEIGHT'}" class="badge bg-primary me-2 fs-6">
+                            <i class="bi bi-lightning me-1"></i>K&ouml;rpergewicht
+                        </span>
+                        <span class="text-muted"><i class="bi bi-clock me-1"></i>ca. <span th:text="${todaySession.estimatedDurationMinutes}">30</span> min</span>
+                    </div>
+                    <p class="text-muted small" th:text="${todaySession.description}"></p>
+                    <!-- Exercise list -->
+                    <ul class="list-unstyled small mb-3" th:if="${not #lists.isEmpty(todaySession.exercises)}">
+                        <li th:each="ex : ${todaySession.exercises}" class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-check2 text-muted"></i>
+                            <span th:text="${ex.exercise.name}"></span>
+                            <span class="text-muted" th:if="${ex.targetSets != null and ex.targetReps != null}"
+                                  th:text="'· ' + ${ex.targetSets} + '×' + ${ex.targetReps}"></span>
+                            <span class="text-muted" th:if="${ex.targetDurationSeconds != null}"
+                                  th:text="'· ' + ${ex.targetDurationSeconds} + 's'"></span>
+                        </li>
+                    </ul>
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        <a th:href="@{/fitness/session/{id}/active(id=${todaySession.id})}" class="btn btn-primary">
+                            <i class="bi bi-play-fill me-1"></i>Training starten
+                        </a>
+                        <button class="btn btn-success" th:onclick="'markDone(' + ${todaySession.id} + ')'">
+                            <i class="bi bi-check-lg me-1"></i>Als erledigt markieren
+                        </button>
+                        <a th:href="@{/fitness/plan}" class="btn btn-outline-secondary">
+                            <i class="bi bi-list-ul me-1"></i>Plan ansehen
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card" th:if="${todaySession == null and plan != null}">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-check-circle text-success" style="font-size:3rem;"></i>
+                    <h5 class="mt-3">Alle Einheiten absolviert!</h5>
+                    <p class="text-muted">Du hast alle geplanten Sessions abgeschlossen. Die KI generiert bald einen neuen Plan.</p>
+                </div>
+            </div>
+            <div class="card" th:if="${plan == null}">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-calendar-plus text-primary" style="font-size:3rem;"></i>
+                    <h5 class="mt-3">Kein aktiver Plan</h5>
+                    <p class="text-muted">Starte die Erstbefragung um deinen ersten KI-Trainingsplan zu erstellen.</p>
+                    <a th:href="@{/fitness/assessment}" class="btn btn-primary">Erstbefragung starten</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary stats -->
+        <div class="col-lg-6" th:if="${progress != null}">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Gesamtstatistik</h5>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="fs-3 fw-bold text-primary" th:text="${progress.totalSessionsCompleted}">0</div>
+                            <div class="text-muted small">Einheiten</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fs-3 fw-bold text-success" th:text="${progress.totalRunningKm}">0</div>
+                            <div class="text-muted small">km gelaufen</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fs-3 fw-bold text-warning" th:text="${progress.totalSessionsSkipped}">0</div>
+                            <div class="text-muted small">&Uuml;bersprungen</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Notes Banner -->
+    <div class="row" th:if="${plan != null and plan.aiNotes != null}">
+        <div class="col">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-info"><i class="bi bi-stars me-2"></i>KI-Kommentar zum aktuellen Plan</h6>
+                    <p class="mb-0 small" th:text="${plan.aiNotes}"></p>
+                    <div class="mt-2 text-muted small">
+                        Plan v<span th:text="${plan.version}">1</span>
+                        <span th:if="${plan.generatedAt != null}">
+                            &middot; generiert <span th:text="${#temporals.format(plan.generatedAt, 'dd.MM.yyyy HH:mm')}"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row" th:if="${progress != null and not #lists.isEmpty(progress.weekLabels) and not #lists.isEmpty(progress.trainingDaysPerWeek)}">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Trainingstage pro Woche</h5>
+                    <canvas id="trainingDaysChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Gelaufene km pro Woche</h5>
+                    <canvas id="runningKmChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Ø Schwierigkeitsbewertung</h5>
+                    <canvas id="difficultyChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="row">
+        <div class="col">
+            <div class="card border-danger mt-2">
+                <div class="card-body">
+                    <h6 class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Gefahrenzone</h6>
+                    <p class="small text-muted mb-2">Alle Fitness-Daten (Trainingsplan, Verlauf, Gewicht, Ern&auml;hrung, Gesundheitsprofil) werden unwiderruflich gel&ouml;scht. Danach startest du mit der Erstbefragung neu.</p>
+                    <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#resetModal">
+                        <i class="bi bi-trash me-1"></i>Alle Fitness-Daten zur&uuml;cksetzen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Daten zur&uuml;cksetzen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Alle Fitness-Daten (Trainingsplan, Verlauf, Gewicht, Ern&auml;hrung, Gesundheitsprofil) werden <strong>unwiderruflich gel&ouml;scht</strong>. Danach startest du mit der Erstbefragung neu.</p>
+                <p class="text-muted small">Bist du sicher?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-danger" onclick="confirmReset()">
+                    <i class="bi bi-trash me-1"></i>Ja, alles l&ouml;schen
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Mark Done Modal -->
+    <div class="modal fade" id="markDoneModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Einheit erledigt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Wie anstrengend war die Einheit?</p>
+                    <div class="d-flex gap-1 justify-content-center mb-3" id="markDoneStars">
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(1)">&#9733;</span>
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(2)">&#9733;</span>
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(3)">&#9733;</span>
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(4)">&#9733;</span>
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(5)">&#9733;</span>
+                    </div>
+                    <textarea class="form-control form-control-sm" id="markDoneNotes" rows="2" placeholder="Notiz (optional)"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success w-100" onclick="submitMarkDone()">
+                        <i class="bi bi-check-lg me-1"></i>Speichern
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmReset() {
+            $.ajax({
+                url: '/api/fitness/reset',
+                type: 'DELETE',
+                success: function () {
+                    window.location.href = '/fitness/assessment';
+                },
+                error: function () {
+                    alert('Fehler beim Zurücksetzen. Bitte erneut versuchen.');
+                }
+            });
+        }
+
+        var markDoneSessionId = null;
+        var markDoneRating = 0;
+
+        function markDone(sessionId) {
+            markDoneSessionId = sessionId;
+            markDoneRating = 0;
+            setMarkDoneRating(0);
+            document.getElementById('markDoneNotes').value = '';
+            new bootstrap.Modal(document.getElementById('markDoneModal')).show();
+        }
+
+        function setMarkDoneRating(val) {
+            markDoneRating = val;
+            document.querySelectorAll('#markDoneStars span').forEach(function(s, i) {
+                s.style.color = i < val ? '#ffc107' : '#ccc';
+            });
+        }
+
+        function submitMarkDone() {
+            if (!markDoneSessionId) return;
+            var payload = {
+                difficultyRating: markDoneRating || null,
+                notes: document.getElementById('markDoneNotes').value || null
+            };
+            $.ajax({
+                url: '/api/fitness/session/' + markDoneSessionId + '/complete',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function() { window.location.reload(); },
+                error: function() { alert('Fehler beim Speichern.'); }
+            });
+        }
+    </script>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

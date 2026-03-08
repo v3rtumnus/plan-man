@@ -1,0 +1,467 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/header :: header-css}"/>
+    <style>
+        .plan-exercise-img { cursor: zoom-in; }
+        #planImageModalBody img { width: 100%; height: auto; border-radius: 8px; }
+    </style>
+    <script>
+        // Skip session
+        function openSkipModal(sessionId) {
+            document.getElementById('skipSessionId').value = sessionId;
+            document.getElementById('skipNotes').value = '';
+            document.getElementById('skipReason').value = 'SICK';
+            toggleSkipNotesLabel();
+            if (typeof bootstrap !== 'undefined') {
+                new bootstrap.Modal(document.getElementById('skipModal')).show();
+            } else {
+                alert('Modal konnte nicht geladen werden (Bootstrap fehlt).');
+            }
+        }
+
+        function toggleSkipNotesLabel() {
+            var reason = document.getElementById('skipReason').value;
+            var label = document.getElementById('skipNotesLabel');
+            if (reason === 'OTHER_SPORT') {
+                label.textContent = 'Welchen Sport? (optional)';
+            } else if (reason === 'OTHER') {
+                label.textContent = 'Begründung (optional)';
+            } else {
+                label.textContent = 'Anmerkung (optional)';
+            }
+        }
+
+        function confirmSkip() {
+            var sessionId = document.getElementById('skipSessionId').value;
+            var reason = document.getElementById('skipReason').value;
+            var notes = document.getElementById('skipNotes').value;
+
+            $.ajax({
+                url: '/api/fitness/session/' + sessionId + '/skip',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ reason: reason, notes: notes }),
+                success: function () {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        var modalEl = document.getElementById('skipModal');
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+                    location.reload();
+                },
+                error: function () {
+                    alert('Fehler beim Überspringen der Session. Bitte erneut versuchen.');
+                }
+            });
+        }
+
+        // Regenerate plan
+        function confirmRegenerate() {
+            var notes = document.getElementById('regenNotes').value;
+            var btn = document.getElementById('regenBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>KI generiert...';
+
+            $.ajax({
+                url: '/api/fitness/regenerate-plan',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ userNotes: notes }),
+                success: function () {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        var modalEl = document.getElementById('regenModal');
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+                    location.reload();
+                },
+                error: function () {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-stars me-2"></i>Plan generieren';
+                    document.getElementById('regenError').style.display = 'block';
+                }
+            });
+        }
+
+        // Switch session type
+        function openSwitchTypeModal(sessionId, currentType) {
+            document.getElementById('switchSessionId').value = sessionId;
+            var newTypeLabel = currentType === 'RUNNING' ? 'Körpergewicht' : 'Laufen';
+            document.getElementById('switchTypeText').textContent =
+                'Diese Einheit auf "' + newTypeLabel + '" umstellen? ' +
+                'Die Übungen werden durch passende Übungen aus dem Plan ersetzt und der Plan wird danach von der KI neu generiert.';
+            if (typeof bootstrap !== 'undefined') {
+                new bootstrap.Modal(document.getElementById('switchTypeModal')).show();
+            } else {
+                alert('Modal konnte nicht geladen werden (Bootstrap fehlt).');
+            }
+        }
+
+        function confirmSwitchType() {
+            var sessionId = document.getElementById('switchSessionId').value;
+            var btn = document.getElementById('switchTypeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>KI generiert...';
+
+            $.ajax({
+                url: '/api/fitness/session/' + sessionId + '/switch-type',
+                type: 'POST',
+                success: function () {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        var modalEl = document.getElementById('switchTypeModal');
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+                    location.reload();
+                },
+                error: function () {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-left-right me-1"></i>Wechseln';
+                    alert('Fehler beim Wechseln des Trainingstyps.');
+                }
+            });
+        }
+
+        function openPlanImageModal(imageUrl, exerciseName) {
+            document.getElementById('planImageModalLabel').textContent = exerciseName;
+            document.getElementById('planImageModalBody').innerHTML = '<img src="' + imageUrl + '" alt="' + exerciseName + '">';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('planImageModal')).show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.plan-exercise-img').forEach(function(img) {
+                img.addEventListener('click', function() {
+                    openPlanImageModal(img.dataset.imageUrl, img.dataset.exerciseName);
+                });
+            });
+            document.querySelectorAll('.skip-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    openSkipModal(btn.dataset.sessionId);
+                });
+            });
+            document.querySelectorAll('.mark-done-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    openMarkDoneModal(btn.dataset.sessionId);
+                });
+            });
+            document.querySelectorAll('.switch-type-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    openSwitchTypeModal(btn.dataset.sessionId, btn.dataset.sessionType);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Trainingsplan</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/fitness/overview}">Fitness</a></li>
+                <li class="breadcrumb-item active">Trainingsplan</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- No plan -->
+    <div th:if="${plan == null}" class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-calendar-x text-muted" style="font-size:3rem;"></i>
+            <h5 class="mt-3">Kein aktiver Trainingsplan</h5>
+            <a th:href="@{/fitness/assessment}" class="btn btn-primary mt-2">Erstbefragung starten</a>
+        </div>
+    </div>
+
+    <div th:if="${plan != null}">
+
+        <!-- Plan header info + actions -->
+        <div class="row mb-3">
+            <div class="col">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <div>
+                                <h6 class="text-info mb-1"><i class="bi bi-stars me-2"></i>KI-Kommentar</h6>
+                                <p class="mb-1 small" th:text="${plan.aiNotes != null ? plan.aiNotes : 'Kein Kommentar.'}"></p>
+                                <span class="text-muted small">
+                                    Plan v<span th:text="${plan.version}">1</span>
+                                    <span th:if="${plan.generatedAt != null}">&middot; <span th:text="${#temporals.format(plan.generatedAt, 'dd.MM.yyyy')}"></span></span>
+                                </span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#regenModal">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Plan neu generieren
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Week tabs -->
+        <div class="card">
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="weekTabs">
+                    <li class="nav-item" th:each="week : ${#numbers.sequence(1, 4)}">
+                        <a class="nav-link" th:classappend="${week == 1} ? ' active'" th:href="'#week' + ${week}" data-bs-toggle="tab">
+                            Woche <span th:text="${week}"></span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content mt-3">
+                    <div th:each="week : ${#numbers.sequence(1, 4)}"
+                         th:id="'week' + ${week}"
+                         class="tab-pane fade"
+                         th:classappend="${week == 1} ? ' show active'">
+
+                        <div th:each="planSession : ${plan.sessions}" th:if="${planSession.weekNumber == week}" class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <span class="me-2 text-muted">Einheit <span th:text="${planSession.sessionNumber}"></span></span>
+                                            <span th:if="${planSession.sessionType.name() == 'RUNNING'}" class="badge bg-success">
+                                                <i class="bi bi-person-walking me-1"></i>Laufen
+                                            </span>
+                                            <span th:if="${planSession.sessionType.name() == 'BODYWEIGHT'}" class="badge bg-primary">
+                                                <i class="bi bi-lightning me-1"></i>K&ouml;rpergewicht
+                                            </span>
+                                            <span th:if="${planSession.status != null and planSession.status.name() == 'COMPLETED'}" class="badge bg-success ms-1">
+                                                <i class="bi bi-check-lg me-1"></i>Abgeschlossen
+                                            </span>
+                                            <span th:if="${planSession.status != null and planSession.status.name() == 'SKIPPED'}" class="badge bg-secondary ms-1">
+                                                <i class="bi bi-skip-forward me-1"></i>&Uuml;bersprungen
+                                                <span th:if="${planSession.skipReason != null}"
+                                                      th:text="' · ' + ${planSession.skipReason.name()}"></span>
+                                            </span>
+                                        </h6>
+                                        <span class="text-muted small"><i class="bi bi-clock me-1"></i>ca. <span th:text="${planSession.estimatedDurationMinutes}">30</span> min</span>
+                                        <p class="small mt-1 mb-2" th:text="${planSession.description}"></p>
+                                    </div>
+                                    <div class="d-flex gap-2 flex-wrap" th:if="${planSession.status == null}">
+                                        <a th:href="@{/fitness/session/{id}/active(id=${planSession.id})}" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-play-fill me-1"></i>Starten
+                                        </a>
+                                        <button class="btn btn-success btn-sm mark-done-btn"
+                                                th:data-session-id="${planSession.id}">
+                                            <i class="bi bi-check-lg me-1"></i>Erledigt
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm skip-btn"
+                                                th:data-session-id="${planSession.id}">
+                                            <i class="bi bi-skip-forward me-1"></i>&Uuml;berspringen
+                                        </button>
+                                        <button class="btn btn-outline-info btn-sm switch-type-btn"
+                                                th:data-session-id="${planSession.id}"
+                                                th:data-session-type="${planSession.sessionType.name()}">
+                                            <i class="bi bi-arrow-left-right me-1"></i>Typ wechseln
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Exercise list -->
+                                <div th:if="${not #lists.isEmpty(planSession.exercises)}">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>&Uuml;bung</th>
+                                                    <th>Ziel</th>
+                                                    <th>Pause</th>
+                                                    <th>Hinweis</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="ex : ${planSession.exercises}">
+                                                    <td th:text="${ex.orderIndex}"></td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <img th:if="${ex.exercise.imageUrl != null}"
+                                                                 th:src="${ex.exercise.imageUrl}"
+                                                                 class="plan-exercise-img"
+                                                                 style="width:48px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;"
+                                                                 th:data-image-url="${ex.exercise.imageUrl}"
+                                                                 th:data-exercise-name="${ex.exercise.name}"
+                                                                 onerror="this.style.display='none'"
+                                                                 alt="">
+                                                            <i th:if="${ex.exercise.imageUrl == null}"
+                                                               style="font-size:1.8rem;flex-shrink:0;"
+                                                               th:class="${'text-muted ' +
+                                                                   (ex.exercise.category.name() == 'RUNNING' ? 'bi bi-person-walking' :
+                                                                    ex.exercise.category.name() == 'WARM_UP' ? 'bi bi-thermometer-sun' :
+                                                                    ex.exercise.category.name() == 'CORE' ? 'bi bi-circle' :
+                                                                    ex.exercise.category.name() == 'UPPER_BODY' ? 'bi bi-arrow-up-circle' :
+                                                                    ex.exercise.category.name() == 'LOWER_BODY' ? 'bi bi-arrow-down-circle' :
+                                                                    'bi bi-wind')}"></i>
+                                                            <div>
+                                                                <strong th:text="${ex.exercise.name}"></strong>
+                                                                <div class="text-muted small" th:text="${ex.exercise.description}"></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span th:if="${ex.targetSets != null}">
+                                                            <span th:text="${ex.targetSets}"></span> × <span th:text="${ex.targetReps}"></span> Wdh.
+                                                        </span>
+                                                        <span th:if="${ex.targetDurationSeconds != null}">
+                                                            <span th:text="${ex.targetDurationSeconds}"></span> s
+                                                        </span>
+                                                        <span th:if="${ex.targetDistanceMeters != null}">
+                                                            <span th:text="${ex.targetDistanceMeters}"></span> m
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span th:if="${ex.restSeconds != null}" th:text="${ex.restSeconds} + ' s'"></span>
+                                                    </td>
+                                                    <td class="small text-muted" th:text="${ex.notes}"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end plan != null -->
+
+</main>
+
+<!-- Skip Modal -->
+<div class="modal fade" id="skipModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-skip-forward me-2"></i>Session &uuml;berspringen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="skipSessionId">
+                <div class="mb-3">
+                    <label class="form-label">Grund</label>
+                    <select class="form-select" id="skipReason" onchange="toggleSkipNotesLabel()">
+                        <option th:each="reason : ${skipReasons}" th:value="${reason.name()}"
+                                th:text="${reason.name() == 'SICK' ? 'Krank' :
+                                          reason.name() == 'NO_TIME' ? 'Keine Zeit' :
+                                          reason.name() == 'OTHER_SPORT' ? 'Anderer Sport' : 'Anderes'}">
+                        </option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" id="skipNotesLabel">Anmerkung (optional)</label>
+                    <input type="text" class="form-control" id="skipNotes" placeholder="">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-warning" onclick="confirmSkip()">
+                    <i class="bi bi-skip-forward me-1"></i>&Uuml;berspringen
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Regenerate Plan Modal -->
+<div class="modal fade" id="regenModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-clockwise me-2"></i>Plan neu generieren</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="regenError" class="alert alert-danger" style="display:none;">
+                    <i class="bi bi-exclamation-triangle me-2"></i>KI-Anfrage fehlgeschlagen. Bitte erneut versuchen.
+                </div>
+                <p class="text-muted small">Optionale Anmerkungen f&uuml;r die KI (z. B. „Liegest&uuml;tze sind zu schwer", „Mehr Laufeinheiten"):</p>
+                <textarea class="form-control" id="regenNotes" rows="3" placeholder="Deine W&uuml;nsche f&uuml;r den neuen Plan..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-primary" id="regenBtn" onclick="confirmRegenerate()">
+                    <i class="bi bi-stars me-2"></i>Plan generieren
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Switch Type Modal -->
+<div class="modal fade" id="switchTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-left-right me-2"></i>Trainingstyp wechseln</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="switchSessionId">
+                <p id="switchTypeText"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-info" id="switchTypeBtn" onclick="confirmSwitchType()">
+                    <i class="bi bi-arrow-left-right me-1"></i>Wechseln
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Mark Done Modal -->
+    <div class="modal fade" id="markDoneModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Einheit erledigt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Wie anstrengend war die Einheit?</p>
+                    <div class="d-flex gap-1 justify-content-center mb-3" id="markDoneStars">
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(1)">&#9733;</span>
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(2)">&#9733;</span>
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(3)">&#9733;</span>
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(4)">&#9733;</span>
+                        <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(5)">&#9733;</span>
+                    </div>
+                    <textarea class="form-control form-control-sm" id="markDoneNotes" rows="2" placeholder="Notiz (optional)"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success w-100" onclick="submitMarkDone()">
+                        <i class="bi bi-check-lg me-1"></i>Speichern
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Image Zoom Modal -->
+<div class="modal fade" id="planImageModal" tabindex="-1" aria-labelledby="planImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="planImageModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0 text-center" id="planImageModalBody"></div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_18.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                                       http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <changeSet author="michael" id="create fitness training tables">
+
+        <createTable tableName="fitness_exercise">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="category" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tracking_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="equipment" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="difficulty" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(500)"/>
+            <column name="video_url" type="VARCHAR(500)"/>
+        </createTable>
+
+        <createTable tableName="fitness_profile">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assessment_completed" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_plan_id" type="BIGINT UNSIGNED"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="height_cm" type="INT"/>
+            <column name="birth_year" type="INT"/>
+            <column name="biological_sex" type="VARCHAR(10)"/>
+            <column name="activity_level" type="VARCHAR(20)"/>
+            <column name="target_weight_kg" type="DECIMAL(5,2)"/>
+            <column name="target_protein_g" type="INT"/>
+            <column name="target_carbs_g" type="INT"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_profile" baseColumnNames="username"
+            referencedTableName="user_profile" referencedColumnNames="username"
+            constraintName="fk_fitness_profile_user"/>
+
+        <createTable tableName="fitness_assessment_answer">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fitness_profile_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="question_key" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="answer_value" type="VARCHAR(255)"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_assessment_answer" baseColumnNames="fitness_profile_id"
+            referencedTableName="fitness_profile" referencedColumnNames="id"
+            constraintName="fk_fitness_assessment_answer_profile"
+            onDelete="CASCADE"/>
+
+        <createTable tableName="fitness_plan">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fitness_profile_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="generated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="generation_reason" type="VARCHAR(50)"/>
+            <column name="ai_notes" type="TEXT"/>
+            <column name="exercise_refresh" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_plan" baseColumnNames="fitness_profile_id"
+            referencedTableName="fitness_profile" referencedColumnNames="id"
+            constraintName="fk_fitness_plan_profile"
+            onDelete="CASCADE"/>
+
+        <createTable tableName="fitness_plan_session">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fitness_plan_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="session_number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="week_number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="session_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="estimated_duration_minutes" type="INT"/>
+            <column name="description" type="TEXT"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_plan_session" baseColumnNames="fitness_plan_id"
+            referencedTableName="fitness_plan" referencedColumnNames="id"
+            constraintName="fk_fitness_plan_session_plan"
+            onDelete="CASCADE"/>
+
+        <createTable tableName="fitness_plan_exercise">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="plan_session_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exercise_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_index" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_sets" type="INT"/>
+            <column name="target_reps" type="INT"/>
+            <column name="target_duration_seconds" type="INT"/>
+            <column name="target_distance_meters" type="INT"/>
+            <column name="target_duration_run_seconds" type="INT"/>
+            <column name="rest_seconds" type="INT" defaultValueNumeric="60">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_plan_exercise" baseColumnNames="plan_session_id"
+            referencedTableName="fitness_plan_session" referencedColumnNames="id"
+            constraintName="fk_fitness_plan_exercise_session"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_plan_exercise" baseColumnNames="exercise_id"
+            referencedTableName="fitness_exercise" referencedColumnNames="id"
+            constraintName="fk_fitness_plan_exercise_exercise"/>
+
+        <createTable tableName="fitness_session_log">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fitness_profile_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="plan_session_id" type="BIGINT UNSIGNED"/>
+            <column name="log_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="session_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skip_reason" type="VARCHAR(50)"/>
+            <column name="skip_notes" type="VARCHAR(255)"/>
+            <column name="actual_duration_minutes" type="INT"/>
+            <column name="difficulty_rating" type="INT"/>
+            <column name="feedback_text" type="TEXT"/>
+            <column name="ai_analyzed" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_session_log" baseColumnNames="fitness_profile_id"
+            referencedTableName="fitness_profile" referencedColumnNames="id"
+            constraintName="fk_fitness_session_log_profile"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_session_log" baseColumnNames="plan_session_id"
+            referencedTableName="fitness_plan_session" referencedColumnNames="id"
+            constraintName="fk_fitness_session_log_plan_session"/>
+
+        <createTable tableName="fitness_session_exercise_log">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="session_log_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exercise_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_index" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="set_number" type="INT"/>
+            <column name="reps_done" type="INT"/>
+            <column name="duration_seconds" type="INT"/>
+            <column name="distance_meters" type="INT"/>
+            <column name="duration_run_seconds" type="INT"/>
+            <column name="notes" type="VARCHAR(255)"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_session_exercise_log" baseColumnNames="session_log_id"
+            referencedTableName="fitness_session_log" referencedColumnNames="id"
+            constraintName="fk_fitness_session_exercise_log_session"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_session_exercise_log" baseColumnNames="exercise_id"
+            referencedTableName="fitness_exercise" referencedColumnNames="id"
+            constraintName="fk_fitness_session_exercise_log_exercise"/>
+
+    </changeSet>
+
+</databaseChangeLog>

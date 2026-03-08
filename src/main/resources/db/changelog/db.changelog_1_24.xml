@@ -1,0 +1,86 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_24.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                                       http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <changeSet author="michael" id="refine-exercise-videos-v2">
+        <!-- 1. Remove videos for running exercises (as requested) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value=""/>
+            <where>category = 'RUNNING'</where>
+        </update>
+
+        <!-- 2. Fix specific exercises with inappropriate/broken videos -->
+        
+        <!-- Plank (Was sometimes incorrect or had equipment in some channels) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=pvIjsG5Svck"/>
+            <where>name = 'Plank'</where>
+        </update>
+
+        <!-- Crunch (Ensure no equipment) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=Xyd_fa5zoEU"/>
+            <where>name = 'Crunch'</where>
+        </update>
+
+        <!-- Reverse Crunch -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=hyv14e2QDqA"/>
+            <where>name = 'Reverse Crunch'</where>
+        </update>
+
+        <!-- Push-ups (Liegestütze) - ensuring bodyweight only -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=IODxDxX7oi4"/>
+            <where>name = 'Liegestütze'</where>
+        </update>
+
+        <!-- Squats (Kniebeuge) - ensuring bodyweight only -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=aclHkVaku9U"/>
+            <where>name = 'Kniebeuge'</where>
+        </update>
+
+        <!-- Glute Bridge -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=wPM8icPu6H8"/>
+            <where>name = 'Brücke (Glute Bridge)'</where>
+        </update>
+
+        <!-- Wall Sit -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=-cdph8igW4w"/>
+            <where>name = 'Wand-Sitzen (Wall Sit)'</where>
+        </update>
+
+        <!-- Mountain Climbers -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=kLh-uczlPLg"/>
+            <where>name = 'Mountainclimbers'</where>
+        </update>
+
+        <!-- Bird Dog -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=wiFNA3sqjCA"/>
+            <where>name = 'Bird Dog'</where>
+        </update>
+
+        <!-- Superman -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=z6PJMT2y8GQ"/>
+            <where>name = 'Superman'</where>
+        </update>
+        
+        <!-- 3. Remove videos that were using suspect IDs from previous attempts -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value=""/>
+            <where>video_url LIKE '%5_MsMS8_f-o%' OR video_url LIKE '%L_C8Cg7j00g%'</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

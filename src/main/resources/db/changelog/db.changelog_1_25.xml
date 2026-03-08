@@ -1,0 +1,225 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_25.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                                       http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <!--
+        Replace all previously invalid video URLs with verified valid YouTube IDs.
+        All IDs confirmed embeddable via YouTube oembed API (HTTP 200).
+
+        Also clears empty strings set for RUNNING exercises (category has no videos).
+    -->
+    <changeSet author="michael" id="replace-invalid-video-urls-with-verified-ones">
+
+        <!-- Clear empty strings left by changelog_1_24 for RUNNING exercises -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" valueComputed="NULL"/>
+            <where>video_url = ''</where>
+        </update>
+
+        <!-- ===== WARM_UP ===== -->
+        <!-- Armkreisen – arm circles tutorial (verified: 6ls8aY83FL0) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=6ls8aY83FL0"/>
+            <where>name = 'Armkreisen'</where>
+        </update>
+        <!-- Schulterrollen – shoulder rolls tutorial (verified: A7kgx8gGmPA) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=A7kgx8gGmPA"/>
+            <where>name = 'Schulterrollen'</where>
+        </update>
+        <!-- Hüftschwingen – hip circles tutorial (verified: qkrJXGVj_OQ) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=qkrJXGVj_OQ"/>
+            <where>name = 'Hüftschwingen'</where>
+        </update>
+        <!-- Fußgelenk mobilisieren – ankle circles tutorial (verified: 9tFDZqo-X3o) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=9tFDZqo-X3o"/>
+            <where>name = 'Fußgelenk mobilisieren'</where>
+        </update>
+        <!-- Torso-Rotation – torso rotation tutorial (verified: HYVzsJ5nTsk) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=HYVzsJ5nTsk"/>
+            <where>name = 'Torso-Rotation'</where>
+        </update>
+        <!-- Kniehebelauf auf der Stelle – high knees tutorial (verified: ZNDHivUg7vA) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=ZNDHivUg7vA"/>
+            <where>name = 'Kniehebelauf auf der Stelle'</where>
+        </update>
+        <!-- Standwaage (dynamisch) – single leg balance tutorial (verified: mjzu4CEkTLE) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=mjzu4CEkTLE"/>
+            <where>name = 'Standwaage (dynamisch)'</where>
+        </update>
+        <!-- Hampelmann (leicht) – jumping jacks tutorial (verified: XR0xeuK5zBU) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=XR0xeuK5zBU"/>
+            <where>name = 'Hampelmann (leicht)'</where>
+        </update>
+        <!-- Hüftbeuger-Mobilisation – hip flexor mobility tutorial (verified: Jaw7LUmEkBk) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=Jaw7LUmEkBk"/>
+            <where>name = 'Hüftbeuger-Mobilisation'</where>
+        </update>
+
+        <!-- ===== CORE ===== -->
+        <!-- Seitstütz links + rechts – side plank tutorial (verified: wP7xBF-LZxs) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=wP7xBF-LZxs"/>
+            <where>name = 'Seitstütz links' OR name = 'Seitstütz rechts'</where>
+        </update>
+        <!-- Reverse Crunch – tutorial (verified: XY8KzdDcMFg) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=XY8KzdDcMFg"/>
+            <where>name = 'Reverse Crunch'</where>
+        </update>
+        <!-- Beinheben liegend – lying leg raise tutorial (verified: 2wUpI98Ix-k) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=2wUpI98Ix-k"/>
+            <where>name = 'Beinheben liegend'</where>
+        </update>
+        <!-- Dead Bug – tutorial (verified: eEhoSeBFoBk) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=eEhoSeBFoBk"/>
+            <where>name = 'Dead Bug'</where>
+        </update>
+        <!-- Hollow Body Hold – tutorial (verified: EsnM8eBtazU) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=EsnM8eBtazU"/>
+            <where>name = 'Hollow Body Hold'</where>
+        </update>
+        <!-- Russian Twist – tutorial (verified: -BzNffL_6YE) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=-BzNffL_6YE"/>
+            <where>name = 'Russian Twist (ohne Gewicht)'</where>
+        </update>
+
+        <!-- ===== UPPER_BODY ===== -->
+        <!-- Wandstütz-Liegestütze – wall push-up tutorial (verified: YWw-3rGaoT0) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=YWw-3rGaoT0"/>
+            <where>name = 'Wandstütz-Liegestütze'</where>
+        </update>
+        <!-- Liegestütze (kniend) – knee push-up tutorial (verified: W0GFFzyYUWI) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=W0GFFzyYUWI"/>
+            <where>name = 'Liegestütze (kniend)'</where>
+        </update>
+        <!-- Liegestütze mit Schulter-Tap – reuse standard push-up video (verified: IODxDxX7oi4) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=IODxDxX7oi4"/>
+            <where>name = 'Liegestütze mit Schulter-Tap'</where>
+        </update>
+        <!-- Schulterblatt-Kreisen – shoulder blade retraction tutorial (verified: 3AZ_iF-_RFE) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=3AZ_iF-_RFE"/>
+            <where>name = 'Schulterblatt-Kreisen'</where>
+        </update>
+        <!-- Pike-Liegestütze – pike push-up tutorial (verified: V6BtY3Lt0Ys) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=V6BtY3Lt0Ys"/>
+            <where>name = 'Pike-Liegestütze'</where>
+        </update>
+        <!-- Inchworm – tutorial (verified: o5owhd6Eg5o) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=o5owhd6Eg5o"/>
+            <where>name = 'Inchworm'</where>
+        </update>
+
+        <!-- ===== LOWER_BODY ===== -->
+        <!-- Sumo-Kniebeuge – sumo squat tutorial (verified: SZ6cLnBVwNM) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=SZ6cLnBVwNM"/>
+            <where>name = 'Sumo-Kniebeuge'</where>
+        </update>
+        <!-- Ausfallschritte (forward, reverse, side) – lunge tutorial (verified: 1cS-6KsJW9g) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=1cS-6KsJW9g"/>
+            <where>name = 'Ausfallschritt vorwärts' OR name = 'Ausfallschritt rückwärts' OR name = 'Seitlicher Ausfallschritt'</where>
+        </update>
+        <!-- Wadenheben – calf raise tutorial (verified: baEXLy09Ncc) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=baEXLy09Ncc"/>
+            <where>name = 'Wadenheben beidbeinig' OR name = 'Wadenheben einbeinig'</where>
+        </update>
+        <!-- Seitliches Beinheben + Hinteres Beinheben – side leg raise tutorial (verified: l_U2uoePtS4) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=l_U2uoePtS4"/>
+            <where>name = 'Seitliches Beinheben stehend' OR name = 'Hinteres Beinheben'</where>
+        </update>
+        <!-- Donkey Kicks – tutorial (verified: KgghFOMKnkE) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=KgghFOMKnkE"/>
+            <where>name = 'Donkey Kicks'</where>
+        </update>
+        <!-- Squat Jump – tutorial (verified: XOTO2qWRy9U) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=XOTO2qWRy9U"/>
+            <where>name = 'Squat Jump'</where>
+        </update>
+        <!-- Wand-Sitzen (Wall Sit) – tutorial (verified: cWTZ8Am1Ee0) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=cWTZ8Am1Ee0"/>
+            <where>name = 'Wand-Sitzen (Wall Sit)'</where>
+        </update>
+
+        <!-- ===== COOL_DOWN ===== -->
+        <!-- Oberschenkel-Dehnung stehend – standing quad stretch (verified: aNXGOpP37CY) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=aNXGOpP37CY"/>
+            <where>name = 'Oberschenkel-Dehnung stehend'</where>
+        </update>
+        <!-- Wade dehnen an der Wand – wall calf stretch (verified: tUA4MO1kXV8) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=tUA4MO1kXV8"/>
+            <where>name = 'Wade dehnen an der Wand'</where>
+        </update>
+        <!-- Hüftbeuger-Dehnung – hip flexor stretch (verified: DXuStgWuJV8) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=DXuStgWuJV8"/>
+            <where>name = 'Hüftbeuger-Dehnung'</where>
+        </update>
+        <!-- Schulter-Dehnung quer – cross-body shoulder stretch (verified: aIq0fLi8iak) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=aIq0fLi8iak"/>
+            <where>name = 'Schulter-Dehnung quer'</where>
+        </update>
+        <!-- Kindshaltung – child's pose (verified: nMp3MlTz9fA) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=nMp3MlTz9fA"/>
+            <where>name = 'Kindshaltung'</where>
+        </update>
+        <!-- Taubenstellung (vereinfacht) – pigeon pose (verified: 1o7awuDGzag) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=1o7awuDGzag"/>
+            <where>name = 'Taubenstellung (vereinfacht)'</where>
+        </update>
+        <!-- Brustdehnung (Türrahmen) – doorway chest stretch (verified: BXVTnO8Rxjk) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=BXVTnO8Rxjk"/>
+            <where>name = 'Brustdehnung (Türrahmen)'</where>
+        </update>
+        <!-- Nacken-Seitneigung – neck side stretch (verified: s-7lyvblFNI) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=s-7lyvblFNI"/>
+            <where>name = 'Nacken-Seitneigung'</where>
+        </update>
+        <!-- Liegender Dreher – supine spinal twist (verified: qEVNj4tcr0Y) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=qEVNj4tcr0Y"/>
+            <where>name = 'Liegender Dreher'</where>
+        </update>
+        <!-- Vorwärtsbeugen (stehend) – standing forward bend (verified: 1E-84p0itDs) -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=1E-84p0itDs"/>
+            <where>name = 'Vorwärtsbeugen (stehend)'</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

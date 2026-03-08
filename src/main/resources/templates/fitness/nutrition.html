@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/header :: header-css}"/>
+    <style>
+        .delta-ok { color: #198754; }
+        .delta-warn { color: #fd7e14; }
+        .delta-bad { color: #dc3545; }
+    </style>
+    <script>
+        function saveMeal() {
+            var text = document.getElementById('mealText').value.trim();
+            if (!text) { alert('Bitte beschreibe deine heutigen Mahlzeiten.'); return; }
+
+            var btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>KI analysiert...';
+
+            $.ajax({
+                url: '/api/fitness/nutrition/meal',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ mealText: text }),
+                success: function() {
+                    var currentDate = new URLSearchParams(window.location.search).get('date') || '';
+                    window.location.href = '/fitness/nutrition' + (currentDate ? '?date=' + currentDate : '');
+                },
+                error: function() {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-stars me-2"></i>KI-Kalorien berechnen';
+                    alert('KI-Anfrage fehlgeschlagen. Bitte erneut versuchen.');
+                }
+            });
+        }
+
+        function navigateDate(offset) {
+            var params = new URLSearchParams(window.location.search);
+            var dateStr = params.get('date') || new Date().toISOString().slice(0,10);
+            var d = new Date(dateStr);
+            d.setDate(d.getDate() + offset);
+            window.location.href = '/fitness/nutrition?date=' + d.toISOString().slice(0,10);
+        }
+    </script>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <div class="d-flex align-items-center gap-3">
+            <h1>Ern&auml;hrung</h1>
+            <div class="d-flex align-items-center gap-2 ms-3">
+                <button class="btn btn-outline-secondary btn-sm" onclick="navigateDate(-1)">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="fw-semibold" th:text="${#temporals.format(logDate, 'EEEE, dd.MM.yyyy', new java.util.Locale('de'))}"></span>
+                <button class="btn btn-outline-secondary btn-sm" onclick="navigateDate(1)">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/fitness/overview}">Fitness</a></li>
+                <li class="breadcrumb-item active">Ern&auml;hrung</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Calorie target -->
+    <div class="row" th:if="${mealLog != null and mealLog.dailyCalorieTarget != null}">
+        <div class="col">
+            <div class="alert alert-info d-flex align-items-center gap-2 py-2">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>Tages-Kalorienziel: <strong th:text="${mealLog.dailyCalorieTarget} + ' kcal'"></strong></span>
+                <span class="ms-3 text-muted small">Protein: <strong th:text="${mealLog.targetProteinG} + ' g'"></strong></span>
+                <span class="ms-2 text-muted small">Kohlenhydrate: <strong th:text="${mealLog.targetCarbsG} + ' g'"></strong></span>
+                <span class="ms-2 text-muted small">Fett: <strong th:text="${mealLog.targetFatG} + ' g'"></strong></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Meal input -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Was hast du heute gegessen?</h5>
+                    <textarea class="form-control mb-3" id="mealText" rows="7"
+                              placeholder="Fr&uuml;hst&uuml;ck: 2 Eier, Toast mit Butter, Kaffee&#10;Mittagessen: H&uuml;hnchensalat, Apfel&#10;Abendessen: Nudeln mit Tomatenso&szlig;e&#10;Snack: 1 Banane, Handvoll N&uuml;sse"
+                              th:text="${mealLog != null ? mealLog.mealText : ''}"></textarea>
+                    <button class="btn btn-primary" id="analyzeBtn" onclick="saveMeal()">
+                        <i class="bi bi-stars me-2"></i>KI-Kalorien berechnen
+                    </button>
+                    <span class="text-muted small ms-3">Bestehender Eintrag wird &uuml;berschrieben.</span>
+                </div>
+            </div>
+
+            <!-- AI result -->
+            <div class="card" th:if="${mealLog != null and mealLog.aiCalories != null}">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-stars text-primary me-2"></i>KI-Sch&auml;tzung:
+                        <strong th:text="${mealLog.aiCalories} + ' kcal'"></strong>
+                    </h5>
+                    <div th:if="${mealLog.aiNotes}" class="alert alert-light small py-2">
+                        <span th:text="${mealLog.aiNotes}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Macro table -->
+        <div class="col-lg-5" th:if="${mealLog != null and mealLog.aiCalories != null}">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Ziel vs. Ist</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th></th>
+                                    <th>Ziel</th>
+                                    <th>Ist</th>
+                                    <th>Delta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-start fw-semibold">Kalorien</td>
+                                    <td th:text="${mealLog.dailyCalorieTarget != null ? mealLog.dailyCalorieTarget + ' kcal' : '–'}"></td>
+                                    <td th:text="${mealLog.aiCalories} + ' kcal'"></td>
+                                    <td th:if="${mealLog.calorieDelta != null}">
+                                        <span th:with="d=${mealLog.calorieDelta}, absTarget=${mealLog.dailyCalorieTarget ?: 2000}"
+                                              th:class="${d <= 0 or d <= absTarget * 0.1 ? 'delta-ok' :
+                                                         d <= absTarget * 0.25 ? 'delta-warn' : 'delta-bad'}">
+                                            <span th:text="${(d >= 0 ? '+' : '') + d + ' kcal'}"></span>
+                                            <span th:text="${d <= 0 or d <= absTarget * 0.1 ? ' ✅' :
+                                                             d <= absTarget * 0.25 ? ' 🟡' : ' 🔴'}"></span>
+                                        </span>
+                                    </td>
+                                    <td th:if="${mealLog.calorieDelta == null}" class="text-muted">&mdash;</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-start fw-semibold">Protein (g)</td>
+                                    <td th:text="${mealLog.targetProteinG != null ? mealLog.targetProteinG + ' g' : '–'}"></td>
+                                    <td th:text="${mealLog.aiProteinG != null ? mealLog.aiProteinG + ' g' : '–'}"></td>
+                                    <td th:if="${mealLog.proteinDelta != null}">
+                                        <span th:with="d=${mealLog.proteinDelta}, absTarget=${mealLog.targetProteinG ?: 100}"
+                                              th:class="${T(java.lang.Math).abs(d) <= absTarget * 0.1 ? 'delta-ok' :
+                                                         T(java.lang.Math).abs(d) <= absTarget * 0.25 ? 'delta-warn' : 'delta-bad'}">
+                                            <span th:text="${(d >= 0 ? '+' : '') + d + ' g'}"></span>
+                                            <span th:text="${T(java.lang.Math).abs(d) <= absTarget * 0.1 ? ' ✅' :
+                                                             T(java.lang.Math).abs(d) <= absTarget * 0.25 ? ' 🟡' : ' 🔴'}"></span>
+                                        </span>
+                                    </td>
+                                    <td th:if="${mealLog.proteinDelta == null}" class="text-muted">&mdash;</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-start fw-semibold">Kohlenhydrate (g)</td>
+                                    <td th:text="${mealLog.targetCarbsG != null ? mealLog.targetCarbsG + ' g' : '–'}"></td>
+                                    <td th:text="${mealLog.aiCarbsG != null ? mealLog.aiCarbsG + ' g' : '–'}"></td>
+                                    <td th:if="${mealLog.carbsDelta != null}">
+                                        <span th:with="d=${mealLog.carbsDelta}, absTarget=${mealLog.targetCarbsG ?: 200}"
+                                              th:class="${T(java.lang.Math).abs(d) <= absTarget * 0.1 ? 'delta-ok' :
+                                                         T(java.lang.Math).abs(d) <= absTarget * 0.25 ? 'delta-warn' : 'delta-bad'}">
+                                            <span th:text="${(d >= 0 ? '+' : '') + d + ' g'}"></span>
+                                            <span th:text="${T(java.lang.Math).abs(d) <= absTarget * 0.1 ? ' ✅' :
+                                                             T(java.lang.Math).abs(d) <= absTarget * 0.25 ? ' 🟡' : ' 🔴'}"></span>
+                                        </span>
+                                    </td>
+                                    <td th:if="${mealLog.carbsDelta == null}" class="text-muted">&mdash;</td>
+                                <tr>
+                                    <td class="text-start fw-semibold">Fett (g)</td>
+                                    <td th:text="${mealLog.targetFatG != null ? mealLog.targetFatG + ' g' : '–'}"></td>
+                                    <td th:text="${mealLog.aiFatG != null ? mealLog.aiFatG + ' g' : '–'}"></td>
+                                    <td th:if="${mealLog.fatDelta != null}">
+                                        <span th:with="d=${mealLog.fatDelta}, absTarget=${mealLog.targetFatG ?: 60}"
+                                              th:class="${T(java.lang.Math).abs(d) <= absTarget * 0.15 ? 'delta-ok' :
+                                                         T(java.lang.Math).abs(d) <= absTarget * 0.30 ? 'delta-warn' : 'delta-bad'}">
+                                            <span th:text="${(d >= 0 ? '+' : '') + d + ' g'}"></span>
+                                            <span th:text="${T(java.lang.Math).abs(d) <= absTarget * 0.15 ? ' ✅' :
+                                                             T(java.lang.Math).abs(d) <= absTarget * 0.30 ? ' 🟡' : ' 🔴'}"></span>
+                                        </span>
+                                    </td>
+                                    <td th:if="${mealLog.fatDelta == null}" class="text-muted">&mdash;</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No data placeholder when no mealLog -->
+    <div class="row" th:if="${mealLog == null or mealLog.aiCalories == null}">
+        <div class="col-lg-5">
+            <div class="card border-dashed">
+                <div class="card-body text-center text-muted py-4">
+                    <i class="bi bi-table" style="font-size:2rem;"></i>
+                    <p class="mt-2 small">Nachdem du deine Mahlzeiten eingetragen und die KI-Analyse durchgef&uuml;hrt hast, erscheint hier die Auswertung.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

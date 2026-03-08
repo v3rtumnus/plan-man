@@ -71,12 +71,12 @@
                     </a>
                 </td>
                 <td th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).RECORDED}">
-                   <input type="button" th:attr="onclick=|updateInsuranceEntry('${entry.id}', '${entry.state}')|"
-                          class="btn btn-primary" value="ÖGK eingereicht" />
+                   <input type="button" th:data-id="${entry.id}" th:data-state="${entry.state}"
+                          class="btn btn-primary update-insurance-btn" value="ÖGK eingereicht" />
                 </td>
                 <td th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).HEALH_INSURANCE_RECEIVED}">
-                   <input type="button" th:attr="onclick=|updateInsuranceEntry('${entry.id}', '${entry.state}')|"
-                          class="btn btn-primary" value="Uniqa eingereicht" />
+                   <input type="button" th:data-id="${entry.id}" th:data-state="${entry.state}"
+                          class="btn btn-primary update-insurance-btn" value="Uniqa eingereicht" />
                 </td>
                 <td th:if="${entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).WAITING_FOR_HEALTH_INSURANCE ||
                              entry.state == T(at.v3rtumnus.planman.entity.insurance.InsuranceEntryState).WAITING_FOR_PRIVATE_INSURANCE}">
@@ -100,8 +100,12 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary"
-                                            th:attr="onclick=|updateInsuranceEntry('${entry.id}', '${entry.state}', 'amount_${entry.id}', 'file_${entry.id}', 'modal_${entry.id}' )|">Speichern</button>
+                                    <button type="button" class="btn btn-primary save-insurance-btn"
+                                            th:data-id="${entry.id}"
+                                            th:data-state="${entry.state}"
+                                            th:data-amount-id="'amount_' + ${entry.id}"
+                                            th:data-file-id="'file_' + ${entry.id}"
+                                            th:data-modal-id="'modal_' + ${entry.id}">Speichern</button>
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
                                 </div>
                             </div>

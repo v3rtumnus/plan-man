@@ -1,0 +1,455 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/header :: header-css}"/>
+    <script th:src="@{/resources/vendor/chart.js/chart.umd.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var weightHistory = /*[[${weightHistory}]]*/ [];
+        var mealHistory   = /*[[${mealHistory}]]*/ [];
+
+        // Chronological order for charts (API returns DESC)
+        var mealChronological = mealHistory.slice().reverse();
+
+        $(document).ready(function() {
+
+            // ── Weight chart ──────────────────────────────────────────────
+            if (weightHistory && weightHistory.length > 0) {
+                var wLabels = weightHistory.slice().reverse().map(function(e) { return e.logDate; });
+                var wData   = weightHistory.slice().reverse().map(function(e) { return e.weightKg; });
+
+                new Chart(document.getElementById('weightChart'), {
+                    type: 'line',
+                    data: {
+                        labels: wLabels,
+                        datasets: [{
+                            label: 'Gewicht (kg)',
+                            data: wData,
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: false, ticks: { callback: function(v) { return v + ' kg'; } } } }
+                    }
+                });
+            }
+
+            // ── Calorie chart ─────────────────────────────────────────────
+            if (mealChronological.length > 0) {
+                var cLabels  = mealChronological.map(function(e) { return e.logDate; });
+                var cActual  = mealChronological.map(function(e) { return e.aiCalories; });
+                var cTarget  = mealChronological.map(function(e) { return e.dailyCalorieTarget; });
+
+                new Chart(document.getElementById('calorieChart'), {
+                    type: 'line',
+                    data: {
+                        labels: cLabels,
+                        datasets: [
+                            {
+                                label: 'Ziel (kcal)',
+                                data: cTarget,
+                                borderColor: 'rgba(108, 117, 125, 0.8)',
+                                borderDash: [6, 4],
+                                backgroundColor: 'transparent',
+                                tension: 0.2,
+                                pointRadius: 2
+                            },
+                            {
+                                label: 'Ist (kcal)',
+                                data: cActual,
+                                borderColor: 'rgba(25, 135, 84, 1)',
+                                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { y: { beginAtZero: false, ticks: { callback: function(v) { return v + ' kcal'; } } } }
+                    }
+                });
+            }
+
+            // ── Macro chart ───────────────────────────────────────────────
+            if (mealChronological.length > 0) {
+                var mLabels = mealChronological.map(function(e) { return e.logDate; });
+
+                var macroDatasets = {
+                    protein: {
+                        target: mealChronological.map(function(e) { return e.targetProteinG; }),
+                        actual: mealChronological.map(function(e) { return e.aiProteinG; }),
+                        color: 'rgba(13, 110, 253, 1)',
+                        fill: 'rgba(13, 110, 253, 0.1)',
+                        unit: 'g'
+                    },
+                    carbs: {
+                        target: mealChronological.map(function(e) { return e.targetCarbsG; }),
+                        actual: mealChronological.map(function(e) { return e.aiCarbsG; }),
+                        color: 'rgba(255, 153, 0, 1)',
+                        fill: 'rgba(255, 153, 0, 0.1)',
+                        unit: 'g'
+                    },
+                    fat: {
+                        target: mealChronological.map(function(e) { return e.targetFatG; }),
+                        actual: mealChronological.map(function(e) { return e.aiFatG; }),
+                        color: 'rgba(220, 53, 69, 1)',
+                        fill: 'rgba(220, 53, 69, 0.1)',
+                        unit: 'g'
+                    }
+                };
+
+                var currentMacro = 'protein';
+
+                var macroChart = new Chart(document.getElementById('macroChart'), {
+                    type: 'line',
+                    data: {
+                        labels: mLabels,
+                        datasets: [
+                            {
+                                label: 'Ziel (g)',
+                                data: macroDatasets.protein.target,
+                                borderColor: 'rgba(108, 117, 125, 0.8)',
+                                borderDash: [6, 4],
+                                backgroundColor: 'transparent',
+                                tension: 0.2,
+                                pointRadius: 2
+                            },
+                            {
+                                label: 'Ist (g)',
+                                data: macroDatasets.protein.actual,
+                                borderColor: macroDatasets.protein.color,
+                                backgroundColor: macroDatasets.protein.fill,
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { y: { beginAtZero: false, ticks: { callback: function(v) { return v + ' g'; } } } }
+                    }
+                });
+
+                window.switchMacro = function(type) {
+                    if (type === currentMacro) return;
+                    currentMacro = type;
+                    var d = macroDatasets[type];
+                    macroChart.data.datasets[0].data = d.target;
+                    macroChart.data.datasets[1].data = d.actual;
+                    macroChart.data.datasets[1].borderColor = d.color;
+                    macroChart.data.datasets[1].backgroundColor = d.fill;
+                    macroChart.update();
+
+                    document.querySelectorAll('.macro-toggle .btn').forEach(function(btn) {
+                        btn.classList.remove('btn-primary', 'btn-warning', 'btn-danger');
+                        btn.classList.add('btn-outline-secondary');
+                    });
+                    var activeMap = { protein: 'btn-primary', carbs: 'btn-warning', fat: 'btn-danger' };
+                    var activeOutlineMap = { protein: 'btn-outline-primary', carbs: 'btn-outline-warning', fat: 'btn-outline-danger' };
+                    document.querySelectorAll('.macro-toggle .btn').forEach(function(btn) {
+                        if (btn.dataset.macro === type) {
+                            btn.classList.remove('btn-outline-secondary');
+                            btn.classList.add(activeMap[type]);
+                        }
+                    });
+                };
+            }
+        });
+
+        function saveWeight() {
+            var kg = parseFloat(document.getElementById('weightKg').value);
+            var notes = document.getElementById('weightNotes').value;
+            if (!kg || kg <= 0) { alert('Bitte ein gültiges Gewicht eingeben.'); return; }
+
+            $.ajax({
+                url: '/api/fitness/weight',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ weightKg: kg, notes: notes }),
+                success: function() { location.reload(); },
+                error: function() { alert('Fehler beim Speichern. Bitte erneut versuchen.'); }
+            });
+        }
+
+        function saveHealthProfile() {
+            var dto = {
+                heightCm: parseInt(document.getElementById('heightCm').value) || null,
+                birthYear: parseInt(document.getElementById('birthYear').value) || null,
+                biologicalSex: document.getElementById('biologicalSex').value || null,
+                activityLevel: document.getElementById('activityLevel').value || null,
+                targetWeightKg: parseFloat(document.getElementById('targetWeightKg').value) || null,
+                targetProteinG: parseInt(document.getElementById('targetProteinG').value) || null,
+                targetCarbsG: parseInt(document.getElementById('targetCarbsG').value) || null
+            };
+            $.ajax({
+                url: '/api/fitness/health-profile',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(dto),
+                success: function() {
+                    document.getElementById('profileSuccess').style.display = 'block';
+                    setTimeout(function() { location.reload(); }, 1000);
+                },
+                error: function() { alert('Fehler beim Speichern des Profils.'); }
+            });
+        }
+        /*]]>*/
+    </script>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Gesundheit &amp; Ern&auml;hrung</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/fitness/overview}">Fitness</a></li>
+                <li class="breadcrumb-item active">Gesundheit</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Row 1: Weight chart + Calorie target info -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Gewichtsverlauf (kg)</h5>
+                    <div th:if="${weightHistory.isEmpty()}" class="text-center py-4 text-muted">
+                        <i class="bi bi-bar-chart" style="font-size:2rem;"></i>
+                        <p class="mt-2">Noch keine Eintr&auml;ge. Trage dein erstes Gewicht ein!</p>
+                    </div>
+                    <canvas th:if="${!weightHistory.isEmpty()}" id="weightChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Kalorienbedarf</h5>
+                    <div th:if="${dailyCalorieTarget != null}">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Tages-Kalorienziel:</span>
+                            <strong th:text="${dailyCalorieTarget} + ' kcal'"></strong>
+                        </div>
+                        <p class="small text-muted">Berechnet aus aktuellem Gewicht, K&ouml;rperprofil und Zielgewicht (Mifflin-St-Je&ocirc;r).</p>
+                    </div>
+                    <div th:if="${dailyCalorieTarget == null}" class="text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>Bitte f&uuml;lle das K&ouml;rperprofil aus und trage dein Gewicht ein.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Calorie history chart -->
+    <div class="row" th:if="${!mealHistory.isEmpty()}">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Kalorienhistorie – Ziel vs. Ist (letzte 30 Tage)</h5>
+                    <canvas id="calorieChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Macro chart with toggle -->
+    <div class="row" th:if="${!mealHistory.isEmpty()}">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="card-title mb-0">Makron&auml;hrstoffe – Ziel vs. Ist (letzte 30 Tage)</h5>
+                        <div class="btn-group macro-toggle" role="group">
+                            <button type="button" class="btn btn-primary btn-sm" data-macro="protein" onclick="switchMacro('protein')">Protein</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-macro="carbs" onclick="switchMacro('carbs')">Kohlenhydrate</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-macro="fat" onclick="switchMacro('fat')">Fett</button>
+                        </div>
+                    </div>
+                    <canvas id="macroChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New weight entry -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Gewicht eintragen</h5>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Gewicht</label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" class="form-control" id="weightKg" placeholder="83.5" min="20" max="300">
+                                <span class="input-group-text">kg</span>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Notiz (optional)</label>
+                            <input type="text" class="form-control" id="weightNotes" placeholder="z. B. Morgens n&uuml;chtern">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" onclick="saveWeight()">
+                                <i class="bi bi-plus-lg me-1"></i>Speichern
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Link to daily nutrition -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+                    <i class="bi bi-stars text-primary" style="font-size:2rem;"></i>
+                    <p class="mt-2 mb-3 text-muted small">Tageseintrag f&uuml;r Ern&auml;hrung und KI-Sch&auml;tzung</p>
+                    <a th:href="@{/fitness/nutrition}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Ern&auml;hrung eintragen
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weight history table -->
+    <div class="row" th:if="${!weightHistory.isEmpty()}">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Letzte Eintr&auml;ge</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Gewicht</th>
+                                    <th>Notiz</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="entry, stat : ${weightHistory}" th:if="${stat.index < 10}">
+                                    <td th:text="${#temporals.format(entry.logDate, 'dd.MM.yyyy')}"></td>
+                                    <td><strong th:text="${entry.weightKg} + ' kg'"></strong></td>
+                                    <td class="text-muted small" th:text="${entry.notes}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health profile -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">K&ouml;rperprofil</h5>
+                    <p class="text-muted small">Diese Daten werden f&uuml;r die TDEE-Berechnung und Makroziele ben&ouml;tigt.</p>
+                    <div id="profileSuccess" class="alert alert-success" style="display:none;">Profil gespeichert.</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Gr&ouml;&szlig;e</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="heightCm"
+                                       th:value="${healthProfile != null ? healthProfile.heightCm : ''}"
+                                       placeholder="175" min="100" max="250">
+                                <span class="input-group-text">cm</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Geburtsjahr</label>
+                            <input type="number" class="form-control" id="birthYear"
+                                   th:value="${healthProfile != null ? healthProfile.birthYear : ''}"
+                                   placeholder="1990" min="1940" max="2010">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Biologisches Geschlecht</label>
+                            <select class="form-select" id="biologicalSex">
+                                <option value="">Bitte w&auml;hlen</option>
+                                <option th:each="sex : ${biologicalSexValues}"
+                                        th:value="${sex.name()}"
+                                        th:text="${sex.name() == 'MALE' ? 'M&auml;nnlich' : 'Weiblich'}"
+                                        th:selected="${healthProfile != null and healthProfile.biologicalSex != null and sex.name() == healthProfile.biologicalSex.name()}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Aktivit&auml;tslevel</label>
+                            <select class="form-select" id="activityLevel">
+                                <option value="">Bitte w&auml;hlen</option>
+                                <option th:each="level : ${activityLevels}"
+                                        th:value="${level.name()}"
+                                        th:text="${level.name() == 'SEDENTARY' ? 'Sitzend (wenig Bewegung)' :
+                                                  level.name() == 'LIGHTLY_ACTIVE' ? 'Leicht aktiv (1-3×/Woche)' :
+                                                  level.name() == 'MODERATELY_ACTIVE' ? 'M&auml;&szlig;ig aktiv (3-5×/Woche)' : 'Sehr aktiv (6-7×/Woche)'}"
+                                        th:selected="${healthProfile != null and healthProfile.activityLevel != null and level.name() == healthProfile.activityLevel.name()}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Zielgewicht</label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" class="form-control" id="targetWeightKg"
+                                       th:value="${healthProfile != null ? healthProfile.targetWeightKg : ''}"
+                                       placeholder="78" min="30" max="300">
+                                <span class="input-group-text">kg</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Protein-Ziel (optional)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="targetProteinG"
+                                       th:value="${healthProfile != null ? healthProfile.targetProteinG : ''}"
+                                       placeholder="auto">
+                                <span class="input-group-text">g</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Kohlenhydrat-Ziel (optional)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="targetCarbsG"
+                                       th:value="${healthProfile != null ? healthProfile.targetCarbsG : ''}"
+                                       placeholder="auto">
+                                <span class="input-group-text">g</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-primary" onclick="saveHealthProfile()">
+                                <i class="bi bi-floppy me-1"></i>Profil speichern
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

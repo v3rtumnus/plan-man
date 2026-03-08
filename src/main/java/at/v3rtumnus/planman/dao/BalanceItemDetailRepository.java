@@ -19,6 +19,6 @@ public interface BalanceItemDetailRepository extends JpaRepository<BalanceItemDe
     @Query("SELECT MIN(begin) FROM BalanceItemDetail")
     LocalDate getMinimumBalanceDate();
 
-    @Query("SELECT b FROM BalanceItemDetail b WHERE (:date BETWEEN b.begin AND b.end) OR (:date >= b.begin AND b.end = NULL)")
+    @Query("SELECT b FROM BalanceItemDetail b WHERE (:date BETWEEN b.begin AND b.end) OR (:date >= b.begin AND b.end IS NULL)")
     List<BalanceItemDetail> getRelevantAmountsForDate(@Param("date") LocalDate date);
 }

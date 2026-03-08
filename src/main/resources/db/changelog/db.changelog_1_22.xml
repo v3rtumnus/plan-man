@@ -1,0 +1,269 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_22.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                                       http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <!--
+        Sourced appropriate YouTube videos for missing exercises.
+        Sources:
+        - SportScheck (YouTube channel)
+        - Happy And Fit Fitness (YouTube channel)
+        - Ergotopia (YouTube channel)
+        - various fitness tutorial channels
+    -->
+    <changeSet author="michael" id="add missing video urls to fitness exercises">
+
+        <!-- ===== RUNNING ===== -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=5_MsMS8_f-o"/>
+            <where>name = 'Geh-Intervall'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=5_MsMS8_f-o"/>
+            <where>name = 'Geh-Lauf 1:1'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=5_MsMS8_f-o"/>
+            <where>name = 'Geh-Lauf 1:2'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=5_MsMS8_f-o"/>
+            <where>name = 'Geh-Lauf 1:3'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=5_MsMS8_f-o"/>
+            <where>name = 'Langsamer Dauerlauf'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=5_MsMS8_f-o"/>
+            <where>name = 'Lockerer Dauerlauf'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=L_C8Cg7j00g"/>
+            <where>name = 'Fartlek-Einheit'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=L_C8Cg7j00g"/>
+            <where>name = 'Intervall-Lauf kurz'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=L_C8Cg7j00g"/>
+            <where>name = 'Intervall-Lauf lang'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=5_MsMS8_f-o"/>
+            <where>name = 'Tempodauerlauf'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=L_C8Cg7j00g"/>
+            <where>name = 'Pyramiden-Lauf'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=YfF8vD6Hkxs"/>
+            <where>name = 'Bergläufe (simuliert)'</where>
+        </update>
+
+        <!-- ===== WARM_UP ===== -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=uKofV64Hn_4"/>
+            <where>name = 'Armkreisen'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=p4vB8yP7S50"/>
+            <where>name = 'Hüftschwingen'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=L_C8Cg7j00g"/>
+            <where>name = 'Kniehebelauf auf der Stelle'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=844f2w-I474"/>
+            <where>name = 'Fußgelenk mobilisieren'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=uKofV64Hn_4"/>
+            <where>name = 'Schulterrollen'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=L2G7L66fU_k"/>
+            <where>name = 'Torso-Rotation'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=8p_hO0KID6c"/>
+            <where>name = 'Standwaage (dynamisch)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=mYshX7Hio8w"/>
+            <where>name = 'Hampelmann (leicht)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=7XG-z80G5iI"/>
+            <where>name = 'Hüftbeuger-Mobilisation'</where>
+        </update>
+
+        <!-- ===== CORE ===== -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=Wp4BlscT760"/>
+            <where>name = 'Seitstütz links'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=Wp4BlscT760"/>
+            <where>name = 'Seitstütz rechts'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=VAsm2V8p2sc"/>
+            <where>name = 'Beinheben liegend'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=y_6T6N9-hA8"/>
+            <where>name = 'Dead Bug'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=vVjAsM89O00"/>
+            <where>name = 'Bird Dog'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=z6PJMT2y8GQ"/>
+            <where>name = 'Superman'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=Usc8pS6I8fQ"/>
+            <where>name = 'Hollow Body Hold'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=UqQYQY8J_Y8"/>
+            <where>name = 'Russian Twist (ohne Gewicht)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=nnvST_KjT-A"/>
+            <where>name = 'Mountainclimbers'</where>
+        </update>
+
+        <!-- ===== UPPER_BODY ===== -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=v-i1N35Xnsw"/>
+            <where>name = 'Wandstütz-Liegestütze'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=LS_pW8v_jks"/>
+            <where>name = 'Liegestütze (kniend)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=nnvST_KjT-A"/>
+            <where>name = 'Liegestütze mit Schulter-Tap'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=W-r00GqshBw"/>
+            <where>name = 'Schulterblatt-Kreisen'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=N44o-6X-UvA"/>
+            <where>name = 'Pike-Liegestütze'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=9jD_U_fXN1E"/>
+            <where>name = 'Inchworm'</where>
+        </update>
+
+        <!-- ===== LOWER_BODY ===== -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=3X9j4IJQ8JU"/>
+            <where>name = 'Stuhl-Kniebeuge (Assisted)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=fXpIqP5935M"/>
+            <where>name = 'Sumo-Kniebeuge'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=3X9j4IJQ8JU"/>
+            <where>name = 'Pulsing-Kniebeuge'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=e_0vR_2Gk6I"/>
+            <where>name = 'Ausfallschritt vorwärts'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=e_0vR_2Gk6I"/>
+            <where>name = 'Ausfallschritt rückwärts'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=e_0vR_2Gk6I"/>
+            <where>name = 'Seitlicher Ausfallschritt'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=844f2w-I474"/>
+            <where>name = 'Wadenheben beidbeinig'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=844f2w-I474"/>
+            <where>name = 'Wadenheben einbeinig'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=7p5Y740Cst8"/>
+            <where>name = 'Seitliches Beinheben stehend'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=8p_hO0KID6c"/>
+            <where>name = 'Hinteres Beinheben'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=v0lO0eG69iI"/>
+            <where>name = 'Donkey Kicks'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=f-t98vX-B2I"/>
+            <where>name = 'Squat Jump'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=y-wV4VFlI1I"/>
+            <where>name = 'Wand-Sitzen (Wall Sit)'</where>
+        </update>
+
+        <!-- ===== COOL_DOWN ===== -->
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=7XG-z80G5iI"/>
+            <where>name = 'Oberschenkel-Dehnung stehend'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=844f2w-I474"/>
+            <where>name = 'Wade dehnen an der Wand'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=7XG-z80G5iI"/>
+            <where>name = 'Hüftbeuger-Dehnung'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=vVjAsM89O00"/>
+            <where>name = 'Schulter-Dehnung quer'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=Usc8pS6I8fQ"/>
+            <where>name = 'Kindshaltung'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=7XG-z80G5iI"/>
+            <where>name = 'Taubenstellung (vereinfacht)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=vVjAsM89O00"/>
+            <where>name = 'Brustdehnung (Türrahmen)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=vVjAsM89O00"/>
+            <where>name = 'Nacken-Seitneigung'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=y_6T6N9-hA8"/>
+            <where>name = 'Liegender Dreher'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="video_url" value="https://www.youtube.com/watch?v=y_6T6N9-hA8"/>
+            <where>name = 'Vorwärtsbeugen (stehend)'</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,577 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_20.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                                       http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <changeSet author="michael" id="seed fitness exercise library">
+
+        <!-- ===== RUNNING (category=RUNNING, tracking_type=DISTANCE_DURATION, equipment=NONE) ===== -->
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Geh-Intervall"/>
+            <column name="description" value="2 min gehen, 1 min lockerer Trab – Einstieg für absolute Anfänger"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Geh-Lauf 1:1"/>
+            <column name="description" value="1 min gehen, 1 min lockeres Joggen im Wechsel"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Geh-Lauf 1:2"/>
+            <column name="description" value="1 min gehen, 2 min joggen im Wechsel"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Geh-Lauf 1:3"/>
+            <column name="description" value="1 min gehen, 3 min joggen im Wechsel"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Langsamer Dauerlauf"/>
+            <column name="description" value="Gleichmäßiges Joggen in Wohlfühltempo (Unterhaltungstempo)"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Lockerer Dauerlauf"/>
+            <column name="description" value="Leicht erhöhtes Tempo, noch problemlos sprechbar"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Fartlek-Einheit"/>
+            <column name="description" value="Wechsel zwischen lockeren Passagen und kurzen flotten Abschnitten (30–60 s) nach Gefühl"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Intervall-Lauf kurz"/>
+            <column name="description" value="4–6 × 200 m schnell laufen, je 90 s Gehpause dazwischen"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="4"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Intervall-Lauf lang"/>
+            <column name="description" value="4 × 400 m im zügigen Tempo, je 2 min Gehpause"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="4"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Tempodauerlauf"/>
+            <column name="description" value="Mittleres bis hohes Tempo über 20–25 min am Stück"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="5"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Pyramiden-Lauf"/>
+            <column name="description" value="1/2/3/2/1 min schnell laufen mit je gleicher Pause (Gehend)"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="4"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Bergläufe (simuliert)"/>
+            <column name="description" value="Steigungen suchen oder Treppenaufgänge nutzen – 6 × aufwärts laufen, gehend zurück"/>
+            <column name="category" value="RUNNING"/>
+            <column name="tracking_type" value="DISTANCE_DURATION"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="4"/>
+        </insert>
+
+        <!-- ===== WARM_UP (category=WARM_UP, tracking_type=TIME_BASED, equipment=NONE) ===== -->
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Armkreisen"/>
+            <column name="description" value="Vorwärts und rückwärts, langsam"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Hüftschwingen"/>
+            <column name="description" value="Hüftkreise links und rechts"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Kniehebelauf auf der Stelle"/>
+            <column name="description" value="Knie abwechselnd hochziehen, locker"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Fußgelenk mobilisieren"/>
+            <column name="description" value="Kreisbewegungen beider Fußgelenke"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Schulterrollen"/>
+            <column name="description" value="Schultern nach vorne und hinten rollen"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Torso-Rotation"/>
+            <column name="description" value="Stehend, Oberkörper langsam links und rechts drehen"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Standwaage (dynamisch)"/>
+            <column name="description" value="Auf einem Bein balancieren, Oberkörper leicht vor (wechseln)"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Hampelmann (leicht)"/>
+            <column name="description" value="Klassischer Jumping Jack in ruhigem Tempo"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Hüftbeuger-Mobilisation"/>
+            <column name="description" value="Großer Ausfallschritt, Oberkörper aufrecht, Hüfte nach vorne schieben"/>
+            <column name="category" value="WARM_UP"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+
+        <!-- ===== CORE (category=CORE, equipment=NONE) ===== -->
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Plank"/>
+            <column name="description" value="Unterarmstütz, Körper gerade halten"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Seitstütz links"/>
+            <column name="description" value="Seitlicher Unterarmstütz auf der linken Seite"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Seitstütz rechts"/>
+            <column name="description" value="Seitlicher Unterarmstütz auf der rechten Seite"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Crunch"/>
+            <column name="description" value="Klassisches Bauchpressen, kleiner Bewegungsradius"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Reverse Crunch"/>
+            <column name="description" value="Beine anziehen und Becken vom Boden heben"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Beinheben liegend"/>
+            <column name="description" value="Gestreckte Beine vom Boden heben und absenken"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Brücke (Glute Bridge)"/>
+            <column name="description" value="Rückenlage, Hüfte heben und senken"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Einbein-Brücke"/>
+            <column name="description" value="Brücke mit einem gestreckten Bein"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Dead Bug"/>
+            <column name="description" value="Gegengleich Arm/Bein strecken in Rückenlage"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Bird Dog"/>
+            <column name="description" value="Vierfüßler, gegengleich Arm/Bein strecken"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Superman"/>
+            <column name="description" value="Bauchlage, Arme und Beine gleichzeitig heben"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Hollow Body Hold"/>
+            <column name="description" value="Rückenlage, Körper in Bananenform halten"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="4"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Russian Twist (ohne Gewicht)"/>
+            <column name="description" value="Sitzend, Oberkörper drehen"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Mountainclimbers"/>
+            <column name="description" value="Aus Liegestütz-Position Knie abwechselnd zur Brust"/>
+            <column name="category" value="CORE"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+
+        <!-- ===== UPPER_BODY (category=UPPER_BODY) ===== -->
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Wandstütz-Liegestütze"/>
+            <column name="description" value="Hände an Wand, Liegestütz-Bewegung schräg"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="WALL"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Liegestütze (kniend)"/>
+            <column name="description" value="Klassischer Liegestütz mit Knie-Unterstützung"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Liegestütze"/>
+            <column name="description" value="Voller Liegestütz"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Enge Liegestütze"/>
+            <column name="description" value="Hände eng, Trizeps-Fokus"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="4"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Breite Liegestütze"/>
+            <column name="description" value="Hände weit außen, Brust-Fokus"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Liegestütze mit Schulter-Tap"/>
+            <column name="description" value="Nach jedem Rep Schulter berühren"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="4"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Stuhl-Dips"/>
+            <column name="description" value="Hände auf Stuhlkante, Körper absenken"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="CHAIR"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Schulterblatt-Kreisen"/>
+            <column name="description" value="Schulterblätter zusammenziehen und rollen"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Pike-Liegestütze"/>
+            <column name="description" value="Hüfte hoch (umgekehrtes V), Kopf Richtung Boden"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Inchworm"/>
+            <column name="description" value="Aufrollen bis Liegestütz-Position und zurück"/>
+            <column name="category" value="UPPER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+
+        <!-- ===== LOWER_BODY (category=LOWER_BODY) ===== -->
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Stuhl-Kniebeuge (Assisted)"/>
+            <column name="description" value="Stuhl hinten als Sicherheit, Kniebeuge-Bewegung"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="CHAIR"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Kniebeuge"/>
+            <column name="description" value="Klassische Kniebeuge, Knie über Zehen"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Sumo-Kniebeuge"/>
+            <column name="description" value="Breite Beinstellung, Zehen auswärts"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Pulsing-Kniebeuge"/>
+            <column name="description" value="In der unteren Position kleine Wippbewegungen"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Ausfallschritt vorwärts"/>
+            <column name="description" value="Abwechselnd vor, Knie fast am Boden"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Ausfallschritt rückwärts"/>
+            <column name="description" value="Schritt nach hinten, stabiler als vorwärts"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Seitlicher Ausfallschritt"/>
+            <column name="description" value="Schritt zur Seite, Körpergewicht verlagern"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Wadenheben beidbeinig"/>
+            <column name="description" value="Auf Zehenspitzen heben und senken"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Wadenheben einbeinig"/>
+            <column name="description" value="Auf einem Bein auf Zehenspitzen heben"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Seitliches Beinheben stehend"/>
+            <column name="description" value="Im Stehen Bein seitlich heben"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Hinteres Beinheben"/>
+            <column name="description" value="Im Stehen Bein nach hinten-oben heben"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Donkey Kicks"/>
+            <column name="description" value="Vierfüßler, Bein nach hinten-oben stoßen"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Squat Jump"/>
+            <column name="description" value="Kniebeuge mit explosivem Absprung"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="SETS_REPS"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="5"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Wand-Sitzen (Wall Sit)"/>
+            <column name="description" value="Rücken an Wand, 90°-Position halten"/>
+            <column name="category" value="LOWER_BODY"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="WALL"/>
+            <column name="difficulty" valueNumeric="3"/>
+        </insert>
+
+        <!-- ===== COOL_DOWN (category=COOL_DOWN, tracking_type=TIME_BASED) ===== -->
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Oberschenkel-Dehnung stehend"/>
+            <column name="description" value="Im Stehen Fußgelenk zum Gesäß ziehen"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Wade dehnen an der Wand"/>
+            <column name="description" value="Ferse bleibt am Boden, Bein gestreckt, Wand als Stütze"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="WALL"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Hüftbeuger-Dehnung"/>
+            <column name="description" value="Ausfallschritt-Position, Hüfte nach vorne drücken"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Schulter-Dehnung quer"/>
+            <column name="description" value="Arm gestreckt vor dem Körper, andere Hand drückt leicht nach"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Kindshaltung"/>
+            <column name="description" value="Kniend, Arme nach vorne strecken, Stirn am Boden"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Taubenstellung (vereinfacht)"/>
+            <column name="description" value="Im Sitzen eine Hüfte dehnen, Bein vor dem Körper"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="2"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Brustdehnung (Türrahmen)"/>
+            <column name="description" value="Arme in T-Position an Türrahmen, Brust nach vorne strecken"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Nacken-Seitneigung"/>
+            <column name="description" value="Kopf langsam zur Seite, ggf. leicht mit Hand drücken"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Liegender Dreher"/>
+            <column name="description" value="Rückenlage, Knie zur Seite legen, Schultern bleiben am Boden"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+        <insert tableName="fitness_exercise">
+            <column name="name" value="Vorwärtsbeugen (stehend)"/>
+            <column name="description" value="Langsam nach unten rollen, Knie leicht gebeugt"/>
+            <column name="category" value="COOL_DOWN"/>
+            <column name="tracking_type" value="TIME_BASED"/>
+            <column name="equipment" value="NONE"/>
+            <column name="difficulty" valueNumeric="1"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

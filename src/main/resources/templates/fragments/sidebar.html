@@ -93,6 +93,44 @@
           </ul>
         </li>
         <li class="nav-item">
+          <a th:class="${#strings.startsWith(currentPath, '/fitness')} ? 'nav-link' : 'nav-link collapsed'" data-bs-target="#fitness-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-activity"></i><span>Fitness</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="fitness-nav" th:class="${#strings.startsWith(currentPath, '/fitness')} ? 'nav-content collapse show' : 'nav-content collapse'" data-bs-parent="#sidebar-nav">
+            <li>
+              <a th:href="@{/fitness/overview}" th:class="${currentPath == '/fitness/overview'} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>&Uuml;bersicht</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/fitness/plan}" th:class="${currentPath == '/fitness/plan'} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>Trainingsplan</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/fitness/history}" th:class="${currentPath == '/fitness/history'} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>Verlauf</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/fitness/weight}" th:class="${currentPath == '/fitness/weight'} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>Gesundheit</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/fitness/nutrition}" th:class="${currentPath == '/fitness/nutrition'} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>Ern&auml;hrung</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/fitness/exercises}" th:class="${currentPath == '/fitness/exercises'} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>&Uuml;bungskatalog</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
           <a th:class="${#strings.startsWith(currentPath, '/assistant')} ? 'nav-link' : 'nav-link collapsed'" th:href="@{/assistant}">
             <i class="bi bi-robot"></i>
             <span>KI-Assistent</span>

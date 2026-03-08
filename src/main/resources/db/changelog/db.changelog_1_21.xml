@@ -1,0 +1,323 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_21.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                                       http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <!--
+        Image GIFs sourced from spotebi.com/exercise-guide (verified via page fetch).
+        YouTube video IDs sourced from drdotzauer.de and fitkurs.de embedded players (verified via page fetch).
+        Exercises without a verified video ID have video_url left null.
+    -->
+    <changeSet author="michael" id="add image and video urls to fitness exercises">
+
+        <!-- ===== RUNNING ===== -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/run-in-place-exercise-illustration.gif"/>
+            <where>name = 'Geh-Intervall'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/run-in-place-exercise-illustration.gif"/>
+            <where>name = 'Geh-Lauf 1:1'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/run-in-place-exercise-illustration.gif"/>
+            <where>name = 'Geh-Lauf 1:2'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/run-in-place-exercise-illustration.gif"/>
+            <where>name = 'Geh-Lauf 1:3'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/run-in-place-exercise-illustration.gif"/>
+            <where>name = 'Langsamer Dauerlauf'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/run-in-place-exercise-illustration.gif"/>
+            <where>name = 'Lockerer Dauerlauf'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/high-knees-exercise-illustration.gif"/>
+            <where>name = 'Fartlek-Einheit'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/high-knees-exercise-illustration.gif"/>
+            <where>name = 'Intervall-Lauf kurz'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/high-knees-exercise-illustration.gif"/>
+            <where>name = 'Intervall-Lauf lang'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/run-in-place-exercise-illustration.gif"/>
+            <where>name = 'Tempodauerlauf'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/high-knees-exercise-illustration.gif"/>
+            <where>name = 'Pyramiden-Lauf'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/run-in-place-exercise-illustration.gif"/>
+            <where>name = 'Bergläufe (simuliert)'</where>
+        </update>
+
+        <!-- ===== WARM_UP ===== -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/arm-circles-exercise-illustration.gif"/>
+            <where>name = 'Armkreisen'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/01/hip-circles-exercise-illustration.gif"/>
+            <where>name = 'Hüftschwingen'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/high-knees-exercise-illustration.gif"/>
+            <where>name = 'Kniehebelauf auf der Stelle'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/03/ankle-circles-exercise-illustration.gif"/>
+            <where>name = 'Fußgelenk mobilisieren'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/shoulder-stretch-exercise-illustration.gif"/>
+            <where>name = 'Schulterrollen'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/01/hip-circles-exercise-illustration.gif"/>
+            <where>name = 'Torso-Rotation'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2017/07/side-leg-lifts-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Standwaage (dynamisch)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/jumping-jacks-exercise-illustration.gif"/>
+            <where>name = 'Hampelmann (leicht)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/03/hip-flexor-stretch-exercise-illustration.gif"/>
+            <where>name = 'Hüftbeuger-Mobilisation'</where>
+        </update>
+
+        <!-- ===== CORE ===== -->
+        <!-- Plank: video VAuJvTYjWC8 sourced from fitkurs.de embedded player -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/plank-exercise-illustration.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=VAuJvTYjWC8"/>
+            <where>name = 'Plank'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/side-plank-exercise-illustration.gif"/>
+            <where>name = 'Seitstütz links'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/side-plank-exercise-illustration.gif"/>
+            <where>name = 'Seitstütz rechts'</where>
+        </update>
+        <!-- Crunch: video H2a-sJBYsBo sourced from drdotzauer.de/uebungen/crunches embedded player -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2016/03/crunch-chop-exercise-illustration-spotebi.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=H2a-sJBYsBo"/>
+            <where>name = 'Crunch'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2017/10/reverse-crunch-and-twist-exercise-illustration-spotebi.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=H2a-sJBYsBo"/>
+            <where>name = 'Reverse Crunch'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/straight-leg-raise-exercise-illustration.gif"/>
+            <where>name = 'Beinheben liegend'</where>
+        </update>
+        <!-- Glute Bridge: video MwNP1Ure28Q sourced from drdotzauer.de/uebungen/banded-glute-bridges -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/01/glute-bridge-exercise-illustration-spotebi.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=MwNP1Ure28Q"/>
+            <where>name = 'Brücke (Glute Bridge)'</where>
+        </update>
+        <!-- Single-leg Glute Bridge: video q4EgxNavxKc from drdotzauer.de/uebungen/banded-glute-bridges -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/01/glute-bridge-exercise-illustration-spotebi.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=q4EgxNavxKc"/>
+            <where>name = 'Einbein-Brücke'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/05/dead-bug-exercise-illustration.gif"/>
+            <where>name = 'Dead Bug'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/bird-dogs-exercise-illustration.gif"/>
+            <where>name = 'Bird Dog'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2016/02/superman-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Superman'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/plank-exercise-illustration.gif"/>
+            <where>name = 'Hollow Body Hold'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/04/russian-twist-exercise-illustration.gif"/>
+            <where>name = 'Russian Twist (ohne Gewicht)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/mountain-climbers-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Mountainclimbers'</where>
+        </update>
+
+        <!-- ===== UPPER_BODY ===== -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/knee-push-up-exercise-illustration.gif"/>
+            <where>name = 'Wandstütz-Liegestütze'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/knee-push-up-exercise-illustration.gif"/>
+            <where>name = 'Liegestütze (kniend)'</where>
+        </update>
+        <!-- Push-up: video e_1BDnOVKso sourced from drdotzauer.de/uebungen/liegestuetze embedded player -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/push-up-exercise-illustration.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=e_1BDnOVKso"/>
+            <where>name = 'Liegestütze'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/push-up-exercise-illustration.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=e_1BDnOVKso"/>
+            <where>name = 'Enge Liegestütze'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/push-up-exercise-illustration.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=e_1BDnOVKso"/>
+            <where>name = 'Breite Liegestütze'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/push-up-exercise-illustration.gif"/>
+            <where>name = 'Liegestütze mit Schulter-Tap'</where>
+        </update>
+        <!-- Chair Dips: video oZla4PbWZYU sourced from drdotzauer.de/uebungen/dips embedded player -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/04/tricep-dips-exercise-illustration-spotebi.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=oZla4PbWZYU"/>
+            <where>name = 'Stuhl-Dips'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/shoulder-stretch-exercise-illustration.gif"/>
+            <where>name = 'Schulterblatt-Kreisen'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2016/03/pike-push-up-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Pike-Liegestütze'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/01/inchworm-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Inchworm'</where>
+        </update>
+
+        <!-- ===== LOWER_BODY ===== -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/squat-exercise-illustration.gif"/>
+            <where>name = 'Stuhl-Kniebeuge (Assisted)'</where>
+        </update>
+        <!-- Squat: video 3X9j4IJQ8JU sourced from drdotzauer.de/uebungen/kniebeugen embedded player -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/squat-exercise-illustration.gif"/>
+            <column name="video_url" value="https://www.youtube.com/watch?v=3X9j4IJQ8JU"/>
+            <where>name = 'Kniebeuge'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/05/sumo-squat-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Sumo-Kniebeuge'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/squat-exercise-illustration.gif"/>
+            <where>name = 'Pulsing-Kniebeuge'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2016/09/front-and-back-lunges-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Ausfallschritt vorwärts'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2016/09/front-and-back-lunges-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Ausfallschritt rückwärts'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/02/alternating-side-lunge-exercise-illustration.gif"/>
+            <where>name = 'Seitlicher Ausfallschritt'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/05/calf-raises-exercise-illustration.gif"/>
+            <where>name = 'Wadenheben beidbeinig'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/05/calf-raises-exercise-illustration.gif"/>
+            <where>name = 'Wadenheben einbeinig'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2017/07/side-leg-lifts-exercise-illustration-spotebi.gif"/>
+            <where>name = 'Seitliches Beinheben stehend'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/01/back-leg-lifts-exercise-illustration.gif"/>
+            <where>name = 'Hinteres Beinheben'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/01/donkey-kicks-exercise-illustration.gif"/>
+            <where>name = 'Donkey Kicks'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/08/jump-squat-exercise-illustration.gif"/>
+            <where>name = 'Squat Jump'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/05/wall-sit-exercise-illustration.gif"/>
+            <where>name = 'Wand-Sitzen (Wall Sit)'</where>
+        </update>
+
+        <!-- ===== COOL_DOWN ===== -->
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/03/quad-stretch-exercise-illustration.gif"/>
+            <where>name = 'Oberschenkel-Dehnung stehend'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/03/calf-stretch-exercise-illustration.gif"/>
+            <where>name = 'Wade dehnen an der Wand'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/03/hip-flexor-stretch-exercise-illustration.gif"/>
+            <where>name = 'Hüftbeuger-Dehnung'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/shoulder-stretch-exercise-illustration.gif"/>
+            <where>name = 'Schulter-Dehnung quer'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2016/01/childs-pose-balasana.jpg"/>
+            <where>name = 'Kindshaltung'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/11/pigeon-pose-eka-pada-rajakapotasana.jpg"/>
+            <where>name = 'Taubenstellung (vereinfacht)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2015/06/chest-stretch-exercise-illustration.gif"/>
+            <where>name = 'Brustdehnung (Türrahmen)'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2014/10/neck-stretch-exercise-illustration.gif"/>
+            <where>name = 'Nacken-Seitneigung'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2016/04/supta-matsyendrasana-supine-spinal-twist-pose-spotebi.jpg"/>
+            <where>name = 'Liegender Dreher'</where>
+        </update>
+        <update tableName="fitness_exercise">
+            <column name="image_url" value="https://spotebi.com/wp-content/uploads/2016/01/standing-forward-bend-pose-uttanasana.jpg"/>
+            <where>name = 'Vorwärtsbeugen (stehend)'</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

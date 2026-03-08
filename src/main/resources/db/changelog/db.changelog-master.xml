@@ -23,4 +23,13 @@
     <include file="db.changelog_1_15.xml" relativeToChangelogFile="true"/>
     <include file="db.changelog_1_16.xml" relativeToChangelogFile="true"/>
     <include file="db.changelog_1_17.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_18.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_19.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_20.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_21.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_22.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_23.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_24.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_25.xml" relativeToChangelogFile="true"/>
+    <include file="db.changelog_1_26.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

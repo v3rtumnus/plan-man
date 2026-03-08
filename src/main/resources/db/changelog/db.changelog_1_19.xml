@@ -1,0 +1,71 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_19.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                                       http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <changeSet author="michael" id="create fitness weight and nutrition tables">
+
+        <createTable tableName="fitness_weight_log">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fitness_profile_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="log_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="weight_kg" type="DECIMAL(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="VARCHAR(255)"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_weight_log" baseColumnNames="fitness_profile_id"
+            referencedTableName="fitness_profile" referencedColumnNames="id"
+            constraintName="fk_fitness_weight_log_profile"
+            onDelete="CASCADE"/>
+
+        <createTable tableName="fitness_meal_log">
+            <column name="id" type="BIGINT UNSIGNED" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fitness_profile_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="log_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="meal_text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ai_calories" type="INT"/>
+            <column name="ai_protein_g" type="INT"/>
+            <column name="ai_carbs_g" type="INT"/>
+            <column name="ai_notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="fitness_meal_log" baseColumnNames="fitness_profile_id"
+            referencedTableName="fitness_profile" referencedColumnNames="id"
+            constraintName="fk_fitness_meal_log_profile"
+            onDelete="CASCADE"/>
+
+        <addUniqueConstraint
+            tableName="fitness_meal_log"
+            columnNames="fitness_profile_id, log_date"
+            constraintName="uq_fitness_meal_log_profile_date"/>
+
+    </changeSet>
+
+</databaseChangeLog>
