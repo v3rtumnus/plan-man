@@ -2,6 +2,7 @@ package at.v3rtumnus.planman.controller.ui;
 
 import at.v3rtumnus.planman.dto.fitness.AssessmentAnswerDTO;
 import at.v3rtumnus.planman.dto.fitness.FitnessPlanDTO;
+import at.v3rtumnus.planman.dto.fitness.PersonalRecordDTO;
 import at.v3rtumnus.planman.entity.fitness.ActivityLevel;
 import at.v3rtumnus.planman.entity.fitness.BiologicalSex;
 import at.v3rtumnus.planman.entity.fitness.FitnessProfile;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -82,6 +84,11 @@ public class FitnessController {
         FitnessPlanDTO plan = fitnessService.getActivePlan(username);
         mav.addObject("plan", plan);
         mav.addObject("progress", fitnessService.getProgressStats(username));
+        mav.addObject("readiness", fitnessService.getRecoveryReadiness(username));
+        mav.addObject("todayActivities", fitnessService.getExternalActivitiesForDate(username, LocalDate.now()));
+        mav.addObject("todayMealLog", fitnessNutritionAiService.getMealLogDTO(username, LocalDate.now()));
+        var weightHistory = fitnessHealthService.getWeightHistory(username);
+        mav.addObject("lastWeight", weightHistory.isEmpty() ? null : weightHistory.get(0));
 
         if (plan != null) {
             plan.getSessions().stream()
@@ -144,9 +151,33 @@ public class FitnessController {
     }
 
     @GetMapping("/history")
-    public ModelAndView history() {
-        ModelAndView mav = new ModelAndView("fitness/history");
-        mav.addObject("sessionLogs", fitnessService.getSessionHistory(currentUsername(), 0));
+    public ModelAndView historyRedirect() {
+        return new ModelAndView("redirect:/fitness/aktivitaeten");
+    }
+
+    @GetMapping("/aktivitaeten")
+    public ModelAndView aktivitaeten() {
+        ModelAndView mav = new ModelAndView("fitness/aktivitaeten");
+        mav.addObject("sessionLogs", fitnessService.getSessionHistoryWithStats(currentUsername(), 0));
+        return mav;
+    }
+
+    @GetMapping("/records")
+    public ModelAndView recordsRedirect() {
+        return new ModelAndView("redirect:/fitness/statistik");
+    }
+
+    @GetMapping("/statistik")
+    public ModelAndView statistik() {
+        String username = currentUsername();
+        ModelAndView mav = new ModelAndView("fitness/statistik");
+        mav.addObject("progress", fitnessService.getProgressStats(username));
+        List<PersonalRecordDTO> records = fitnessService.getPersonalRecords(username);
+        Map<String, List<PersonalRecordDTO>> byCategory = records.stream()
+                .collect(Collectors.groupingBy(pr -> pr.getCategory().name(), LinkedHashMap::new, Collectors.toList()));
+        mav.addObject("recordsByCategory", byCategory);
+        mav.addObject("mealHistory", fitnessNutritionAiService.getMealHistoryWithTargets(username, 30));
+        mav.addObject("nutritionWeeklySummary", fitnessNutritionAiService.getWeeklyNutritionSummary(username));
         return mav;
     }
 
@@ -159,7 +190,6 @@ public class FitnessController {
         mav.addObject("dailyCalorieTarget", fitnessHealthService.recalculateDailyCalorieTarget(username));
         mav.addObject("activityLevels", ActivityLevel.values());
         mav.addObject("biologicalSexValues", BiologicalSex.values());
-        mav.addObject("mealHistory", fitnessNutritionAiService.getMealHistoryWithTargets(username, 30));
         return mav;
     }
 

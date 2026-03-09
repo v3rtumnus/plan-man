@@ -55,4 +55,7 @@ public class FitnessSessionLog {
 
     @Column(name = "ai_analyzed", nullable = false)
     private boolean aiAnalyzed;
+
+    @Column(name = "external_calories_burned")
+    private Integer externalCaloriesBurned;
 }

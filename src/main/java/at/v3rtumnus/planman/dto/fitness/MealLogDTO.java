@@ -25,4 +25,5 @@ public class MealLogDTO {
     private Integer proteinDelta;
     private Integer carbsDelta;
     private Integer fatDelta;
+    private Integer externalCaloriesBurned;
 }

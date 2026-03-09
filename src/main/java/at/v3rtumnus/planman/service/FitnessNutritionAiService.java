@@ -4,6 +4,7 @@ import at.v3rtumnus.planman.dao.fitness.FitnessMealLogRepository;
 import at.v3rtumnus.planman.dao.fitness.FitnessProfileRepository;
 import at.v3rtumnus.planman.dto.fitness.MealLogDTO;
 import at.v3rtumnus.planman.dto.fitness.NutritionExtractionResult;
+import at.v3rtumnus.planman.dto.fitness.NutritionWeeklySummaryDTO;
 import at.v3rtumnus.planman.entity.fitness.FitnessMealLog;
 import at.v3rtumnus.planman.entity.fitness.FitnessProfile;
 import at.v3rtumnus.planman.exception.FitnessAiException;
@@ -97,15 +98,18 @@ public class FitnessNutritionAiService {
         Integer proteinTarget = fitnessHealthService.getProteinTarget(username);
         Integer carbsTarget = fitnessHealthService.getCarbsTarget(username);
         Integer fatTarget = fitnessHealthService.getFatTarget(username);
+        int externalCalories = fitnessService.getExternalCaloriesForDate(username, date);
+        Integer effectiveCalorieTarget = (calorieTarget != null) ? calorieTarget + externalCalories : null;
 
         if (logOpt.isEmpty()) {
             return new MealLogDTO(date, null, null, null, null, null, null,
-                    calorieTarget, proteinTarget, carbsTarget, fatTarget, null, null, null, null);
+                    effectiveCalorieTarget, proteinTarget, carbsTarget, fatTarget, null, null, null, null,
+                    externalCalories > 0 ? externalCalories : null);
         }
 
         FitnessMealLog log = logOpt.get();
-        Integer calorieDelta = (log.getAiCalories() != null && calorieTarget != null)
-                ? log.getAiCalories() - calorieTarget : null;
+        Integer calorieDelta = (log.getAiCalories() != null && effectiveCalorieTarget != null)
+                ? log.getAiCalories() - effectiveCalorieTarget : null;
         Integer proteinDelta = (log.getAiProteinG() != null && proteinTarget != null)
                 ? log.getAiProteinG() - proteinTarget : null;
         Integer carbsDelta = (log.getAiCarbsG() != null && carbsTarget != null)
@@ -116,8 +120,9 @@ public class FitnessNutritionAiService {
         return new MealLogDTO(
                 log.getLogDate(), log.getMealText(), log.getAiCalories(),
                 log.getAiProteinG(), log.getAiCarbsG(), log.getAiFatG(), log.getAiNotes(),
-                calorieTarget, proteinTarget, carbsTarget, fatTarget,
-                calorieDelta, proteinDelta, carbsDelta, fatDelta
+                effectiveCalorieTarget, proteinTarget, carbsTarget, fatTarget,
+                calorieDelta, proteinDelta, carbsDelta, fatDelta,
+                externalCalories > 0 ? externalCalories : null
         );
     }
 
@@ -128,7 +133,7 @@ public class FitnessNutritionAiService {
                 .filter(l -> !l.getLogDate().isBefore(cutoff))
                 .map(l -> new MealLogDTO(l.getLogDate(), l.getMealText(), l.getAiCalories(),
                         l.getAiProteinG(), l.getAiCarbsG(), l.getAiFatG(), l.getAiNotes(),
-                        null, null, null, null, null, null, null, null))
+                        null, null, null, null, null, null, null, null, null))
                 .collect(Collectors.toList());
     }
 
@@ -144,8 +149,39 @@ public class FitnessNutritionAiService {
                 .map(l -> new MealLogDTO(l.getLogDate(), l.getMealText(), l.getAiCalories(),
                         l.getAiProteinG(), l.getAiCarbsG(), l.getAiFatG(), l.getAiNotes(),
                         calorieTarget, proteinTarget, carbsTarget, fatTarget,
-                        null, null, null, null))
+                        null, null, null, null, null))
                 .collect(Collectors.toList());
+    }
+
+    public NutritionWeeklySummaryDTO getWeeklyNutritionSummary(String username) {
+        FitnessProfile profile = fitnessService.getOrCreateFitnessProfile(username);
+        LocalDate cutoff = LocalDate.now().minusDays(6);
+        List<FitnessMealLog> weekLogs = mealLogRepository.findByFitnessProfileOrderByLogDateDesc(profile).stream()
+                .filter(l -> !l.getLogDate().isBefore(cutoff) && l.getAiCalories() != null)
+                .collect(Collectors.toList());
+
+        int daysLogged = weekLogs.size();
+        if (daysLogged == 0) {
+            return new NutritionWeeklySummaryDTO(0, null, null, null, null,
+                    fitnessHealthService.recalculateDailyCalorieTarget(username),
+                    fitnessHealthService.getProteinTarget(username),
+                    fitnessHealthService.getCarbsTarget(username),
+                    fitnessHealthService.getFatTarget(username));
+        }
+
+        Integer avgCal = (int) weekLogs.stream().mapToInt(FitnessMealLog::getAiCalories).average().orElse(0);
+        Integer avgProt = weekLogs.stream().anyMatch(l -> l.getAiProteinG() != null)
+                ? (int) weekLogs.stream().filter(l -> l.getAiProteinG() != null).mapToInt(FitnessMealLog::getAiProteinG).average().orElse(0) : null;
+        Integer avgCarbs = weekLogs.stream().anyMatch(l -> l.getAiCarbsG() != null)
+                ? (int) weekLogs.stream().filter(l -> l.getAiCarbsG() != null).mapToInt(FitnessMealLog::getAiCarbsG).average().orElse(0) : null;
+        Integer avgFat = weekLogs.stream().anyMatch(l -> l.getAiFatG() != null)
+                ? (int) weekLogs.stream().filter(l -> l.getAiFatG() != null).mapToInt(FitnessMealLog::getAiFatG).average().orElse(0) : null;
+
+        return new NutritionWeeklySummaryDTO(daysLogged, avgCal, avgProt, avgCarbs, avgFat,
+                fitnessHealthService.recalculateDailyCalorieTarget(username),
+                fitnessHealthService.getProteinTarget(username),
+                fitnessHealthService.getCarbsTarget(username),
+                fitnessHealthService.getFatTarget(username));
     }
 
     private String callAiWithTimeout(String prompt) {

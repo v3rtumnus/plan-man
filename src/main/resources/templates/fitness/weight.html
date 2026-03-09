@@ -6,10 +6,6 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         var weightHistory = /*[[${weightHistory}]]*/ [];
-        var mealHistory   = /*[[${mealHistory}]]*/ [];
-
-        // Chronological order for charts (API returns DESC)
-        var mealChronological = mealHistory.slice().reverse();
 
         $(document).ready(function() {
 
@@ -40,131 +36,6 @@
                 });
             }
 
-            // ── Calorie chart ─────────────────────────────────────────────
-            if (mealChronological.length > 0) {
-                var cLabels  = mealChronological.map(function(e) { return e.logDate; });
-                var cActual  = mealChronological.map(function(e) { return e.aiCalories; });
-                var cTarget  = mealChronological.map(function(e) { return e.dailyCalorieTarget; });
-
-                new Chart(document.getElementById('calorieChart'), {
-                    type: 'line',
-                    data: {
-                        labels: cLabels,
-                        datasets: [
-                            {
-                                label: 'Ziel (kcal)',
-                                data: cTarget,
-                                borderColor: 'rgba(108, 117, 125, 0.8)',
-                                borderDash: [6, 4],
-                                backgroundColor: 'transparent',
-                                tension: 0.2,
-                                pointRadius: 2
-                            },
-                            {
-                                label: 'Ist (kcal)',
-                                data: cActual,
-                                borderColor: 'rgba(25, 135, 84, 1)',
-                                backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                                fill: true,
-                                tension: 0.3,
-                                pointRadius: 4
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: { legend: { position: 'top' } },
-                        scales: { y: { beginAtZero: false, ticks: { callback: function(v) { return v + ' kcal'; } } } }
-                    }
-                });
-            }
-
-            // ── Macro chart ───────────────────────────────────────────────
-            if (mealChronological.length > 0) {
-                var mLabels = mealChronological.map(function(e) { return e.logDate; });
-
-                var macroDatasets = {
-                    protein: {
-                        target: mealChronological.map(function(e) { return e.targetProteinG; }),
-                        actual: mealChronological.map(function(e) { return e.aiProteinG; }),
-                        color: 'rgba(13, 110, 253, 1)',
-                        fill: 'rgba(13, 110, 253, 0.1)',
-                        unit: 'g'
-                    },
-                    carbs: {
-                        target: mealChronological.map(function(e) { return e.targetCarbsG; }),
-                        actual: mealChronological.map(function(e) { return e.aiCarbsG; }),
-                        color: 'rgba(255, 153, 0, 1)',
-                        fill: 'rgba(255, 153, 0, 0.1)',
-                        unit: 'g'
-                    },
-                    fat: {
-                        target: mealChronological.map(function(e) { return e.targetFatG; }),
-                        actual: mealChronological.map(function(e) { return e.aiFatG; }),
-                        color: 'rgba(220, 53, 69, 1)',
-                        fill: 'rgba(220, 53, 69, 0.1)',
-                        unit: 'g'
-                    }
-                };
-
-                var currentMacro = 'protein';
-
-                var macroChart = new Chart(document.getElementById('macroChart'), {
-                    type: 'line',
-                    data: {
-                        labels: mLabels,
-                        datasets: [
-                            {
-                                label: 'Ziel (g)',
-                                data: macroDatasets.protein.target,
-                                borderColor: 'rgba(108, 117, 125, 0.8)',
-                                borderDash: [6, 4],
-                                backgroundColor: 'transparent',
-                                tension: 0.2,
-                                pointRadius: 2
-                            },
-                            {
-                                label: 'Ist (g)',
-                                data: macroDatasets.protein.actual,
-                                borderColor: macroDatasets.protein.color,
-                                backgroundColor: macroDatasets.protein.fill,
-                                fill: true,
-                                tension: 0.3,
-                                pointRadius: 4
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: { legend: { position: 'top' } },
-                        scales: { y: { beginAtZero: false, ticks: { callback: function(v) { return v + ' g'; } } } }
-                    }
-                });
-
-                window.switchMacro = function(type) {
-                    if (type === currentMacro) return;
-                    currentMacro = type;
-                    var d = macroDatasets[type];
-                    macroChart.data.datasets[0].data = d.target;
-                    macroChart.data.datasets[1].data = d.actual;
-                    macroChart.data.datasets[1].borderColor = d.color;
-                    macroChart.data.datasets[1].backgroundColor = d.fill;
-                    macroChart.update();
-
-                    document.querySelectorAll('.macro-toggle .btn').forEach(function(btn) {
-                        btn.classList.remove('btn-primary', 'btn-warning', 'btn-danger');
-                        btn.classList.add('btn-outline-secondary');
-                    });
-                    var activeMap = { protein: 'btn-primary', carbs: 'btn-warning', fat: 'btn-danger' };
-                    var activeOutlineMap = { protein: 'btn-outline-primary', carbs: 'btn-outline-warning', fat: 'btn-outline-danger' };
-                    document.querySelectorAll('.macro-toggle .btn').forEach(function(btn) {
-                        if (btn.dataset.macro === type) {
-                            btn.classList.remove('btn-outline-secondary');
-                            btn.classList.add(activeMap[type]);
-                        }
-                    });
-                };
-            }
         });
 
         function saveWeight() {
@@ -215,7 +86,7 @@
 <main id="main" class="main">
 
     <div class="pagetitle">
-        <h1>Gesundheit &amp; Ern&auml;hrung</h1>
+        <h1>Gesundheit</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
@@ -254,37 +125,6 @@
                     <div th:if="${dailyCalorieTarget == null}" class="text-muted small">
                         <i class="bi bi-info-circle me-1"></i>Bitte f&uuml;lle das K&ouml;rperprofil aus und trage dein Gewicht ein.
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Row 2: Calorie history chart -->
-    <div class="row" th:if="${!mealHistory.isEmpty()}">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Kalorienhistorie – Ziel vs. Ist (letzte 30 Tage)</h5>
-                    <canvas id="calorieChart" height="80"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Row 3: Macro chart with toggle -->
-    <div class="row" th:if="${!mealHistory.isEmpty()}">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h5 class="card-title mb-0">Makron&auml;hrstoffe – Ziel vs. Ist (letzte 30 Tage)</h5>
-                        <div class="btn-group macro-toggle" role="group">
-                            <button type="button" class="btn btn-primary btn-sm" data-macro="protein" onclick="switchMacro('protein')">Protein</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" data-macro="carbs" onclick="switchMacro('carbs')">Kohlenhydrate</button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" data-macro="fat" onclick="switchMacro('fat')">Fett</button>
-                        </div>
-                    </div>
-                    <canvas id="macroChart" height="80"></canvas>
                 </div>
             </div>
         </div>
@@ -448,7 +288,59 @@
         </div>
     </div>
 
+    <!-- Danger zone -->
+    <div class="row mt-2">
+        <div class="col">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h6 class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Gefahrenzone</h6>
+                    <p class="small text-muted mb-2">Alle Fitness-Daten (Trainingsplan, Verlauf, Gewicht, Ern&auml;hrung, Gesundheitsprofil) werden unwiderruflich gel&ouml;scht. Danach startest du mit der Erstbefragung neu.</p>
+                    <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#resetModal">
+                        <i class="bi bi-trash me-1"></i>Alle Fitness-Daten zur&uuml;cksetzen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </main>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Daten zur&uuml;cksetzen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Alle Fitness-Daten werden <strong>unwiderruflich gel&ouml;scht</strong>. Danach startest du mit der Erstbefragung neu.</p>
+                <p class="text-muted small">Bist du sicher?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-danger" onclick="confirmReset()">
+                    <i class="bi bi-trash me-1"></i>Ja, alles l&ouml;schen
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmReset() {
+        $.ajax({
+            url: '/api/fitness/reset',
+            type: 'DELETE',
+            success: function () {
+                window.location.href = '/fitness/assessment';
+            },
+            error: function () {
+                alert('Fehler beim Zur\u00fccksetzen. Bitte erneut versuchen.');
+            }
+        });
+    }
+</script>
 
 <div th:replace="~{fragments/footer :: footer-js}"/>
 </body>

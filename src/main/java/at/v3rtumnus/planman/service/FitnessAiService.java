@@ -105,7 +105,9 @@ public class FitnessAiService {
 
         List<FitnessExercise> exercises = exerciseRepository.findAll();
         String exerciseRefreshInstruction = detectExerciseRefreshInstruction(profile, activePlan);
-        String prompt = buildEvolutionPrompt(activePlan, weekLogs, weekSessions, exercises, exerciseRefreshInstruction);
+        List<FitnessSessionLog> teamSportLogs = sessionLogRepository
+                .findByFitnessProfileAndPlanSessionIsNullAndSessionTypeAndAiAnalyzedFalse(profile, SessionType.TEAM_SPORT);
+        String prompt = buildEvolutionPrompt(activePlan, weekLogs, weekSessions, exercises, exerciseRefreshInstruction, teamSportLogs);
 
         log.info("Evolving fitness plan for user {}, analyzing week {}", username, completedWeek);
         String response = callAiWithTimeout(prompt, "KI-Plan-Evolution fehlgeschlagen", planModel);
@@ -123,8 +125,12 @@ public class FitnessAiService {
         activePlan.setActive(false);
         fitnessPlanRepository.save(activePlan);
 
-        // Mark analyzed logs
+        // Mark analyzed logs (planned sessions + team sport)
         weekLogs.forEach(l -> {
+            l.setAiAnalyzed(true);
+            sessionLogRepository.save(l);
+        });
+        teamSportLogs.forEach(l -> {
             l.setAiAnalyzed(true);
             sessionLogRepository.save(l);
         });
@@ -447,7 +453,8 @@ public class FitnessAiService {
 
     private String buildEvolutionPrompt(FitnessPlan currentPlan, List<FitnessSessionLog> weekLogs,
                                          List<FitnessPlanSession> weekSessions,
-                                         List<FitnessExercise> exercises, String exerciseRefreshInstruction) {
+                                         List<FitnessExercise> exercises, String exerciseRefreshInstruction,
+                                         List<FitnessSessionLog> teamSportLogs) {
         StringBuilder sessionSummary = new StringBuilder();
         for (FitnessSessionLog log : weekLogs) {
             sessionSummary.append("- Session %d (%s): Status=%s"
@@ -469,6 +476,18 @@ public class FitnessAiService {
             sessionSummary.append("\n");
         }
 
+        StringBuilder teamSportSection = new StringBuilder();
+        if (teamSportLogs != null && !teamSportLogs.isEmpty()) {
+            teamSportSection.append("\nExterne Aktivitäten außerhalb des Plans:\n");
+            for (FitnessSessionLog ts : teamSportLogs) {
+                teamSportSection.append("- %s: TEAM_SPORT".formatted(ts.getLogDate()));
+                if (ts.getFeedbackText() != null) teamSportSection.append(" (%s)".formatted(ts.getFeedbackText()));
+                if (ts.getActualDurationMinutes() != null) teamSportSection.append(", %d min".formatted(ts.getActualDurationMinutes()));
+                if (ts.getExternalCaloriesBurned() != null) teamSportSection.append(", ~%d kcal".formatted(ts.getExternalCaloriesBurned()));
+                teamSportSection.append("\n");
+            }
+        }
+
         String exerciseJson = serializeExerciseLibrary(exercises);
         String refreshSection = exerciseRefreshInstruction.isBlank()
                 ? "Keine Anpassung der Übungsauswahl nötig — nur Parameter optimieren."
@@ -478,8 +497,7 @@ public class FitnessAiService {
                 Du bist ein Fitness-Coach. Analysiere die letzte abgeschlossene Trainingswoche und erstelle einen angepassten 4-Wochen-Plan.
 
                 Sessions der letzten Woche:
-                %s
-
+                %s%s
                 Verfügbare Übungen: %s
 
                 Regeln:
@@ -487,6 +505,7 @@ public class FitnessAiService {
                 - Übersprungene Sessions wegen SICK: Schwierigkeit leicht reduzieren oder halten
                 - Übersprungene Sessions wegen NO_TIME: Schwierigkeit halten
                 - Übersprungene Sessions wegen OTHER_SPORT: Erholung berücksichtigen, Schwierigkeit halten oder leicht steigern
+                - TEAM_SPORT-Aktivitäten: Als intensive Einheit werten, bei Bedarf Erholung am Folgetag einplanen
                 - Bewertungen ≤ 2/5: Schwierigkeit reduzieren
                 - Bewertungen ≥ 4/5: Schwierigkeit steigern
                 - Übungs-Refresh: %s
@@ -499,7 +518,7 @@ public class FitnessAiService {
                   "new_exercises": [],
                   "sessions": [ ... ]
                 }
-                """.formatted(sessionSummary, exerciseJson, refreshSection);
+                """.formatted(sessionSummary, teamSportSection, exerciseJson, refreshSection);
     }
 
     private String serializeExerciseLibrary(List<FitnessExercise> exercises) {

@@ -11,8 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.IsoFields;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -104,6 +106,7 @@ public class FitnessService {
         log.setActualDurationMinutes(dto.getActualDurationMinutes());
         log.setDifficultyRating(dto.getDifficultyRating());
         log.setFeedbackText(dto.getFeedbackText());
+        log.setExternalCaloriesBurned(dto.getExternalCaloriesBurned());
         log.setAiAnalyzed(false);
         FitnessSessionLog savedLog = sessionLogRepository.save(log);
 
@@ -172,6 +175,18 @@ public class FitnessService {
 
         checkAndTriggerEvolution(username, profile, planSession);
         return savedLog;
+    }
+
+    public List<FitnessSessionLog> getExternalActivitiesForDate(String username, LocalDate date) {
+        FitnessProfile profile = getOrCreateFitnessProfile(username);
+        return sessionLogRepository.findByFitnessProfileAndLogDateAndSessionType(profile, date, SessionType.TEAM_SPORT);
+    }
+
+    public int getExternalCaloriesForDate(String username, LocalDate date) {
+        return getExternalActivitiesForDate(username, date).stream()
+                .filter(l -> l.getExternalCaloriesBurned() != null)
+                .mapToInt(FitnessSessionLog::getExternalCaloriesBurned)
+                .sum();
     }
 
     public List<FitnessExercise> getAllExercises() {
@@ -259,11 +274,196 @@ public class FitnessService {
                 })
                 .sum();
 
+        int[] streaks = calculateStreaks(allLogs);
+
         return new FitnessProgressDTO(
                 weekLabels, trainingDays, runningKm, avgDifficulty,
                 (int) totalCompleted, (int) totalSkipped,
-                Math.round(totalKm * 100.0) / 100.0
+                Math.round(totalKm * 100.0) / 100.0,
+                streaks[0], streaks[1]
         );
+    }
+
+    /** Returns [currentStreak, longestStreak] in weeks with at least 1 completed session. */
+    private int[] calculateStreaks(List<FitnessSessionLog> allLogs) {
+        List<Long> absoluteWeeks = allLogs.stream()
+                .filter(l -> l.getStatus() == SessionStatus.COMPLETED && l.getLogDate() != null)
+                .map(l -> weekToAbsolute(l.getLogDate()))
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        if (absoluteWeeks.isEmpty()) return new int[]{0, 0};
+
+        int longest = 1, run = 1;
+        for (int i = 1; i < absoluteWeeks.size(); i++) {
+            if (absoluteWeeks.get(i) - absoluteWeeks.get(i - 1) == 1) {
+                run++;
+                longest = Math.max(longest, run);
+            } else {
+                run = 1;
+            }
+        }
+
+        long currentWeek = weekToAbsolute(LocalDate.now());
+        int current = 0;
+        for (int i = absoluteWeeks.size() - 1; i >= 0; i--) {
+            long w = absoluteWeeks.get(i);
+            if (w > currentWeek) continue;
+            if (current == 0 && currentWeek - w <= 1) {
+                current = 1;
+            } else if (current > 0 && absoluteWeeks.get(i + 1) - w == 1) {
+                current++;
+            } else {
+                break;
+            }
+        }
+
+        return new int[]{current, longest};
+    }
+
+    private long weekToAbsolute(LocalDate date) {
+        return date.with(DayOfWeek.MONDAY).toEpochDay() / 7;
+    }
+
+    public List<SessionSummaryDTO> getSessionHistoryWithStats(String username, int limit) {
+        FitnessProfile profile = getOrCreateFitnessProfile(username);
+        List<FitnessSessionLog> all = sessionLogRepository.findByFitnessProfileOrderByLogDateDesc(profile);
+        List<FitnessSessionLog> logs = limit > 0 ? all.stream().limit(limit).collect(Collectors.toList()) : all;
+
+        return logs.stream().map(log -> {
+            Integer totalDist = null;
+            String paceDisplay = null;
+            if (log.getStatus() == SessionStatus.COMPLETED && log.getSessionType() == SessionType.RUNNING) {
+                List<FitnessSessionExerciseLog> exLogs = sessionExerciseLogRepository.findBySessionLogOrderByOrderIndex(log);
+                int dist = exLogs.stream().filter(e -> e.getDistanceMeters() != null)
+                        .mapToInt(FitnessSessionExerciseLog::getDistanceMeters).sum();
+                int runSec = exLogs.stream().filter(e -> e.getDurationRunSeconds() != null)
+                        .mapToInt(FitnessSessionExerciseLog::getDurationRunSeconds).sum();
+                if (dist > 0) {
+                    totalDist = dist;
+                    if (runSec > 0) {
+                        double paceSecPerKm = (runSec * 1000.0) / dist;
+                        int min = (int) (paceSecPerKm / 60);
+                        int sec = (int) (paceSecPerKm % 60);
+                        paceDisplay = String.format("%d:%02d min/km", min, sec);
+                    }
+                }
+            }
+            return new SessionSummaryDTO(
+                    log.getId(), log.getLogDate(), log.getSessionType(), log.getStatus(),
+                    log.getSkipReason(), log.getSkipNotes(), log.getActualDurationMinutes(),
+                    log.getDifficultyRating(), log.getFeedbackText(), log.getExternalCaloriesBurned(),
+                    totalDist, paceDisplay);
+        }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<PersonalRecordDTO> getPersonalRecords(String username) {
+        FitnessProfile profile = getOrCreateFitnessProfile(username);
+        List<FitnessSessionLog> completedLogs = sessionLogRepository
+                .findByFitnessProfileOrderByLogDateDesc(profile).stream()
+                .filter(l -> l.getStatus() == SessionStatus.COMPLETED)
+                .collect(Collectors.toList());
+
+        Map<Long, FitnessExercise> allExercises = exerciseRepository.findAll().stream()
+                .collect(Collectors.toMap(FitnessExercise::getId, e -> e));
+
+        Map<Long, Integer> bestValue = new LinkedHashMap<>();
+        Map<Long, LocalDate> bestDate = new LinkedHashMap<>();
+        Map<Long, Integer> sessionCount = new LinkedHashMap<>();
+
+        for (FitnessSessionLog sessionLog : completedLogs) {
+            List<FitnessSessionExerciseLog> exLogs = sessionExerciseLogRepository
+                    .findBySessionLogOrderByOrderIndex(sessionLog);
+            for (FitnessSessionExerciseLog exLog : exLogs) {
+                Long exId = exLog.getExercise().getId();
+                FitnessExercise ex = allExercises.get(exId);
+                if (ex == null) continue;
+                sessionCount.merge(exId, 1, Integer::sum);
+                Integer val = extractBestValue(exLog, ex);
+                if (val != null && (bestValue.get(exId) == null || val > bestValue.get(exId))) {
+                    bestValue.put(exId, val);
+                    bestDate.put(exId, sessionLog.getLogDate());
+                }
+            }
+        }
+
+        return allExercises.values().stream()
+                .filter(ex -> bestValue.containsKey(ex.getId()))
+                .map(ex -> {
+                    Long id = ex.getId();
+                    Integer best = bestValue.get(id);
+                    Integer bestReps = null, bestDur = null, bestDist = null;
+                    if (ex.getTrackingType() == ExerciseTrackingType.SETS_REPS) bestReps = best;
+                    else if (ex.getTrackingType() == ExerciseTrackingType.TIME_BASED) bestDur = best;
+                    else if (ex.getTrackingType() == ExerciseTrackingType.DISTANCE_DURATION) bestDist = best;
+                    return new PersonalRecordDTO(id, ex.getName(), ex.getCategory(), ex.getTrackingType(),
+                            bestReps, bestDur, bestDist, bestDate.get(id), sessionCount.getOrDefault(id, 0));
+                })
+                .sorted(Comparator.comparing((PersonalRecordDTO pr) -> pr.getCategory().ordinal())
+                        .thenComparing(PersonalRecordDTO::getExerciseName))
+                .collect(Collectors.toList());
+    }
+
+    public RecoveryReadinessDTO getRecoveryReadiness(String username) {
+        FitnessProfile profile = getOrCreateFitnessProfile(username);
+        List<FitnessSessionLog> recent = sessionLogRepository
+                .findByFitnessProfileOrderByLogDateDesc(profile).stream()
+                .limit(20)
+                .collect(Collectors.toList());
+
+        LocalDate today = LocalDate.now();
+
+        boolean recentSick = recent.stream()
+                .filter(l -> l.getStatus() == SessionStatus.SKIPPED && l.getSkipReason() == SkipReason.SICK)
+                .anyMatch(l -> l.getLogDate() != null && !l.getLogDate().isBefore(today.minusDays(7)));
+
+        boolean recentTeamSport = recent.stream()
+                .filter(l -> l.getSessionType() == SessionType.TEAM_SPORT && l.getStatus() == SessionStatus.COMPLETED)
+                .anyMatch(l -> l.getLogDate() != null && !l.getLogDate().isBefore(today.minusDays(1)));
+
+        Optional<FitnessSessionLog> lastCompleted = recent.stream()
+                .filter(l -> l.getStatus() == SessionStatus.COMPLETED && l.getSessionType() != SessionType.TEAM_SPORT)
+                .findFirst();
+
+        long daysSinceLast = lastCompleted
+                .map(l -> ChronoUnit.DAYS.between(l.getLogDate(), today))
+                .orElse(999L);
+
+        Integer lastDifficulty = lastCompleted.map(FitnessSessionLog::getDifficultyRating).orElse(null);
+
+        if (recentSick) {
+            return new RecoveryReadinessDTO("REST_RECOMMENDED", "Erholung empfohlen",
+                    "Du hattest in den letzten Tagen eine Krankmeldung. H\u00f6r auf deinen K\u00f6rper.", "danger");
+        }
+        if (recentTeamSport) {
+            return new RecoveryReadinessDTO("TAKE_IT_EASY", "Erholung ber\u00fccksichtigen",
+                    "Du hast gestern Fu\u00dfball gespielt. W\u00e4rme dich gut auf und starte nicht zu intensiv.", "warning");
+        }
+        if (daysSinceLast > 7) {
+            return new RecoveryReadinessDTO("EASE_BACK_IN", "Sanft einsteigen",
+                    "\u00dcber eine Woche Pause \u2014 starte mit reduzierter Intensit\u00e4t.", "info");
+        }
+        if (lastDifficulty != null && lastDifficulty >= 4 && daysSinceLast <= 1) {
+            return new RecoveryReadinessDTO("TAKE_IT_EASY", "Leicht trainieren",
+                    "Letzte Einheit war intensiv (Schwierigkeit " + lastDifficulty + "/5). G\u00f6nne dir heute eine leichtere Einheit.", "warning");
+        }
+        if (lastDifficulty != null && lastDifficulty <= 2) {
+            return new RecoveryReadinessDTO("READY", "Bereit \u2013 Intensit\u00e4t steigern",
+                    "Letzte Einheit war locker. Du kannst heute einen Zahn zulegen.", "success");
+        }
+        return new RecoveryReadinessDTO("READY", "Bereit",
+                "Nichts spricht gegen eine normale Trainingseinheit heute.", "success");
+    }
+
+    private Integer extractBestValue(FitnessSessionExerciseLog exLog, FitnessExercise ex) {
+        if (ex.getTrackingType() == null) return null;
+        return switch (ex.getTrackingType()) {
+            case SETS_REPS -> exLog.getRepsDone();
+            case TIME_BASED -> exLog.getDurationSeconds();
+            case DISTANCE_DURATION -> exLog.getDistanceMeters();
+        };
     }
 
     @Transactional

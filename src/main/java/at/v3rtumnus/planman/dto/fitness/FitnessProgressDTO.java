@@ -17,4 +17,6 @@ public class FitnessProgressDTO {
     private Integer totalSessionsCompleted;
     private Integer totalSessionsSkipped;
     private Double totalRunningKm;
+    private Integer currentStreak;
+    private Integer longestStreak;
 }

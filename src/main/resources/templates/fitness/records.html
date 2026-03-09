@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Bestleistungen</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/fitness/overview}">Fitness</a></li>
+                <li class="breadcrumb-item active">Bestleistungen</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div th:if="${#maps.isEmpty(recordsByCategory)}" class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-trophy text-muted" style="font-size:3rem;"></i>
+            <p class="mt-3 text-muted">Noch keine Bestleistungen erfasst. Absolviere Trainingseinheiten mit Übungsprotokoll.</p>
+            <a th:href="@{/fitness/plan}" class="btn btn-primary">Zum Trainingsplan</a>
+        </div>
+    </div>
+
+    <div th:each="entry : ${recordsByCategory}">
+
+        <h5 class="mt-3 mb-2 text-muted text-uppercase small fw-bold" style="letter-spacing:.08em;"
+            th:text="${entry.key == 'RUNNING' ? 'Laufen' :
+                       entry.key == 'WARM_UP' ? 'Aufwärmen' :
+                       entry.key == 'CORE' ? 'Core' :
+                       entry.key == 'UPPER_BODY' ? 'Oberkörper' :
+                       entry.key == 'LOWER_BODY' ? 'Unterkörper' :
+                       entry.key == 'COOL_DOWN' ? 'Abkühlen' : entry.key}">
+        </h5>
+
+        <div class="card mb-2">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3" style="width:40%">Übung</th>
+                                <th>Bestleistung</th>
+                                <th>Erreicht am</th>
+                                <th>Sessions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="pr : ${entry.value}">
+                                <td class="ps-3">
+                                    <span class="fw-semibold" th:text="${pr.exerciseName}"></span>
+                                    <span class="ms-2 badge"
+                                          th:class="${pr.trackingType.name() == 'SETS_REPS' ? 'badge bg-primary-subtle text-primary' :
+                                                     pr.trackingType.name() == 'TIME_BASED' ? 'badge bg-info-subtle text-info' :
+                                                     'badge bg-success-subtle text-success'}"
+                                          th:text="${pr.trackingType.name() == 'SETS_REPS' ? 'Wiederholungen' :
+                                                     pr.trackingType.name() == 'TIME_BASED' ? 'Zeit' : 'Distanz'}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong th:if="${pr.bestReps != null}"
+                                            th:text="${pr.bestReps} + ' Wdh.'"></strong>
+                                    <th:block th:if="${pr.bestDurationSeconds != null}">
+                                        <strong th:if="${pr.bestDurationSeconds >= 60}"
+                                                th:text="${pr.bestDurationSeconds / 60} + ':' + ${#strings.leftPad('' + (pr.bestDurationSeconds % 60), 2, '0')} + ' min'"></strong>
+                                        <strong th:if="${pr.bestDurationSeconds < 60}"
+                                                th:text="${pr.bestDurationSeconds} + ' s'"></strong>
+                                    </th:block>
+                                    <th:block th:if="${pr.bestDistanceMeters != null}">
+                                        <strong th:if="${pr.bestDistanceMeters >= 1000}"
+                                                th:text="${#numbers.formatDecimal(pr.bestDistanceMeters / 1000.0, 1, 2)} + ' km'"></strong>
+                                        <strong th:if="${pr.bestDistanceMeters < 1000}"
+                                                th:text="${pr.bestDistanceMeters} + ' m'"></strong>
+                                    </th:block>
+                                </td>
+                                <td class="text-muted">
+                                    <span th:if="${pr.achievedDate != null}"
+                                          th:text="${#temporals.format(pr.achievedDate, 'dd.MM.yyyy')}"></span>
+                                </td>
+                                <td class="text-muted small" th:text="${pr.totalSessions} + '×'"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<div th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

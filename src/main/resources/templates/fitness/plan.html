@@ -161,12 +161,17 @@
 <main id="main" class="main">
 
     <div class="pagetitle">
-        <h1>Trainingsplan</h1>
+        <div class="d-flex align-items-center justify-content-between">
+            <h1>Training</h1>
+            <a th:href="@{/fitness/exercises}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-book me-1"></i>&Uuml;bungskatalog
+            </a>
+        </div>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
                 <li class="breadcrumb-item"><a th:href="@{/fitness/overview}">Fitness</a></li>
-                <li class="breadcrumb-item active">Trainingsplan</li>
+                <li class="breadcrumb-item active">Training</li>
             </ol>
         </nav>
     </div>

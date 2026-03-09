@@ -40,6 +40,7 @@
             d.setDate(d.getDate() + offset);
             window.location.href = '/fitness/nutrition?date=' + d.toISOString().slice(0,10);
         }
+
     </script>
 </head>
 <body>
@@ -74,9 +75,13 @@
     <!-- Calorie target -->
     <div class="row" th:if="${mealLog != null and mealLog.dailyCalorieTarget != null}">
         <div class="col">
-            <div class="alert alert-info d-flex align-items-center gap-2 py-2">
+            <div class="alert alert-info d-flex align-items-center gap-2 py-2 flex-wrap">
                 <i class="bi bi-lightning-charge-fill"></i>
                 <span>Tages-Kalorienziel: <strong th:text="${mealLog.dailyCalorieTarget} + ' kcal'"></strong></span>
+                <span th:if="${mealLog.externalCaloriesBurned != null}" class="badge bg-success">
+                    <i class="bi bi-dribbble me-1"></i>+<span th:text="${mealLog.externalCaloriesBurned}"></span> kcal Aktivit&auml;t
+                </span>
+                <a th:href="@{/fitness/aktivitaeten}" class="ms-auto text-muted small"><i class="bi bi-dribbble me-1"></i>Aktivit&auml;t erfassen</a>
                 <span class="ms-3 text-muted small">Protein: <strong th:text="${mealLog.targetProteinG} + ' g'"></strong></span>
                 <span class="ms-2 text-muted small">Kohlenhydrate: <strong th:text="${mealLog.targetCarbsG} + ' g'"></strong></span>
                 <span class="ms-2 text-muted small">Fett: <strong th:text="${mealLog.targetFatG} + ' g'"></strong></span>
