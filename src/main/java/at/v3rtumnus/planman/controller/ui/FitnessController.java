@@ -63,6 +63,7 @@ public class FitnessController {
 
         try {
             fitnessAiService.generateInitialPlan(username);
+            fitnessService.markAssessmentCompleted(username);
             return new ModelAndView("redirect:/fitness/overview");
         } catch (FitnessAiException e) {
             log.warn("Initial plan generation failed for user {}: {}", username, e.getMessage());

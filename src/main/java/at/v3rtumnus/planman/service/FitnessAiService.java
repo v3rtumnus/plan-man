@@ -384,17 +384,29 @@ public class FitnessAiService {
 
         String exerciseJson = serializeExerciseLibrary(exercises);
 
+        int maxRunMin     = parseIntSafe(answerMap.getOrDefault("max_run_minutes", "0"));
+        int maxPushups    = parseIntSafe(answerMap.getOrDefault("max_pushups", "0"));
+        int maxPlankSec   = parseIntSafe(answerMap.getOrDefault("max_plank_seconds", "0"));
+        int maxSquats     = parseIntSafe(answerMap.getOrDefault("max_squats", "0"));
+        int maxSitups     = parseIntSafe(answerMap.getOrDefault("max_situps", "0"));
+
+        int startRunMin   = Math.max(1, (int) Math.round(maxRunMin   * 0.6));
+        int startPushups  = Math.max(1, (int) Math.round(maxPushups  * 0.6));
+        int startPlankSec = Math.max(10, (int) Math.round(maxPlankSec * 0.6));
+        int startSquats   = Math.max(1, (int) Math.round(maxSquats   * 0.6));
+        int startSitups   = Math.max(1, (int) Math.round(maxSitups   * 0.6));
+
         return """
                 Du bist ein Fitness-Coach. Erstelle einen 4-Wochen-Trainingsplan für eine Person mit folgendem Profil:
                 - Verletzungen/Einschränkungen: %s
                 - Schwerpunkt: %s
                 - Trainingstage pro Woche: %s
                 - Laufen möglich: %s
-                - Liegestütze am Stück: %s
-                - Laufen ohne Pause: %s min
-                - Plank: %s s
-                - Kniebeugen am Stück: %s
-                - Sit-ups/Crunches am Stück: %s
+                - Liegestütze am Stück (Maximum): %d → Startziel Woche 1: %d
+                - Laufen ohne Pause (Maximum): %d min → Startziel Woche 1: %d min
+                - Plank (Maximum): %d s → Startziel Woche 1: %d s
+                - Kniebeugen am Stück (Maximum): %d → Startziel Woche 1: %d
+                - Sit-ups/Crunches am Stück (Maximum): %d → Startziel Woche 1: %d
                 - Zusätzliche Hinweise: %s
 
                 Verfügbare Übungen (JSON-Array): %s
@@ -403,10 +415,11 @@ public class FitnessAiService {
                 - Jede Einheit dauert ca. 30 Minuten
                 - Wechsle zwischen Lauf- und Körpergewichts-Einheiten
                 - Jeder Trainingstag hat genau EINEN Typ: entweder "RUNNING" oder "BODYWEIGHT" — niemals beides kombiniert
-                - Der User startet beim Laufen bei Null-Fitness: Beginne in Woche 1 mit Geh-Lauf-Intervallen
                 - Jede Einheit: Warm-Up + Hauptteil + Abkühlen
                 - Steigere Schwierigkeit progressiv von Woche zu Woche
-                - Starte bei ca. 50-60%% der Maximalwerte und steigere progressiv
+                - WICHTIG: Verwende in Woche 1 exakt die oben angegebenen Startziele — leite keine anderen Werte ab und erfinde keine
+                - Lauf-Einheiten in Woche 1: Wenn das Startziel Laufen ≤ 3 min ist, nutze Geh-Lauf-Intervalle; ansonsten nutze einen einzelnen kontinuierlichen Lauf von genau %d min
+                - Überschreite in keiner Woche-1-Einheit das Startziel Laufen von %d min pro Laufintervall
 
                 Antworte ausschließlich als gültiges JSON (kein Markdown, kein Text davor/danach):
                 {
@@ -441,14 +454,24 @@ public class FitnessAiService {
                 answerMap.getOrDefault("focus_area", "GLEICHMAESSIG"),
                 answerMap.getOrDefault("training_days", "3"),
                 answerMap.getOrDefault("can_run_outside", "JA"),
-                answerMap.getOrDefault("max_pushups", "0"),
-                answerMap.getOrDefault("max_run_minutes", "0"),
-                answerMap.getOrDefault("max_plank_seconds", "0"),
-                answerMap.getOrDefault("max_squats", "0"),
-                answerMap.getOrDefault("max_situps", "0"),
+                maxPushups, startPushups,
+                maxRunMin, startRunMin,
+                maxPlankSec, startPlankSec,
+                maxSquats, startSquats,
+                maxSitups, startSitups,
                 answerMap.getOrDefault("additional_notes", "keine"),
-                exerciseJson
+                exerciseJson,
+                startRunMin,
+                startRunMin
         );
+    }
+
+    private int parseIntSafe(String value) {
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private String buildEvolutionPrompt(FitnessPlan currentPlan, List<FitnessSessionLog> weekLogs,

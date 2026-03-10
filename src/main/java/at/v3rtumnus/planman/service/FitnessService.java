@@ -69,9 +69,16 @@ public class FitnessService {
 
         assessmentAnswerRepository.saveAll(entities);
 
-        profile.setAssessmentCompleted(true);
+        profile.setAssessmentCompleted(false);
         fitnessProfileRepository.save(profile);
         log.info("Saved {} assessment answers for user {}", answers.size(), username);
+    }
+
+    @Transactional
+    public void markAssessmentCompleted(String username) {
+        FitnessProfile profile = getOrCreateFitnessProfile(username);
+        profile.setAssessmentCompleted(true);
+        fitnessProfileRepository.save(profile);
     }
 
     public FitnessPlanDTO getActivePlan(String username) {
