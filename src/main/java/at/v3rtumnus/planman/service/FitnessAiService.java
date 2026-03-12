@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
@@ -237,6 +239,10 @@ public class FitnessAiService {
             });
         }
 
+        LocalDate startDate = reason == PlanGenerationReason.EVOLUTION
+                ? LocalDate.now().with(DayOfWeek.MONDAY).plusWeeks(1)
+                : LocalDate.now().with(DayOfWeek.MONDAY);
+
         FitnessPlan plan = new FitnessPlan();
         plan.setFitnessProfile(profile);
         plan.setVersion(nextVersion);
@@ -245,6 +251,7 @@ public class FitnessAiService {
         plan.setGenerationReason(reason);
         plan.setAiNotes(aiPlan.aiNotes);
         plan.setExerciseRefresh(aiPlan.exerciseRefresh);
+        plan.setStartDate(startDate);
         FitnessPlan savedPlan = fitnessPlanRepository.save(plan);
 
         // Update profile's current plan reference
@@ -391,37 +398,97 @@ public class FitnessAiService {
         int maxSitups     = parseIntSafe(answerMap.getOrDefault("max_situps", "0"));
 
         int startRunMin   = Math.max(1, (int) Math.round(maxRunMin   * 0.6));
-        int startPushups  = Math.max(1, (int) Math.round(maxPushups  * 0.6));
-        int startPlankSec = Math.max(10, (int) Math.round(maxPlankSec * 0.6));
-        int startSquats   = Math.max(1, (int) Math.round(maxSquats   * 0.6));
-        int startSitups   = Math.max(1, (int) Math.round(maxSitups   * 0.6));
+        int startPushups  = maxPushups  > 0 ? Math.max(1, (int) Math.round(maxPushups  * 0.6)) : 0;
+        int startPlankSec = maxPlankSec > 0 ? Math.max(10, (int) Math.round(maxPlankSec * 0.6)) : 0;
+        int startSquats   = maxSquats   > 0 ? Math.max(1, (int) Math.round(maxSquats   * 0.6)) : 0;
+        int startSitups   = maxSitups   > 0 ? Math.max(1, (int) Math.round(maxSitups   * 0.6)) : 0;
+
+        int trainingDays  = parseIntSafe(answerMap.getOrDefault("training_days", "3"));
+        int totalSessions = trainingDays * 4;
+        String canRun     = answerMap.getOrDefault("can_run_outside", "JA");
+
+        // Build performance profile lines — skip metrics where max=0 (not possible for user)
+        StringBuilder perfLines = new StringBuilder();
+        if (maxPushups > 0) {
+            perfLines.append("- Liegestütze am Stück (Maximum): %d → Startziel Woche 1: %d\n".formatted(maxPushups, startPushups));
+        } else {
+            perfLines.append("- Liegestütze: noch nicht möglich\n");
+        }
+        if ("NEIN".equals(canRun)) {
+            perfLines.append("- Laufen: NICHT MÖGLICH\n");
+        } else {
+            perfLines.append("- Laufen ohne Pause (Maximum): %d min → Startziel Woche 1: %d min\n".formatted(maxRunMin, startRunMin));
+        }
+        if (maxPlankSec > 0) {
+            perfLines.append("- Plank (Maximum): %d s → Startziel Woche 1: %d s\n".formatted(maxPlankSec, startPlankSec));
+        } else {
+            perfLines.append("- Plank: noch nicht möglich\n");
+        }
+        if (maxSquats > 0) {
+            perfLines.append("- Kniebeugen am Stück (Maximum): %d → Startziel Woche 1: %d\n".formatted(maxSquats, startSquats));
+        } else {
+            perfLines.append("- Kniebeugen: noch nicht möglich\n");
+        }
+        if (maxSitups > 0) {
+            perfLines.append("- Sit-ups/Crunches am Stück (Maximum): %d → Startziel Woche 1: %d\n".formatted(maxSitups, startSitups));
+        } else {
+            perfLines.append("- Sit-ups/Crunches: noch nicht möglich\n");
+        }
+
+        // Build running rule based on can_run value
+        String runningRule;
+        if ("NEIN".equals(canRun)) {
+            runningRule = """
+                    - Laufen NICHT MÖGLICH: Alle %d Einheiten sind vom Typ "BODYWEIGHT" — KEIN "RUNNING"
+                    """.formatted(totalSessions);
+        } else if ("MANCHMAL".equals(canRun)) {
+            runningRule = """
+                    - Laufen NUR MANCHMAL möglich: Plane maximal 1 RUNNING-Einheit pro Woche ein, Rest BODYWEIGHT
+                    - Lauf-Einheiten: Wenn Startziel Laufen ≤ 3 min → Geh-Lauf-Intervalle; sonst kontinuierlicher Lauf von genau %d min
+                    - Überschreite in keiner Woche-1-Laufeinheit %d min pro Laufintervall
+                    """.formatted(startRunMin, startRunMin);
+        } else {
+            runningRule = """
+                    - Lauf-Einheiten in Woche 1: Wenn Startziel Laufen ≤ 3 min → Geh-Lauf-Intervalle; sonst kontinuierlicher Lauf von genau %d min
+                    - Überschreite in keiner Woche-1-Laufeinheit %d min pro Laufintervall
+                    """.formatted(startRunMin, startRunMin);
+        }
+
+        String age = answerMap.getOrDefault("age", "");
+        String experienceLevel = answerMap.getOrDefault("experience_level", "");
 
         return """
-                Du bist ein Fitness-Coach. Erstelle einen 4-Wochen-Trainingsplan für eine Person mit folgendem Profil:
+                Du bist ein Fitness-Coach. Erstelle einen vollständigen 4-Wochen-Trainingsplan für folgendes Profil:
+                - Alter: %s Jahre
+                - Erfahrungslevel: %s
                 - Verletzungen/Einschränkungen: %s
                 - Schwerpunkt: %s
-                - Trainingstage pro Woche: %s
+                - Trainingstage pro Woche: %d
                 - Laufen möglich: %s
-                - Liegestütze am Stück (Maximum): %d → Startziel Woche 1: %d
-                - Laufen ohne Pause (Maximum): %d min → Startziel Woche 1: %d min
-                - Plank (Maximum): %d s → Startziel Woche 1: %d s
-                - Kniebeugen am Stück (Maximum): %d → Startziel Woche 1: %d
-                - Sit-ups/Crunches am Stück (Maximum): %d → Startziel Woche 1: %d
+                %s
                 - Zusätzliche Hinweise: %s
 
                 Verfügbare Übungen (JSON-Array): %s
 
                 Regeln:
-                - Jede Einheit dauert ca. 30 Minuten
-                - Wechsle zwischen Lauf- und Körpergewichts-Einheiten
-                - Jeder Trainingstag hat genau EINEN Typ: entweder "RUNNING" oder "BODYWEIGHT" — niemals beides kombiniert
-                - Jede Einheit: Warm-Up + Hauptteil + Abkühlen
-                - Steigere Schwierigkeit progressiv von Woche zu Woche
-                - WICHTIG: Verwende in Woche 1 exakt die oben angegebenen Startziele — leite keine anderen Werte ab und erfinde keine
-                - Lauf-Einheiten in Woche 1: Wenn das Startziel Laufen ≤ 3 min ist, nutze Geh-Lauf-Intervalle; ansonsten nutze einen einzelnen kontinuierlichen Lauf von genau %d min
-                - Überschreite in keiner Woche-1-Einheit das Startziel Laufen von %d min pro Laufintervall
+                - PFLICHT: Erstelle GENAU %d Einheiten (4 Wochen × %d Tage/Woche = %d sessions), nummeriert week=1..4, session_number=1..%d
+                - Einheitsdauer: Passe die Dauer dem Niveau an (EINSTEIGER: 20–25 min, WIEDEREINSTEIGER: 25–30 min, FORTGESCHRITTEN: 30–45 min); bei Zeiteinschränkungen in den Hinweisen entsprechend kürzen
+                - Wechsle innerhalb jeder Woche zwischen RUNNING und BODYWEIGHT (bei ≥2 Einheiten/Woche)
+                - Jeder Trainingstag hat genau EINEN Typ: "RUNNING" oder "BODYWEIGHT" — niemals kombiniert
+                - Jede Einheit enthält: WARM_UP-Übungen + Hauptteil + COOL_DOWN-Übungen
+                - Steigere Schwierigkeit progressiv von Woche 1 → Woche 4
+                - Verwende in Woche 1 EXAKT die angegebenen Startziele
+                - Verletzungs-Regeln: Bei "Knie"-Einschränkungen: KEINE Kniebeugen, Ausfallschritte oder Sprünge — nutze stattdessen Wadenheben, Brücke, Beinheben; Bei "Rücken"-Einschränkungen: KEINE Hohlkörper, Mountainclimbers oder Beinheben liegend
+                - Abwechslung: Dieselbe Übung maximal 2× pro Woche (nicht in jeder Einheit der Woche wiederholen)
+                %s
+                Feld-Regeln (IMMER ausfüllen, nie null lassen):
+                - SETS_REPS-Übungen: target_sets UND target_reps setzen
+                - TIME_BASED-Übungen: target_duration_seconds setzen (in Sekunden)
+                - DISTANCE_DURATION-Übungen (Lauf): target_duration_run_seconds setzen = Dauer eines einzelnen Laufintervalls in Sekunden (bei Geh-Lauf: Länge des Lauf-Abschnitts, z.B. 60 s); notes erklärt die Intervallstruktur
+                - rest_seconds immer setzen (Standard 60, bei Warm-Up/Cool-Down 0)
 
-                Antworte ausschließlich als gültiges JSON (kein Markdown, kein Text davor/danach):
+                Antworte ausschließlich als gültiges JSON (kein Markdown, kein Text davor/danach).
+                Die sessions-Liste muss ALLE %d Einheiten enthalten (Woche 1 bis 4):
                 {
                   "ai_notes": "...",
                   "exercise_refresh": false,
@@ -433,36 +500,28 @@ public class FitnessAiService {
                       "description": "...",
                       "estimated_duration_minutes": 30,
                       "exercises": [
-                        {
-                          "exercise_id": 1,
-                          "exercise_name": null,
-                          "order_index": 1,
-                          "target_sets": null,
-                          "target_reps": null,
-                          "target_duration_seconds": null,
-                          "target_distance_meters": 1000,
-                          "target_duration_run_seconds": 1800,
-                          "rest_seconds": 60,
-                          "notes": "..."
-                        }
+                        { "exercise_id": 13, "order_index": 1, "target_duration_seconds": 60, "rest_seconds": 0, "notes": "Warm-Up" },
+                        { "exercise_id": 2, "order_index": 2, "target_duration_run_seconds": 120, "rest_seconds": 60, "notes": "Geh-Lauf 1:1 Intervall" },
+                        { "exercise_id": 60, "order_index": 3, "target_duration_seconds": 30, "rest_seconds": 0, "notes": "Cool-Down" }
                       ]
-                    }
+                    },
+                    { "week": 1, "session_number": 2, "session_type": "BODYWEIGHT", "description": "...", "estimated_duration_minutes": 30, "exercises": [ ... ] },
+                    ...alle weiteren Wochen...
                   ]
                 }
                 """.formatted(
+                age.isBlank() ? "unbekannt" : age,
+                experienceLevel.isBlank() ? "unbekannt" : experienceLevel,
                 answerMap.getOrDefault("injuries", "keine"),
                 answerMap.getOrDefault("focus_area", "GLEICHMAESSIG"),
-                answerMap.getOrDefault("training_days", "3"),
-                answerMap.getOrDefault("can_run_outside", "JA"),
-                maxPushups, startPushups,
-                maxRunMin, startRunMin,
-                maxPlankSec, startPlankSec,
-                maxSquats, startSquats,
-                maxSitups, startSitups,
+                trainingDays,
+                canRun,
+                perfLines,
                 answerMap.getOrDefault("additional_notes", "keine"),
                 exerciseJson,
-                startRunMin,
-                startRunMin
+                totalSessions, trainingDays, totalSessions, trainingDays,
+                runningRule,
+                totalSessions
         );
     }
 

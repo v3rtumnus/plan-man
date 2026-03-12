@@ -19,4 +19,5 @@ public class FitnessPlanDTO {
     private PlanGenerationReason generationReason;
     private String aiNotes;
     private List<FitnessPlanSessionDTO> sessions;
+    private Integer currentWeek;
 }

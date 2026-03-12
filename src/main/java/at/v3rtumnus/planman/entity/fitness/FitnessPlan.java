@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -40,4 +41,7 @@ public class FitnessPlan {
 
     @Column(name = "exercise_refresh", nullable = false)
     private boolean exerciseRefresh;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
 }

@@ -329,6 +329,14 @@ public class FitnessService {
         return new int[]{current, longest};
     }
 
+    private int computeCurrentPlanWeek(FitnessPlan plan) {
+        if (plan.getStartDate() == null) return 1;
+        LocalDate planMonday = plan.getStartDate();
+        LocalDate todayMonday = LocalDate.now().with(DayOfWeek.MONDAY);
+        long weeksElapsed = ChronoUnit.WEEKS.between(planMonday, todayMonday);
+        return (int) Math.min(4, Math.max(1, weeksElapsed + 1));
+    }
+
     private long weekToAbsolute(LocalDate date) {
         return date.with(DayOfWeek.MONDAY).toEpochDay() / 7;
     }
@@ -618,10 +626,12 @@ public class FitnessService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList()) : new ArrayList<>();
 
-        return new FitnessPlanDTO(
+        FitnessPlanDTO dto = new FitnessPlanDTO(
                 plan.getId(), plan.getVersion(), plan.getGeneratedAt(),
-                plan.isActive(), plan.getGenerationReason(), plan.getAiNotes(), sessionDTOs
+                plan.isActive(), plan.getGenerationReason(), plan.getAiNotes(), sessionDTOs, null
         );
+        dto.setCurrentWeek(computeCurrentPlanWeek(plan));
+        return dto;
     }
 
     private FitnessPlanSessionDTO toSessionDTO(FitnessPlanSession session) {
