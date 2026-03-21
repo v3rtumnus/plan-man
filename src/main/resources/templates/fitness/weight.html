@@ -90,7 +90,7 @@
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
-                <li class="breadcrumb-item"><a th:href="@{/fitness/overview}">Fitness</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/fitness}">Fitness</a></li>
                 <li class="breadcrumb-item active">Gesundheit</li>
             </ol>
         </nav>
@@ -294,7 +294,7 @@
             <div class="card border-danger">
                 <div class="card-body">
                     <h6 class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Gefahrenzone</h6>
-                    <p class="small text-muted mb-2">Alle Fitness-Daten (Trainingsplan, Verlauf, Gewicht, Ern&auml;hrung, Gesundheitsprofil) werden unwiderruflich gel&ouml;scht. Danach startest du mit der Erstbefragung neu.</p>
+                    <p class="small text-muted mb-2">Alle Fitness-Daten (Gewicht, Ern&auml;hrung, Gesundheitsprofil) werden unwiderruflich gel&ouml;scht.</p>
                     <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#resetModal">
                         <i class="bi bi-trash me-1"></i>Alle Fitness-Daten zur&uuml;cksetzen
                     </button>
@@ -314,7 +314,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Alle Fitness-Daten werden <strong>unwiderruflich gel&ouml;scht</strong>. Danach startest du mit der Erstbefragung neu.</p>
+                <p>Alle Fitness-Daten werden <strong>unwiderruflich gel&ouml;scht</strong>.</p>
                 <p class="text-muted small">Bist du sicher?</p>
             </div>
             <div class="modal-footer">
@@ -333,7 +333,7 @@
             url: '/api/fitness/reset',
             type: 'DELETE',
             success: function () {
-                window.location.href = '/fitness/assessment';
+                window.location.href = '/fitness';
             },
             error: function () {
                 alert('Fehler beim Zur\u00fccksetzen. Bitte erneut versuchen.');

@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog_1_29.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <changeSet author="michael" id="drop training tables and columns">
+
+        <!-- Drop dependent tables first (FK order) -->
+        <dropTable tableName="fitness_session_exercise_log"/>
+        <dropTable tableName="fitness_session_log"/>
+        <dropTable tableName="fitness_plan_exercise"/>
+        <dropTable tableName="fitness_plan_session"/>
+        <dropTable tableName="fitness_plan"/>
+        <dropTable tableName="fitness_assessment_answer"/>
+        <dropTable tableName="fitness_exercise"/>
+
+        <!-- Remove training-specific columns from fitness_profile -->
+        <dropColumn tableName="fitness_profile" columnName="assessment_completed"/>
+        <dropColumn tableName="fitness_profile" columnName="current_plan_id"/>
+
+        <!-- Remove external_calories_burned from fitness_session_log was already dropped with the table above -->
+        <!-- Remove start_date from fitness_plan was already dropped with the table above -->
+
+    </changeSet>
+
+</databaseChangeLog>

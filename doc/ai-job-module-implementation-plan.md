@@ -15,6 +15,35 @@ receives the instruction, calls the relevant data tools, composes an HTML summar
 
 ---
 
+## When to Use This Module vs. the Notification System
+
+These two modules are complementary. Choosing the wrong one adds unnecessary cost or complexity.
+
+| Criterion | AI Job Module | Notification System (evaluators) |
+|---|---|---|
+| Task type | Synthesis, composition, narration | Condition check, threshold alert |
+| Output | Free-form text / HTML email | Structured notification (title + message) |
+| Cost per run | LLM API call (non-trivial) | Near-zero (pure Java logic) |
+| Determinism | Non-deterministic | Fully deterministic |
+| Adding new types | DB-only (no redeploy) | New `@Component` class + redeploy |
+| Testability | Harder (mock LLM) | Straightforward unit tests |
+
+**Use the AI job module when:**
+- The task requires synthesising data from multiple sources into readable prose (e.g. a daily summary email)
+- The output format varies depending on the data (e.g. "highlight only the 3 most unusual movements")
+- Authoring flexibility matters more than cost predictability
+
+**Use a notification evaluator when:**
+- The task is a deterministic condition check (e.g. "expenses > 80% of budget")
+- The result is a pass/fail with a fixed message template
+- The job runs frequently (e.g. hourly) — LLM cost per run is prohibitive
+
+**Anti-pattern to avoid:** using an AI job to do something a notification evaluator could do
+deterministically (e.g. "check if my budget is exceeded and notify me"). That wastes LLM calls and
+makes results unpredictable. Implement it as an evaluator instead.
+
+---
+
 ## Step 1 — Database Layer (Entities + Liquibase)
 
 ### 1.1 Create `db.changelog_1_28.xml`

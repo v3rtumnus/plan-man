@@ -11,6 +11,37 @@ beans — adding a new rule type is a single new class implementing one interfac
 **First concrete rule:** *Notify when the actual expenses for the current month come within
 `thresholdAmount` EUR of the monthly liquid budget (configurable, default 300 EUR).*
 
+---
+
+## When to Use This Module vs. the AI Job Module
+
+These two modules are complementary. Choosing the wrong one adds unnecessary cost or complexity.
+
+| Criterion | Notification System (evaluators) | AI Job Module |
+|---|---|---|
+| Task type | Condition check, threshold alert | Synthesis, composition, narration |
+| Output | Structured notification (title + message) | Free-form text / HTML email |
+| Cost per run | Near-zero (pure Java logic) | LLM API call (non-trivial) |
+| Determinism | Fully deterministic | Non-deterministic |
+| Adding new types | New `@Component` class + redeploy | DB-only (no redeploy) |
+| Testability | Straightforward unit tests | Harder (mock LLM) |
+
+**Use a notification evaluator when:**
+- The task is a deterministic condition check (e.g. "expenses > 80% of budget")
+- The result is a pass/fail with a fixed message template
+- The job runs frequently (e.g. hourly) — LLM cost per run is prohibitive
+
+**Use the AI job module when:**
+- The task requires synthesising data from multiple sources into readable prose
+- The output format varies depending on the data content
+- Authoring flexibility matters more than cost predictability
+
+**Anti-pattern to avoid:** routing condition-check logic through the AI job module. If the condition
+and message template are known at coding time, implement it as an evaluator here. That keeps the
+AI job module reserved for tasks where LLM reasoning is the actual value being added.
+
+---
+
 The liquid budget for a month is calculated the same way `BalanceService.getBalanceComparisons()`
 does it: sum of income `BalanceItemDetail` entries minus sum of expenditure entries active on the
 1st of the month (`balanceDetailRepository.getRelevantAmountsForDate`). The actual expenses are the

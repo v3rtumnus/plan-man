@@ -2,9 +2,41 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <div th:replace="~{fragments/header :: header-css}"/>
-    <style>
-        .dashboard-widget { min-height: 140px; }
-    </style>
+    <script th:src="@{/resources/vendor/chart.js/chart.umd.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var weightHistory = /*[[${weightHistory}]]*/ [];
+        /*]]>*/
+
+        $(document).ready(function() {
+            if (weightHistory && weightHistory.length > 1) {
+                var wLabels = weightHistory.slice(0, 14).reverse().map(function(e) { return e.logDate; });
+                var wData   = weightHistory.slice(0, 14).reverse().map(function(e) { return e.weightKg; });
+                new Chart(document.getElementById('weightMiniChart'), {
+                    type: 'line',
+                    data: {
+                        labels: wLabels,
+                        datasets: [{
+                            data: wData,
+                            borderColor: 'rgba(13, 110, 253, 0.8)',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { display: false },
+                            y: { display: true, beginAtZero: false, ticks: { callback: function(v) { return v + ' kg'; } } }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </head>
 <body>
 
@@ -23,374 +55,241 @@
         </nav>
     </div>
 
-    <!-- Row 1: Next session + Readiness -->
+    <!-- Row 1: Summary stat cards -->
     <div class="row">
-        <div class="col-lg-6">
-            <div class="card dashboard-widget" th:if="${todaySession != null}">
+        <!-- Current weight card -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card info-card">
                 <div class="card-body">
-                    <h5 class="card-title">N&auml;chste Einheit</h5>
-                    <div class="d-flex align-items-center mb-3">
-                        <span th:if="${todaySession.sessionType.name() == 'RUNNING'}" class="badge bg-success me-2 fs-6">
-                            <i class="bi bi-person-walking me-1"></i>Laufen
-                        </span>
-                        <span th:if="${todaySession.sessionType.name() == 'BODYWEIGHT'}" class="badge bg-primary me-2 fs-6">
-                            <i class="bi bi-lightning me-1"></i>K&ouml;rpergewicht
-                        </span>
-                        <span class="text-muted"><i class="bi bi-clock me-1"></i>ca. <span th:text="${todaySession.estimatedDurationMinutes}">30</span> min</span>
+                    <h5 class="card-title">Aktuelles Gewicht</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="ps-3">
+                            <th:block th:if="${!weightHistory.isEmpty()}">
+                                <h6 th:text="${weightHistory[0].weightKg} + ' kg'"></h6>
+                                <span class="text-muted small" th:text="${#temporals.format(weightHistory[0].logDate, 'dd.MM.yyyy')}"></span>
+                            </th:block>
+                            <th:block th:if="${weightHistory.isEmpty()}">
+                                <h6 class="text-muted">&#8212;</h6>
+                                <span class="text-muted small">Noch kein Eintrag</span>
+                            </th:block>
+                        </div>
                     </div>
-                    <p class="text-muted small" th:text="${todaySession.description}"></p>
-                    <ul class="list-unstyled small mb-3" th:if="${not #lists.isEmpty(todaySession.exercises)}">
-                        <li th:each="ex : ${todaySession.exercises}" class="d-flex align-items-center gap-2 mb-1">
-                            <i class="bi bi-check2 text-muted"></i>
-                            <span th:text="${ex.exercise.name}"></span>
-                            <span class="text-muted" th:if="${ex.targetSets != null and ex.targetReps != null}"
-                                  th:text="'· ' + ${ex.targetSets} + '×' + ${ex.targetReps}"></span>
-                            <span class="text-muted" th:if="${ex.targetDurationSeconds != null}"
-                                  th:text="'· ' + ${ex.targetDurationSeconds} + 's'"></span>
-                        </li>
-                    </ul>
-                    <div class="d-flex gap-2 mt-3 flex-wrap">
-                        <a th:href="@{/fitness/session/{id}/active(id=${todaySession.id})}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-play-fill me-1"></i>Training starten
-                        </a>
-                        <button class="btn btn-success btn-sm" th:onclick="'markDone(' + ${todaySession.id} + ')'">
-                            <i class="bi bi-check-lg me-1"></i>Erledigt
-                        </button>
-                        <a th:href="@{/fitness/plan}" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-list-ul me-1"></i>Plan
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="card dashboard-widget" th:if="${todaySession == null and plan != null}">
-                <div class="card-body text-center py-4">
-                    <i class="bi bi-check-circle text-success" style="font-size:2.5rem;"></i>
-                    <h5 class="mt-3">Alle Einheiten absolviert!</h5>
-                    <p class="text-muted small">Die KI generiert bald einen neuen Plan.</p>
-                </div>
-            </div>
-            <div class="card dashboard-widget" th:if="${plan == null}">
-                <div class="card-body text-center py-4">
-                    <i class="bi bi-calendar-plus text-primary" style="font-size:2.5rem;"></i>
-                    <h5 class="mt-3">Kein aktiver Plan</h5>
-                    <p class="text-muted small">Starte die Erstbefragung um deinen KI-Trainingsplan zu erstellen.</p>
-                    <a th:href="@{/fitness/assessment}" class="btn btn-primary btn-sm">Erstbefragung starten</a>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-6">
-            <!-- Readiness indicator -->
-            <div class="card" th:if="${readiness != null}">
-                <div class="card-body py-3">
-                    <h6 class="card-title mb-2">Bereitschaft</h6>
-                    <div class="d-flex align-items-center gap-3">
-                        <span th:class="'badge fs-5 bg-' + ${readiness.color}" style="min-width:2.5rem; text-align:center;">
-                            <i th:class="${readiness.status == 'READY' ? 'bi bi-check-circle-fill' :
-                                          readiness.status == 'TAKE_IT_EASY' ? 'bi bi-exclamation-circle-fill' :
-                                          readiness.status == 'REST_RECOMMENDED' ? 'bi bi-x-circle-fill' :
-                                          'bi bi-arrow-counterclockwise'}"></i>
-                        </span>
-                        <div>
-                            <div class="fw-semibold" th:text="${readiness.label}"></div>
-                            <div class="text-muted small" th:text="${readiness.message}"></div>
+        <!-- Calorie target card -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card info-card">
+                <div class="card-body">
+                    <h5 class="card-title">Tages-Kalorienziel</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <div class="ps-3">
+                            <th:block th:if="${dailyCalorieTarget != null}">
+                                <h6 th:text="${dailyCalorieTarget} + ' kcal'"></h6>
+                                <span class="text-muted small">TDEE berechnet</span>
+                            </th:block>
+                            <th:block th:if="${dailyCalorieTarget == null}">
+                                <h6 class="text-muted">&#8212;</h6>
+                                <span class="text-muted small"><a th:href="@{/fitness/weight}">Profil ausf&uuml;llen</a></span>
+                            </th:block>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Summary stats + streak -->
-            <div class="card mt-2" th:if="${progress != null}">
-                <div class="card-body py-3">
-                    <h6 class="card-title mb-2">Statistik</h6>
-                    <div class="row text-center">
-                        <div class="col-3">
-                            <div class="fs-4 fw-bold text-primary" th:text="${progress.totalSessionsCompleted}">0</div>
-                            <div class="text-muted" style="font-size:.72rem;">Einheiten</div>
+        <!-- Today's calories card -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card info-card">
+                <div class="card-body">
+                    <h5 class="card-title">Heute gegessen</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-egg-fried"></i>
                         </div>
-                        <div class="col-3">
-                            <div class="fs-4 fw-bold text-success" th:text="${progress.totalRunningKm}">0</div>
-                            <div class="text-muted" style="font-size:.72rem;">km gelaufen</div>
-                        </div>
-                        <div class="col-3" th:if="${progress.currentStreak != null and progress.currentStreak > 0}">
-                            <div class="fs-4 fw-bold text-warning">
-                                <i class="bi bi-fire"></i> <span th:text="${progress.currentStreak}">0</span>
-                            </div>
-                            <div class="text-muted" style="font-size:.72rem;">Wochen Streak</div>
-                        </div>
-                        <div class="col-3">
-                            <div class="fs-4 fw-bold text-secondary" th:text="${progress.totalSessionsSkipped}">0</div>
-                            <div class="text-muted" style="font-size:.72rem;">&Uuml;bersprungen</div>
+                        <div class="ps-3">
+                            <th:block th:if="${todayMealLog != null and todayMealLog.aiCalories != null}">
+                                <h6 th:text="${todayMealLog.aiCalories} + ' kcal'"></h6>
+                                <span class="text-muted small"
+                                      th:if="${todayMealLog.calorieDelta != null}"
+                                      th:text="${todayMealLog.calorieDelta >= 0 ? '+' : ''} + ${todayMealLog.calorieDelta} + ' kcal Delta'"></span>
+                            </th:block>
+                            <th:block th:if="${todayMealLog == null or todayMealLog.aiCalories == null}">
+                                <h6 class="text-muted">&#8212;</h6>
+                                <span class="text-muted small">Noch nichts eingetragen</span>
+                            </th:block>
                         </div>
                     </div>
-                    <div class="mt-2 text-end">
-                        <a th:href="@{/fitness/statistik}" class="text-muted small">Details &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly nutrition card -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card info-card">
+                <div class="card-body">
+                    <h5 class="card-title">Ern&auml;hrung (7 Tage)</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="ps-3">
+                            <th:block th:if="${nutritionWeeklySummary != null and nutritionWeeklySummary.daysLogged > 0}">
+                                <h6 th:text="${nutritionWeeklySummary.avgCalories} + ' kcal &empty;'"></h6>
+                                <span class="text-muted small" th:text="${nutritionWeeklySummary.daysLogged} + ' Tage erfasst'"></span>
+                            </th:block>
+                            <th:block th:if="${nutritionWeeklySummary == null or nutritionWeeklySummary.daysLogged == 0}">
+                                <h6 class="text-muted">&#8212;</h6>
+                                <span class="text-muted small">Keine Eintr&auml;ge diese Woche</span>
+                            </th:block>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Row 2: Today's activities + Today's nutrition + Weight -->
-    <div class="row mt-1">
-        <!-- Today's activities -->
-        <div class="col-lg-4">
-            <div class="card h-100">
+    <!-- Row 2: Weight chart + Today's nutrition -->
+    <div class="row">
+        <!-- Weight trend chart -->
+        <div class="col-lg-7">
+            <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-title mb-0"><i class="bi bi-dribbble me-2 text-success"></i>Heute aktiv</h6>
-                        <a th:href="@{/fitness/aktivitaeten}" class="text-muted small">Alle &rarr;</a>
+                    <h5 class="card-title d-flex justify-content-between align-items-center">
+                        Gewichtsverlauf
+                        <a th:href="@{/fitness/weight}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-arrow-right me-1"></i>Gesundheit
+                        </a>
+                    </h5>
+                    <div th:if="${weightHistory.isEmpty()}" class="text-center py-4 text-muted">
+                        <i class="bi bi-bar-chart" style="font-size:2rem;"></i>
+                        <p class="mt-2">Noch kein Gewicht eingetragen.</p>
+                        <a th:href="@{/fitness/weight}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i>Jetzt eintragen
+                        </a>
                     </div>
-                    <div th:if="${#lists.isEmpty(todayActivities)}" class="text-muted small py-2">
-                        Noch keine Aktivit&auml;ten heute.
-                        <div class="mt-2">
-                            <button class="btn btn-sm btn-outline-success" type="button"
-                                    data-bs-toggle="collapse" data-bs-target="#quickActivityForm">
-                                <i class="bi bi-plus"></i> Hinzuf&uuml;gen
-                            </button>
-                        </div>
-                    </div>
-                    <ul class="list-unstyled mb-0" th:if="${!#lists.isEmpty(todayActivities)}">
-                        <li th:each="act : ${todayActivities}" class="d-flex align-items-center gap-2 mb-1">
-                            <i class="bi bi-check-circle-fill text-success"></i>
-                            <span class="small" th:text="${act.feedbackText != null ? act.feedbackText : 'Teamsport'}"></span>
-                            <span class="text-muted small" th:if="${act.actualDurationMinutes != null}"
-                                  th:text="${act.actualDurationMinutes} + ' min'"></span>
-                            <span class="badge bg-success-subtle text-success" th:if="${act.externalCaloriesBurned != null}"
-                                  th:text="'~' + ${act.externalCaloriesBurned} + ' kcal'"></span>
-                        </li>
-                    </ul>
-                    <div class="mt-2" th:if="${!#lists.isEmpty(todayActivities)}">
-                        <button class="btn btn-sm btn-outline-success" type="button"
-                                data-bs-toggle="collapse" data-bs-target="#quickActivityForm">
-                            <i class="bi bi-plus"></i> Weitere
-                        </button>
-                    </div>
-                    <div class="collapse mt-2" id="quickActivityForm">
-                        <div class="row g-1">
-                            <div class="col-12">
-                                <input type="text" id="actNotes" class="form-control form-control-sm"
-                                       placeholder="z.B. Fu&szlig;ball" value="Fu&szlig;ball"/>
-                            </div>
-                            <div class="col-6">
-                                <input type="number" id="actDuration" class="form-control form-control-sm"
-                                       placeholder="90 min" value="90" min="1"/>
-                            </div>
-                            <div class="col-6">
-                                <input type="number" id="actCalories" class="form-control form-control-sm"
-                                       placeholder="800 kcal" value="800" min="1"/>
-                            </div>
-                        </div>
-                        <button id="actSaveBtn" class="btn btn-success btn-sm mt-1 w-100" onclick="logActivity()">
-                            <i class="bi bi-check me-1"></i>Speichern
-                        </button>
-                    </div>
+                    <canvas th:if="${!weightHistory.isEmpty()}" id="weightMiniChart" height="100"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Today's nutrition -->
-        <div class="col-lg-4">
-            <div class="card h-100">
+        <!-- Today's nutrition summary -->
+        <div class="col-lg-5">
+            <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-title mb-0"><i class="bi bi-egg-fried me-2 text-warning"></i>Ern&auml;hrung heute</h6>
-                        <a th:href="@{/fitness/nutrition}" class="text-muted small">Eintragen &rarr;</a>
-                    </div>
-                    <div th:if="${todayMealLog == null or todayMealLog.aiCalories == null}" class="text-muted small py-2">
-                        Noch kein Eintrag f&uuml;r heute.
-                        <div class="mt-2">
-                            <a th:href="@{/fitness/nutrition}" class="btn btn-sm btn-outline-warning">
-                                <i class="bi bi-pencil me-1"></i>Jetzt eintragen
-                            </a>
-                        </div>
+                    <h5 class="card-title d-flex justify-content-between align-items-center">
+                        Heutige Ern&auml;hrung
+                        <a th:href="@{/fitness/nutrition}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-arrow-right me-1"></i>Eintragen
+                        </a>
+                    </h5>
+                    <div th:if="${todayMealLog == null or todayMealLog.aiCalories == null}" class="text-center py-3 text-muted">
+                        <i class="bi bi-stars" style="font-size:2rem;"></i>
+                        <p class="mt-2 small">Noch keine Mahlzeiten f&uuml;r heute erfasst.</p>
+                        <a th:href="@{/fitness/nutrition}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil me-1"></i>Mahlzeiten eintragen
+                        </a>
                     </div>
                     <div th:if="${todayMealLog != null and todayMealLog.aiCalories != null}">
-                        <div class="d-flex justify-content-between align-items-baseline mb-1">
-                            <span class="fs-4 fw-bold" th:text="${todayMealLog.aiCalories} + ' kcal'"></span>
-                            <span class="text-muted small" th:if="${todayMealLog.dailyCalorieTarget != null}"
-                                  th:text="'Ziel: ' + ${todayMealLog.dailyCalorieTarget} + ' kcal'"></span>
-                        </div>
-                        <div th:if="${todayMealLog.calorieDelta != null}" class="mb-2">
-                            <span th:with="d=${todayMealLog.calorieDelta}"
-                                  th:class="${d <= 0 or (todayMealLog.dailyCalorieTarget != null and d <= todayMealLog.dailyCalorieTarget * 0.1) ? 'badge bg-success-subtle text-success' :
-                                             (todayMealLog.dailyCalorieTarget != null and d <= todayMealLog.dailyCalorieTarget * 0.25) ? 'badge bg-warning-subtle text-warning' : 'badge bg-danger-subtle text-danger'}"
-                                  th:text="${(d >= 0 ? '+' : '') + d + ' kcal'}"></span>
-                            <span th:if="${todayMealLog.externalCaloriesBurned != null}" class="badge bg-success ms-1">
-                                <i class="bi bi-dribbble me-1"></i>+<span th:text="${todayMealLog.externalCaloriesBurned}"></span> kcal
-                            </span>
-                        </div>
-                        <div class="row text-center small text-muted">
-                            <div class="col-4">
-                                <div th:text="${todayMealLog.aiProteinG != null ? todayMealLog.aiProteinG + 'g' : '—'}"></div>
-                                <div>Protein</div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small fw-semibold">Kalorien</span>
+                                <span class="small" th:text="${todayMealLog.aiCalories} + (${todayMealLog.dailyCalorieTarget != null} ? ' / ' + ${todayMealLog.dailyCalorieTarget} + ' kcal' : ' kcal')"></span>
                             </div>
-                            <div class="col-4">
-                                <div th:text="${todayMealLog.aiCarbsG != null ? todayMealLog.aiCarbsG + 'g' : '—'}"></div>
-                                <div>Kohlenh.</div>
-                            </div>
-                            <div class="col-4">
-                                <div th:text="${todayMealLog.aiFatG != null ? todayMealLog.aiFatG + 'g' : '—'}"></div>
-                                <div>Fett</div>
+                            <div class="progress" style="height:8px;" th:if="${todayMealLog.dailyCalorieTarget != null}">
+                                <div class="progress-bar"
+                                     th:with="pct=${T(java.lang.Math).min(100, T(java.lang.Math).round(todayMealLog.aiCalories * 100.0 / todayMealLog.dailyCalorieTarget))}"
+                                     th:style="'width:' + ${pct} + '%'"
+                                     th:class="${pct > 110 ? 'progress-bar bg-danger' : pct > 90 ? 'progress-bar bg-success' : 'progress-bar bg-warning'}">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Weight + quick entry -->
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-title mb-0"><i class="bi bi-speedometer2 me-2 text-info"></i>Gewicht</h6>
-                        <a th:href="@{/fitness/weight}" class="text-muted small">Details &rarr;</a>
-                    </div>
-                    <div th:if="${lastWeight != null}" class="mb-2">
-                        <span class="fs-3 fw-bold" th:text="${lastWeight.weightKg} + ' kg'"></span>
-                        <span class="text-muted small ms-2"
-                              th:text="${#temporals.format(lastWeight.logDate, 'dd.MM.yyyy')}"></span>
-                    </div>
-                    <div th:if="${lastWeight == null}" class="text-muted small mb-2">Noch kein Gewicht eingetragen.</div>
-                    <div class="d-flex gap-2 align-items-center">
-                        <div class="input-group input-group-sm" style="max-width:140px;">
-                            <input type="number" step="0.1" class="form-control" id="quickWeightKg"
-                                   placeholder="83.5" min="20" max="300">
-                            <span class="input-group-text">kg</span>
+                        <div class="row text-center g-2">
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <div class="small text-muted">Protein</div>
+                                    <div class="fw-semibold" th:text="${todayMealLog.aiProteinG != null ? todayMealLog.aiProteinG + ' g' : '–'}"></div>
+                                    <div class="small text-muted" th:if="${todayMealLog.targetProteinG != null}" th:text="'Ziel: ' + ${todayMealLog.targetProteinG} + ' g'"></div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <div class="small text-muted">Kohlenhydrate</div>
+                                    <div class="fw-semibold" th:text="${todayMealLog.aiCarbsG != null ? todayMealLog.aiCarbsG + ' g' : '–'}"></div>
+                                    <div class="small text-muted" th:if="${todayMealLog.targetCarbsG != null}" th:text="'Ziel: ' + ${todayMealLog.targetCarbsG} + ' g'"></div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <div class="small text-muted">Fett</div>
+                                    <div class="fw-semibold" th:text="${todayMealLog.aiFatG != null ? todayMealLog.aiFatG + ' g' : '–'}"></div>
+                                    <div class="small text-muted" th:if="${todayMealLog.targetFatG != null}" th:text="'Ziel: ' + ${todayMealLog.targetFatG} + ' g'"></div>
+                                </div>
+                            </div>
                         </div>
-                        <button class="btn btn-sm btn-outline-info" onclick="saveQuickWeight()">
-                            <i class="bi bi-plus-lg"></i>
-                        </button>
+                        <div th:if="${todayMealLog.aiNotes}" class="mt-2 text-muted small fst-italic" th:text="${todayMealLog.aiNotes}"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- AI Notes Banner -->
-    <div class="row mt-2" th:if="${plan != null and plan.aiNotes != null}">
-        <div class="col">
-            <div class="card border-info">
-                <div class="card-body py-2">
-                    <h6 class="card-title text-info mb-1"><i class="bi bi-stars me-2"></i>KI-Kommentar
-                        <small class="text-muted fw-normal ms-2">Plan v<span th:text="${plan.version}">1</span>
-                            <span th:if="${plan.generatedAt != null}">
-                                &middot; <span th:text="${#temporals.format(plan.generatedAt, 'dd.MM.yyyy')}"></span>
-                            </span>
-                        </small>
-                    </h6>
-                    <p class="mb-0 small" th:text="${plan.aiNotes}"></p>
+    <!-- Row 3: Weekly nutrition summary -->
+    <div class="row" th:if="${nutritionWeeklySummary != null and nutritionWeeklySummary.daysLogged > 0}">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Ern&auml;hrung &ndash; Wochenschnitt (letzte 7 Tage)</h5>
+                    <div class="row g-3 text-center">
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded p-3">
+                                <div class="text-muted small mb-1">Kalorien</div>
+                                <div class="fs-5 fw-bold" th:text="${nutritionWeeklySummary.avgCalories} + ' kcal'"></div>
+                                <div class="text-muted small" th:if="${nutritionWeeklySummary.targetCalories != null}"
+                                     th:text="'Ziel: ' + ${nutritionWeeklySummary.targetCalories} + ' kcal'"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded p-3">
+                                <div class="text-muted small mb-1">Protein</div>
+                                <div class="fs-5 fw-bold" th:text="${nutritionWeeklySummary.avgProteinG != null ? nutritionWeeklySummary.avgProteinG + ' g' : '–'}"></div>
+                                <div class="text-muted small" th:if="${nutritionWeeklySummary.targetProteinG != null}"
+                                     th:text="'Ziel: ' + ${nutritionWeeklySummary.targetProteinG} + ' g'"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded p-3">
+                                <div class="text-muted small mb-1">Kohlenhydrate</div>
+                                <div class="fs-5 fw-bold" th:text="${nutritionWeeklySummary.avgCarbsG != null ? nutritionWeeklySummary.avgCarbsG + ' g' : '–'}"></div>
+                                <div class="text-muted small" th:if="${nutritionWeeklySummary.targetCarbsG != null}"
+                                     th:text="'Ziel: ' + ${nutritionWeeklySummary.targetCarbsG} + ' g'"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded p-3">
+                                <div class="text-muted small mb-1">Fett</div>
+                                <div class="fs-5 fw-bold" th:text="${nutritionWeeklySummary.avgFatG != null ? nutritionWeeklySummary.avgFatG + ' g' : '–'}"></div>
+                                <div class="text-muted small" th:if="${nutritionWeeklySummary.targetFatG != null}"
+                                     th:text="'Ziel: ' + ${nutritionWeeklySummary.targetFatG} + ' g'"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>Basierend auf <span th:text="${nutritionWeeklySummary.daysLogged}"></span> erfassten Tag(en) in den letzten 7 Tagen.
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
 </main>
-
-<!-- Mark Done Modal -->
-<div class="modal fade" id="markDoneModal" tabindex="-1">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Einheit erledigt</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted small">Wie anstrengend war die Einheit?</p>
-                <div class="d-flex gap-1 justify-content-center mb-3" id="markDoneStars">
-                    <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(1)">&#9733;</span>
-                    <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(2)">&#9733;</span>
-                    <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(3)">&#9733;</span>
-                    <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(4)">&#9733;</span>
-                    <span class="fs-2" style="cursor:pointer;color:#ccc;" onclick="setMarkDoneRating(5)">&#9733;</span>
-                </div>
-                <textarea class="form-control form-control-sm" id="markDoneNotes" rows="2" placeholder="Notiz (optional)"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-success w-100" onclick="submitMarkDone()">
-                    <i class="bi bi-check-lg me-1"></i>Speichern
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    var markDoneSessionId = null;
-    var markDoneRating = 0;
-
-    function markDone(sessionId) {
-        markDoneSessionId = sessionId;
-        markDoneRating = 0;
-        setMarkDoneRating(0);
-        document.getElementById('markDoneNotes').value = '';
-        new bootstrap.Modal(document.getElementById('markDoneModal')).show();
-    }
-
-    function setMarkDoneRating(val) {
-        markDoneRating = val;
-        document.querySelectorAll('#markDoneStars span').forEach(function(s, i) {
-            s.style.color = i < val ? '#ffc107' : '#ccc';
-        });
-    }
-
-    function submitMarkDone() {
-        if (!markDoneSessionId) return;
-        var payload = {
-            difficultyRating: markDoneRating || null,
-            notes: document.getElementById('markDoneNotes').value || null
-        };
-        $.ajax({
-            url: '/api/fitness/session/' + markDoneSessionId + '/complete',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(payload),
-            success: function() { window.location.reload(); },
-            error: function() { alert('Fehler beim Speichern.'); }
-        });
-    }
-
-    function logActivity() {
-        var duration = parseInt(document.getElementById('actDuration').value) || null;
-        var calories = parseInt(document.getElementById('actCalories').value) || null;
-        var notes = document.getElementById('actNotes').value.trim() || null;
-
-        var btn = document.getElementById('actSaveBtn');
-        btn.disabled = true;
-
-        $.ajax({
-            url: '/api/fitness/session-log',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                sessionType: 'TEAM_SPORT',
-                logDate: new Date().toISOString().slice(0,10),
-                actualDurationMinutes: duration,
-                externalCaloriesBurned: calories,
-                feedbackText: notes
-            }),
-            success: function() { window.location.reload(); },
-            error: function() {
-                btn.disabled = false;
-                alert('Fehler beim Speichern der Aktivit\u00e4t.');
-            }
-        });
-    }
-
-    function saveQuickWeight() {
-        var kg = parseFloat(document.getElementById('quickWeightKg').value);
-        if (!kg || kg <= 0) { alert('Bitte ein g\u00fcltiges Gewicht eingeben.'); return; }
-        $.ajax({
-            url: '/api/fitness/weight',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ weightKg: kg, notes: null }),
-            success: function() { location.reload(); },
-            error: function() { alert('Fehler beim Speichern.'); }
-        });
-    }
-</script>
 
 <div th:replace="~{fragments/footer :: footer-js}"/>
 </body>

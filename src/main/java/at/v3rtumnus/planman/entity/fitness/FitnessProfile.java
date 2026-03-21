@@ -25,12 +25,6 @@ public class FitnessProfile {
     private UserProfile userProfile;
 
     @Column(nullable = false)
-    private boolean assessmentCompleted;
-
-    @Column(name = "current_plan_id")
-    private Long currentPlanId;
-
-    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "height_cm")
