@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .contentSecurityPolicy(csp -> csp.policyDirectives("frame-src https://www.youtube.com; frame-ancestors 'self' home.altenburger.io")))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/resources/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/login", "/resources/**", "/favicon.ico", "/actuator/**").permitAll()
                         .requestMatchers("/credit/**").hasAnyRole("USER")
                         .requestMatchers("/fitness/**").hasAnyRole("USER")
                         .requestMatchers("/api/fitness/**").hasAnyRole("USER")
