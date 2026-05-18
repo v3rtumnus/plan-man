@@ -4,12 +4,19 @@ import at.v3rtumnus.planman.service.PlanManUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
@@ -28,6 +35,30 @@ public class SecurityConfig {
     private DataSource dataSource;
 
     @Bean
+    @Order(1)
+    public SecurityFilterChain autheliaFilterChain(HttpSecurity http) throws Exception {
+        PreAuthenticatedAuthenticationProvider preAuthProvider = new PreAuthenticatedAuthenticationProvider();
+        preAuthProvider.setPreAuthenticatedUserDetailsService(
+                new UserDetailsByNameServiceWrapper<>(userDetailsService));
+
+        RequestHeaderAuthenticationFilter requestHeaderFilter = new RequestHeaderAuthenticationFilter();
+        requestHeaderFilter.setPrincipalRequestHeader("Remote-User");
+        requestHeaderFilter.setExceptionIfHeaderMissing(false);
+        requestHeaderFilter.setAuthenticationManager(new ProviderManager(preAuthProvider));
+
+        http
+                .securityMatcher(request -> request.getHeader("Remote-User") != null)
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .addFilterBefore(requestHeaderFilter, UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
