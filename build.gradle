@@ -74,6 +74,8 @@ def jacocoExclusions = [
 	'**/PlanManApplication*',   // Spring Boot entry point – no testable logic
 	'**/entity/**',             // Lombok-generated JPA POJOs – no business logic
 	'**/dto/**',                // Lombok-generated DTOs – no business logic
+	'**/conf/CacheConfig*',     // Bean wiring only – no business logic
+	'**/conf/McpToolsConfig*',  // Bean wiring only – no business logic
 ]
 
 jacocoTestReport {
