@@ -1,6 +1,7 @@
 package at.v3rtumnus.planman.service;
 
 import at.v3rtumnus.planman.dto.StockInfo;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -18,6 +20,11 @@ import java.util.List;
 public class OnVistaFinancialService {
 
     public static final String USD_EUR_URL = "https://www.onvista.de/devisen/Dollarkurs-USD-EUR";
+
+    @Getter
+    private volatile Instant lastSuccessfulImport = null;
+    @Getter
+    private volatile String lastImportError = null;
 
     public StockInfo getStockInfo(String url) {
         try {
@@ -31,11 +38,15 @@ public class OnVistaFinancialService {
 
             List<TextNode> currencyList = doc.selectXpath("//data[@value]/span/text()", TextNode.class);
 
+            lastSuccessfulImport = Instant.now();
+            lastImportError = null;
+
             return new StockInfo(marketPrice,
                     changeToday,
                     changePercent,
                     currencyList.get(1).text());
         } catch (IOException e) {
+            lastImportError = e.getMessage();
             throw new RuntimeException(e);
         }
     }

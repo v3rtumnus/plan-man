@@ -46,11 +46,9 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-	// AI Assistant
-	implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+	// MCP Server
+	implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
 	implementation 'com.github.ben-manes.caffeine:caffeine:3.2.3'
-	implementation 'io.micrometer:micrometer-tracing-bridge-otel'
-	implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	compileOnly 'org.projectlombok:lombok:1.18.42'
@@ -76,7 +74,6 @@ def jacocoExclusions = [
 	'**/PlanManApplication*',   // Spring Boot entry point – no testable logic
 	'**/entity/**',             // Lombok-generated JPA POJOs – no business logic
 	'**/dto/**',                // Lombok-generated DTOs – no business logic
-	'**/mcp/StdioMcpClient*',  // Spawns OS processes via stdio – cannot unit-test
 ]
 
 jacocoTestReport {
