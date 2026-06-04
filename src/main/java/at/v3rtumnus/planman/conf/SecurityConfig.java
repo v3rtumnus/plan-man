@@ -12,6 +12,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -66,7 +68,9 @@ public class SecurityConfig {
                         .contentSecurityPolicy(csp -> csp.policyDirectives("frame-src https://www.youtube.com; frame-ancestors 'self' home.altenburger.io")))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/resources/**", "/favicon.ico", "/actuator/**", "/sse", "/mcp/**").permitAll()
+                        .requestMatchers("/login", "/resources/**", "/favicon.ico", "/actuator/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/sse").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/mcp").permitAll()
                         .requestMatchers("/credit/**").hasAnyRole("USER")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated())
