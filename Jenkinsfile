@@ -21,10 +21,9 @@ pipeline {
 
         stage('Deploy service') {
             steps {
-                sh 'docker compose -f /var/plan-man-data/docker-compose.yml -p plan-man down'
-                sh 'cp build/libs/plan-man.jar /var/plan-man-data/docker'
-                sh 'docker compose -f /var/plan-man-data/docker-compose.yml -p plan-man build'
-                sh 'docker compose -f /var/plan-man-data/docker-compose.yml -p plan-man up -d'
+                sh 'docker compose -f /opt/appl/plan-man/docker-compose.yml -p plan-man down'
+                sh 'cp build/libs/plan-man.jar /opt/appl/plan-man/docker/plan-man.jar'
+                sh 'docker compose -f /opt/appl/plan-man/docker-compose.yml -p plan-man up -d'
             }
         }
     }
