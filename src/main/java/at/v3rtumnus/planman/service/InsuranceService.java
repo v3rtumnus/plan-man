@@ -83,9 +83,15 @@ public class InsuranceService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public InsuranceEntryDTO getEntry(Long id) {
-        return InsuranceEntryDTO.fromInsuranceEntry(
-                insuranceEntryRepository.findById(id).orElseThrow(() -> new RuntimeException("Entry not found")));
+        InsuranceEntry entry = insuranceEntryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Entry not found"));
+        InsuranceEntryDTO dto = InsuranceEntryDTO.fromInsuranceEntry(entry);
+        dto.setInvoiceData(entry.getInvoiceData());
+        dto.setHealthInsuranceData(entry.getHealthInsuranceData());
+        dto.setPrivateInsuranceData(entry.getPrivateInsuranceData());
+        return dto;
     }
 
     @Transactional

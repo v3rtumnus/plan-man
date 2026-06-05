@@ -59,9 +59,9 @@ public class InsuranceEntryDTO {
 
 
         return new InsuranceEntryDTO(entry.getId(), entry.getEntryDate(), entry.getPerson().getName(),
-                entry.getType(), entry.getInsuranceType(), entry.getName(), entry.getState(), entry.getAmount(), entry.getInvoiceFilename(), entry.getInvoiceData(),
-                entry.getHealthInsuranceFilename(), entry.getHealthInsuranceData(), entry.getHealthInsuranceAmount(), entry.isHealthInsuranceAmountReceived(), entry.getPrivateInsuranceFilename(),
-                entry.getPrivateInsuranceData(), entry.getPrivateInsuranceAmount(), entry.isPrivateInsuranceAmountReceived(), retention);
+                entry.getType(), entry.getInsuranceType(), entry.getName(), entry.getState(), entry.getAmount(), entry.getInvoiceFilename(), null,
+                entry.getHealthInsuranceFilename(), null, entry.getHealthInsuranceAmount(), entry.isHealthInsuranceAmountReceived(), entry.getPrivateInsuranceFilename(),
+                null, entry.getPrivateInsuranceAmount(), entry.isPrivateInsuranceAmountReceived(), retention);
     }
 
     public InsuranceEntryState getCalculatedState() {

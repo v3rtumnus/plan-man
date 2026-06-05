@@ -53,6 +53,7 @@ public class InsuranceEntry {
     @Column
     private String invoiceFilename;
 
+    @Basic(fetch = FetchType.LAZY)
     @Lob
     @Column
     private byte[] invoiceData;
@@ -60,6 +61,7 @@ public class InsuranceEntry {
     @Column
     private String healthInsuranceFilename;
 
+    @Basic(fetch = FetchType.LAZY)
     @Lob
     @Column
     private byte[] healthInsuranceData;
@@ -76,6 +78,7 @@ public class InsuranceEntry {
     @Column
     private boolean privateInsuranceAmountReceived;
 
+    @Basic(fetch = FetchType.LAZY)
     @Lob
     @Column
     private byte[] privateInsuranceData;
