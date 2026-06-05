@@ -68,9 +68,7 @@ public class SecurityConfig {
                         .contentSecurityPolicy(csp -> csp.policyDirectives("frame-src https://www.youtube.com; frame-ancestors 'self' home.altenburger.io")))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/resources/**", "/favicon.ico", "/actuator/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/sse").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/mcp").permitAll()
+                        .requestMatchers("/login", "/resources/**", "/favicon.ico", "/actuator/**", "/sse", "/mcp").permitAll()
                         .requestMatchers("/credit/**").hasAnyRole("USER")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated())
