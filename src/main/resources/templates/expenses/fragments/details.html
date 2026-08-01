@@ -25,6 +25,13 @@
             </td>
         </tr>
         </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3" style="font-weight: bold;">Summe</td>
+            <td style="font-weight: bold;" th:text="${@thymeleafService.formatNumber(monthlySum, 2, 'EUR')}"></td>
+            <td></td>
+        </tr>
+        </tfoot>
     </table>
 </div>
 </body>

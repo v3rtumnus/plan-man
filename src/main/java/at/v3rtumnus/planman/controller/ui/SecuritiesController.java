@@ -91,6 +91,19 @@ public class SecuritiesController {
                 .mapToDouble(p -> p.getDividendTotal() != null ? p.getDividendTotal().doubleValue() : 0)
                 .sum());
 
+        modelAndView.addObject("shareTax", shareProducts
+                .stream()
+                .mapToDouble(p -> p.getTaxTotal() != null ? p.getTaxTotal().doubleValue() : 0)
+                .sum());
+        modelAndView.addObject("fundTax", fundProducts
+                .stream()
+                .mapToDouble(p -> p.getTaxTotal() != null ? p.getTaxTotal().doubleValue() : 0)
+                .sum());
+        modelAndView.addObject("etfTax", etfProducts
+                .stream()
+                .mapToDouble(p -> p.getTaxTotal() != null ? p.getTaxTotal().doubleValue() : 0)
+                .sum());
+
         modelAndView.addObject("totalSum", products
                 .stream()
                 .mapToDouble(p -> p.getCurrentAmount().doubleValue())
@@ -102,6 +115,10 @@ public class SecuritiesController {
         modelAndView.addObject("totalDividend", products
                 .stream()
                 .mapToDouble(p -> p.getDividendTotal() != null ? p.getDividendTotal().doubleValue() : 0)
+                .sum());
+        modelAndView.addObject("totalTax", products
+                .stream()
+                .mapToDouble(p -> p.getTaxTotal() != null ? p.getTaxTotal().doubleValue() : 0)
                 .sum());
 
         return modelAndView;

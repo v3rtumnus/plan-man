@@ -7,7 +7,9 @@ import at.v3rtumnus.planman.dao.UploadLogRepository;
 import at.v3rtumnus.planman.dto.finance.UploadResult;
 import at.v3rtumnus.planman.dto.finance.UploadResultDto;
 import at.v3rtumnus.planman.dto.finance.UploadType;
+import at.v3rtumnus.planman.entity.finance.Dividend;
 import at.v3rtumnus.planman.entity.finance.FinancialProduct;
+import at.v3rtumnus.planman.entity.finance.FinancialTransactionType;
 import at.v3rtumnus.planman.entity.finance.UploadLog;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -16,6 +18,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -167,8 +170,59 @@ class FinanceImportServiceTest {
         UploadResultDto result = importService.importFinanceFile(file);
 
         assertThat(result.getResult()).isEqualTo(UploadResult.SUCCESS);
-        verify(dividendRepository).save(any());
+
+        ArgumentCaptor<Dividend> dividendCaptor = ArgumentCaptor.forClass(Dividend.class);
+        verify(dividendRepository).save(dividendCaptor.capture());
+        assertThat(dividendCaptor.getValue().getType()).isEqualTo(FinancialTransactionType.DIVIDEND);
         verify(uploadLogRepository).save(any(UploadLog.class));
+    }
+
+    @Test
+    void importFinanceFile_fondsertragsausschuettungFile_routesToDividendCategory() throws IOException {
+        String isin = "AT0000APOST4";
+        byte[] pdfBytes = createPdf(
+                "(" + isin + "/some text",
+                "Valuta 15.06.2024",
+                "  Endbetrag  EUR  12,00"
+        );
+        MockMultipartFile file = pdfFile("20240615_Fondsertragsausschuettung_APOST.pdf", pdfBytes);
+
+        when(uploadLogRepository.findByFilename(anyString())).thenReturn(Optional.empty());
+        when(productRepository.findById(isin)).thenReturn(Optional.empty());
+        when(productRepository.save(any())).thenReturn(new FinancialProduct(isin));
+
+        UploadResultDto result = importService.importFinanceFile(file);
+
+        assertThat(result.getResult()).isEqualTo(UploadResult.SUCCESS);
+
+        ArgumentCaptor<Dividend> dividendCaptor = ArgumentCaptor.forClass(Dividend.class);
+        verify(dividendRepository).save(dividendCaptor.capture());
+        assertThat(dividendCaptor.getValue().getType()).isEqualTo(FinancialTransactionType.DIVIDEND);
+    }
+
+    @Test
+    void importFinanceFile_fondsthesaurierungFile_routesToTaxCategory() throws IOException {
+        String isin = "AT0000APOST4";
+        byte[] pdfBytes = createPdf(
+                "(" + isin + "/some text",
+                "Valuta 15.06.2024",
+                "  Endbetrag  EUR  -3,20"
+        );
+        MockMultipartFile file = pdfFile("20240615_Fondsthesaurierung_APOST.pdf", pdfBytes);
+
+        when(uploadLogRepository.findByFilename(anyString())).thenReturn(Optional.empty());
+        when(productRepository.findById(isin)).thenReturn(Optional.empty());
+        when(productRepository.save(any())).thenReturn(new FinancialProduct(isin));
+
+        UploadResultDto result = importService.importFinanceFile(file);
+
+        assertThat(result.getResult()).isEqualTo(UploadResult.SUCCESS);
+        assertThat(result.getType()).isEqualTo(UploadType.TAX);
+
+        ArgumentCaptor<Dividend> dividendCaptor = ArgumentCaptor.forClass(Dividend.class);
+        verify(dividendRepository).save(dividendCaptor.capture());
+        assertThat(dividendCaptor.getValue().getType()).isEqualTo(FinancialTransactionType.TAX);
+        assertThat(dividendCaptor.getValue().getAmount()).isEqualByComparingTo(new BigDecimal("-3.20"));
     }
 
     // --- German decimal parsing ---

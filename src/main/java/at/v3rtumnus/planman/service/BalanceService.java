@@ -79,6 +79,22 @@ public class BalanceService {
         balanceGroupRepository.save(balanceGroup);
     }
 
+    public BigDecimal getCurrentMonthNetResult() {
+        Map<BalanceGroupType, List<BalanceGroupDto>> groups = retrieveBalanceGroups();
+
+        BigDecimal incomeSum = BigDecimal.valueOf(groups.get(BalanceGroupType.INCOME)
+                .stream()
+                .mapToDouble(g -> g.getSum().doubleValue())
+                .sum());
+
+        BigDecimal expenditureSum = BigDecimal.valueOf(groups.get(BalanceGroupType.EXPENDITURE)
+                .stream()
+                .mapToDouble(g -> g.getSum().doubleValue())
+                .sum());
+
+        return incomeSum.subtract(expenditureSum);
+    }
+
     public List<BalanceComparisonDto> getBalanceComparisons() {
         Optional<LocalDate> startDateOptional = Stream.of(balanceDetailRepository.getMinimumBalanceDate().withDayOfMonth(1),
                         expenseService.getMinimumExpenseDate().withDayOfMonth(1))

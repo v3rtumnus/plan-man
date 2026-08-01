@@ -101,18 +101,26 @@
     <div id="successNotification" class="alert alert-primary" role="alert" style="display: none">&Auml;nderungen erfolgreich durchgef&uuml;hrt</div>
     <div id="errorNotification" class="alert alert-danger" role="alert" style="display: none">Leider ist ein Fehler aufgetreten</div>
 
-    <form class="d-flex flex-wrap align-items-center gap-2">
-        <label for="monthSelection">Monat ausw&auml;hlen:</label>
-        <select id="monthSelection" class="form-select w-auto" onchange="retrieveMonthlyDetails()" name="monthSelection">
-            <option th:each="dateOption: ${datesToSelect}" th:value="${#temporals.format(dateOption, 'M-yyyy')}">[[${#temporals.format(dateOption, 'MMMM yyyy', new java.util.Locale("de"))}]]</option>
-        </select>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form class="d-flex flex-wrap align-items-center gap-2">
+                        <label for="monthSelection">Monat ausw&auml;hlen:</label>
+                        <select id="monthSelection" class="form-select w-auto" onchange="retrieveMonthlyDetails()" name="monthSelection">
+                            <option th:each="dateOption: ${datesToSelect}" th:value="${#temporals.format(dateOption, 'M-yyyy')}">[[${#temporals.format(dateOption, 'MMMM yyyy', new java.util.Locale("de"))}]]</option>
+                        </select>
 
-        <button id="saveButton" class="btn btn-primary" type="submit" onclick="handleExpenseUpdates(); return false;" disabled>Speichern</button>
-        <button id="resetButton" class="btn" type="button" onclick="retrieveMonthlyDetails(); return false;"disabled>Abbrechen</button>
-    </form>
+                        <button id="saveButton" class="btn btn-primary" type="submit" onclick="handleExpenseUpdates(); return false;" disabled>Speichern</button>
+                        <button id="resetButton" class="btn" type="button" onclick="retrieveMonthlyDetails(); return false;"disabled>Abbrechen</button>
+                    </form>
 
-    <div id="detailContainer" style="margin-top:30px">
+                    <div id="detailContainer" style="margin-top:30px">
 
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
 

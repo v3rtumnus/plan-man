@@ -17,67 +17,70 @@
         <h1>Finanzen</h1>
     </div>
 
-
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card h-100 mb-0">
-                <div class="card-body">
-                    <h4 class="card-title">Zusammenfassung</h4>
-                    <table class="table table-borderless table-sm">
-                        <tbody>
-                        <tr>
-                            <td>Aktien</td>
-                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(shareSum, 2, 'EUR')}"></td>
-                        </tr>
-                        <tr>
-                            <td>Aktienfonds</td>
-                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(fundSum, 2, 'EUR')}"></td>
-                        </tr>
-                        <tr>
-                            <td>ETFs</td>
-                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(etfSum, 2, 'EUR')}"></td>
-                        </tr>
-                        <tr>
-                            <td>Sparen</td>
-                            <td style="text-align: right; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#savingsModal" th:text="${@thymeleafService.formatNumber(savingsSum, 2, 'EUR')}"></td>
-                            <div class="modal fade" id="savingsModal" tabindex="-1" style="display: none;" aria-hidden="true">
-                                <form th:action="@{/finance/savingsAmount}" method="post">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Neuen Sparbetrag eingeben</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <input type="number" name="savingsAmount" class="form-control"
-                                                       id="savingsAmount" required>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-primary">Speichern</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
+    <div class="dashboard">
+        <div class="row">
+            <div class="col-xl-3 col-md-6" th:each="position: ${positionChanges}">
+                <div class="card info-card" th:classappend="${@thymeleafService.positionCardClass(position.variant)}">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${position.label}"></h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i th:class="${@thymeleafService.positionIcon(position.label)}"></i>
                             </div>
-                        </tr>
-                        <tr style="border-top: 1em; font-weight: bold">
-                            <td>Verm&ouml;gen</td>
-                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(grossAssets, 2, 'EUR')}"></td>
-                        </tr>
-                        <tr>
-                            <td>Kredit</td>
-                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(creditSum, 2, 'EUR')}"></td>
-                        </tr>
-                        <tr style="border-top: 1em; font-weight: bold">
-                            <td>Nettoverm&ouml;gen</td>
-                            <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(netAssets, 2, 'EUR')}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                            <div class="ps-3">
+                                <h6 th:unless="${position.savings}" th:text="${@thymeleafService.formatNumber(position.currentValue, 2, 'EUR')}"></h6>
+                                <h6 th:if="${position.savings}" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#savingsModal" th:text="${@thymeleafService.formatNumber(position.currentValue, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">1 Monat</span>
+                            <span>
+                                <span th:class="${@thymeleafService.getNumberClass(position.oneMonthChange)}" th:text="${@thymeleafService.formatNumber(position.oneMonthChange, 2, 'EUR')}"></span>
+                                <span style="margin-left: 6px;" th:class="${@thymeleafService.getNumberClass(position.oneMonthPercent)}" th:text="${@thymeleafService.formatNumber(position.oneMonthPercent, 2, '%')}"></span>
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">1 Jahr</span>
+                            <span>
+                                <span th:class="${@thymeleafService.getNumberClass(position.oneYearChange)}" th:text="${@thymeleafService.formatNumber(position.oneYearChange, 2, 'EUR')}"></span>
+                                <span style="margin-left: 6px;" th:class="${@thymeleafService.getNumberClass(position.oneYearPercent)}" th:text="${@thymeleafService.formatNumber(position.oneYearPercent, 2, '%')}"></span>
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-muted">3 Jahre</span>
+                            <span>
+                                <span th:class="${@thymeleafService.getNumberClass(position.threeYearChange)}" th:text="${@thymeleafService.formatNumber(position.threeYearChange, 2, 'EUR')}"></span>
+                                <span style="margin-left: 6px;" th:class="${@thymeleafService.getNumberClass(position.threeYearPercent)}" th:text="${@thymeleafService.formatNumber(position.threeYearPercent, 2, '%')}"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="modal fade" id="savingsModal" tabindex="-1" style="display: none;" aria-hidden="true">
+        <form th:action="@{/finance/savingsAmount}" method="post">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Neuen Sparbetrag eingeben</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="number" name="savingsAmount" class="form-control"
+                               id="savingsAmount" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Speichern</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-body">
@@ -96,40 +99,6 @@
                             },
                             options: {
                                 aspectRatio:2.5
-                            }
-                        });
-                    </script>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-0">
-                <div class="card-body">
-                    <h4 class="card-title">Zeitlicher Verlauf</h4>
-                    <canvas id="assets-flow"></canvas>
-                    <script>
-                        var datasetValue = [];
-                        var amounts = [[${amountsGraph}]]
-                        var categories = [(${categoriesGraph})]
-                        var colors = [(${colorsGraph})]
-                        var count = [[${colorsGraph.size()}]]
-                        for (var j=0; j<count; j++) {
-                            datasetValue[j] = {
-                                data: amounts[j],
-                                label: categories[j],
-                                borderColor: colors[j],
-                                fill: false
-                            }
-                        }
-
-                        new Chart(document.getElementById("assets-flow"), {
-                            type: 'line',
-                            data: {
-                                labels: [(${datesGraph})],
-                                datasets: datasetValue
                             }
                         });
                     </script>

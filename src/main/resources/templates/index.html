@@ -2,18 +2,111 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <div th:replace="~{fragments/header :: header-css}"/>
+
+    <div th:replace="~{fragments/footer :: footer-js}"/>
 </head>
 <body>
 
 <div th:replace="~{fragments/header :: header}"/>
 
-<div class="container">
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
 
-    <div class="starter-template">
+<main id="main" class="main">
+
+    <div class="pagetitle">
         <h1>Plan Man</h1>
-
     </div>
 
-</div>
+    <div class="dashboard">
+        <div class="row">
+            <div class="col-xl-3 col-md-6">
+                <a th:href="@{/finance/overview}" style="text-decoration: none; color: inherit;">
+                <div class="card info-card revenue-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Nettoverm&ouml;gen</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(netAssets, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a th:href="@{/balance}" style="text-decoration: none; color: inherit;">
+                <div class="card info-card sales-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Liquide Mittel (Monat)</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:class="${@thymeleafService.getNumberClass(currentMonthNetResult)}" th:text="${@thymeleafService.formatNumber(currentMonthNetResult, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a th:href="@{/expenses}" style="text-decoration: none; color: inherit;">
+                <div class="card info-card customers-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Ausgaben (Monat)</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-cart2"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(expensesThisMonth, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a th:href="@{/credit/overview}" style="text-decoration: none; color: inherit;">
+                <div class="card info-card customers-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Restschuld Kredit</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-credit-card-2-front"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(currentCreditBalance, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a th:href="@{/insurance/overview}" style="text-decoration: none; color: inherit;">
+                <div class="card info-card sales-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Offene Versicherungsanspr&uuml;che</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-bandaid"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${openInsuranceClaims}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
 </body>
 </html>

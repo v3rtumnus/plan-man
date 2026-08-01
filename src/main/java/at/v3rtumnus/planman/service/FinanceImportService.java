@@ -106,9 +106,11 @@ public class FinanceImportService {
                     .result(UploadResult.IGNORED)
                     .build();
         }
-        if (filename.contains("Fondsthesaurierung") || filename.contains("Fondsertragsausschuettung") ||
-            filename.contains("Dividende")) {
-            return processDividend(filename, lines);
+        if (filename.contains("Fondsthesaurierung")) {
+            return processDividend(filename, lines, FinancialTransactionType.TAX);
+        }
+        if (filename.contains("Fondsertragsausschuettung") || filename.contains("Dividende")) {
+            return processDividend(filename, lines, FinancialTransactionType.DIVIDEND);
         }
         if (filename.contains("Wertpapierabrechnung")) {
             return processTransaction(filename, lines);
@@ -273,7 +275,7 @@ public class FinanceImportService {
                 .build();
     }
 
-    private UploadResultDto processDividend(String filename, List<String> lines) {
+    private UploadResultDto processDividend(String filename, List<String> lines, FinancialTransactionType type) {
         LocalDate date = null;
         BigDecimal amount = null;
         String isin = null;
@@ -305,13 +307,13 @@ public class FinanceImportService {
         }
 
         FinancialProduct product = getOrCreateFinancialProduct(isin);
-        dividendRepository.save(new Dividend(date, amount, product));
+        dividendRepository.save(new Dividend(date, amount, type, product));
         uploadLogRepository.save(new UploadLog(filename, LocalDate.now()));
 
         return UploadResultDto
                 .builder()
                 .result(UploadResult.SUCCESS)
-                .type(UploadType.DIVIDEND)
+                .type(type == FinancialTransactionType.TAX ? UploadType.TAX : UploadType.DIVIDEND)
                 .filename(filename)
                 .isin(isin)
                 .amount(amount)

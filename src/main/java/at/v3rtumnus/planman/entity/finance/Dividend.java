@@ -20,13 +20,17 @@ public class Dividend {
     private LocalDate transactionDate;
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
+    private FinancialTransactionType type;
+
     @ManyToOne
     @JoinColumn(name = "financial_product_id")
     private FinancialProduct financialProduct;
 
-    public Dividend(LocalDate transactionDate, BigDecimal amount, FinancialProduct financialProduct) {
+    public Dividend(LocalDate transactionDate, BigDecimal amount, FinancialTransactionType type, FinancialProduct financialProduct) {
         this.transactionDate = transactionDate;
         this.amount = amount;
+        this.type = type;
         this.financialProduct = financialProduct;
     }
 }

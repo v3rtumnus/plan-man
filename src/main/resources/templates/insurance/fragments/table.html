@@ -22,6 +22,56 @@
 <body>
 <div th:fragment="insuranceTable"  class="container">
 
+    <div class="dashboard">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card info-card sales-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Rechnungssumme</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(sumInvoice, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card info-card revenue-card">
+                    <div class="card-body">
+                        <h5 class="card-title">&Ouml;GK-Summe</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-heart-pulse"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(sumHealthInsurance, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card info-card customers-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Uniqa-Summe</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(sumPrivateInsurance, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form id="insuranceEntryForm">
     <div class="table-responsive">
     <table class="table table-sortable">
@@ -56,7 +106,7 @@
                     <i th:if="${entry.isPrivateAmountOpen()}" class="bi bi-currency-euro private-received" style="cursor: pointer;"></i>
                     <i th:if="${entry.isPrivateAmountReceived()}" class="bi bi-check"></i>
                 </td>
-                <td th:text="${entry.calculatedState.label}"></td>
+                <td><span th:class="${@thymeleafService.insuranceStateBadgeClass(entry.calculatedState)}" th:text="${entry.calculatedState.label}"></span></td>
                 <td>
                     <a th:href="@{/insurance/file/invoice/{id}(id=${entry.id})}" title="Rechnung">
                         <i class="bi bi-file-earmark-pdf"></i>

@@ -3,10 +3,14 @@ package at.v3rtumnus.planman.controller.ui;
 import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
 import at.v3rtumnus.planman.service.ExpenseService;
 import at.v3rtumnus.planman.service.PlanManUserDetailsService;
+import at.v3rtumnus.planman.service.ThymeleafService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -44,6 +48,14 @@ class ExpensesControllerTest {
 
     @MockitoBean
     private CacheManager cacheManager;
+
+    @TestConfiguration
+    static class Config {
+        @Bean
+        ThymeleafService thymeleafService() {
+            return Mockito.mock(ThymeleafService.class);
+        }
+    }
 
     @Test
     void getExpenses_returns200AndCorrectView() throws Exception {

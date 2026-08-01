@@ -214,7 +214,12 @@ public class ExpensesController {
         ModelAndView modelAndView = new ModelAndView("expenses/fragments/details");
         List<ExpenseDTO> expensesForMonth = expenseService.getExpensesForMonth(year, month);
 
+        BigDecimal monthlySum = expensesForMonth.stream()
+                .map(ExpenseDTO::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         modelAndView.addObject("expensesForMonth", expensesForMonth);
+        modelAndView.addObject("monthlySum", monthlySum);
 
         return modelAndView;
     }

@@ -15,52 +15,124 @@
         <h1>Wertpapiere</h1>
     </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card h-100 mb-0">
-                <div class="card-body">
-                    <h4 class="card-title">Zusammenfassung</h4>
-                    <table class="table table-borderless table-sm">
-                        <thead>
-                            <tr>
-                                <th style="text-align: center">Typ</th>
-                                <th style="text-align: center">Summe</th>
-                                <th style="text-align: center">Ertrag</th>
-                                <th style="text-align: center">Div. / Thes.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Aktien</td>
-                                <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(shareSum, 2, 'EUR')}"></td>
-                                <td th:class="${@thymeleafService.getNumberClass(shareChange)}" th:text="${@thymeleafService.formatNumber(shareChange, 2, 'EUR')}"></td>
-                                <td th:class="${@thymeleafService.getNumberClass(shareDividend)}" th:text="${@thymeleafService.formatNumber(shareDividend, 2, 'EUR')}"></td>
-                            </tr>
-                            <tr>
-                                <td>Aktienfonds</td>
-                                <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(fundSum, 2, 'EUR')}"></td>
-                                <td th:class="${@thymeleafService.getNumberClass(fundChange)}" th:text="${@thymeleafService.formatNumber(fundChange, 2, 'EUR')}"></td>
-                                <td th:class="${@thymeleafService.getNumberClass(fundDividend)}" th:text="${@thymeleafService.formatNumber(fundDividend, 2, 'EUR')}"></td>
-                            </tr>
-                            <tr>
-                                <td>ETFs</td>
-                                <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(etfSum, 2, 'EUR')}"></td>
-                                <td th:class="${@thymeleafService.getNumberClass(etfChange)}" th:text="${@thymeleafService.formatNumber(etfChange, 2, 'EUR')}"></td>
-                                <td th:class="${@thymeleafService.getNumberClass(etfDividend)}" th:text="${@thymeleafService.formatNumber(etfDividend, 2, 'EUR')}"></td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr style="font-weight: bold">
-                                <td>Summe</td>
-                                <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(totalSum, 2, 'EUR')}"></td>
-                                <td th:class="${@thymeleafService.getNumberClass(totalChange)}" th:text="${@thymeleafService.formatNumber(totalChange, 2, 'EUR')}"></td>
-                                <td th:class="${@thymeleafService.getNumberClass(totalDividend)}" th:text="${@thymeleafService.formatNumber(totalDividend, 2, 'EUR')}"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+    <div class="dashboard">
+        <div class="row">
+            <div class="col-xl-3 col-md-6">
+                <div class="card info-card sales-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Aktien</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(shareSum, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Ertrag</span>
+                            <span th:class="${@thymeleafService.getNumberClass(shareChange)}" th:text="${@thymeleafService.formatNumber(shareChange, 2, 'EUR')}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Dividenden</span>
+                            <span th:class="${@thymeleafService.getNumberClass(shareDividend)}" th:text="${@thymeleafService.formatNumber(shareDividend, 2, 'EUR')}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-muted">Steuern</span>
+                            <span th:class="${@thymeleafService.getNumberClass(shareTax)}" th:text="${@thymeleafService.formatNumber(shareTax, 2, 'EUR')}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card info-card sales-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Aktienfonds</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-pie-chart-fill"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(fundSum, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Ertrag</span>
+                            <span th:class="${@thymeleafService.getNumberClass(fundChange)}" th:text="${@thymeleafService.formatNumber(fundChange, 2, 'EUR')}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Dividenden</span>
+                            <span th:class="${@thymeleafService.getNumberClass(fundDividend)}" th:text="${@thymeleafService.formatNumber(fundDividend, 2, 'EUR')}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-muted">Steuern</span>
+                            <span th:class="${@thymeleafService.getNumberClass(fundTax)}" th:text="${@thymeleafService.formatNumber(fundTax, 2, 'EUR')}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card info-card sales-card">
+                    <div class="card-body">
+                        <h5 class="card-title">ETFs</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-bar-chart-line-fill"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(etfSum, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Ertrag</span>
+                            <span th:class="${@thymeleafService.getNumberClass(etfChange)}" th:text="${@thymeleafService.formatNumber(etfChange, 2, 'EUR')}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Dividenden</span>
+                            <span th:class="${@thymeleafService.getNumberClass(etfDividend)}" th:text="${@thymeleafService.formatNumber(etfDividend, 2, 'EUR')}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-muted">Steuern</span>
+                            <span th:class="${@thymeleafService.getNumberClass(etfTax)}" th:text="${@thymeleafService.formatNumber(etfTax, 2, 'EUR')}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card info-card revenue-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Summe</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(totalSum, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Ertrag</span>
+                            <span th:class="${@thymeleafService.getNumberClass(totalChange)}" th:text="${@thymeleafService.formatNumber(totalChange, 2, 'EUR')}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Dividenden</span>
+                            <span th:class="${@thymeleafService.getNumberClass(totalDividend)}" th:text="${@thymeleafService.formatNumber(totalDividend, 2, 'EUR')}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-muted">Steuern</span>
+                            <span th:class="${@thymeleafService.getNumberClass(totalTax)}" th:text="${@thymeleafService.formatNumber(totalTax, 2, 'EUR')}"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="row">
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-body">
@@ -94,6 +166,7 @@
                                 <th style="text-align: center">Summe</th>
                                 <th style="text-align: center">Ertrag</th>
                                 <th style="text-align: center">Dividenden</th>
+                                <th style="text-align: center">Steuern</th>
                                 <th style="text-align: center">Prozent heute</th>
                                 <th style="text-align: center">Prozent gesamt</th>
                                 <th style="text-align: center">Prozent j&auml;hrlich</th>
@@ -107,6 +180,7 @@
                             <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentAmount, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.changeTotal)}" th:text="${@thymeleafService.formatNumber(product.changeTotal, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.dividendTotal)}" th:text="${@thymeleafService.formatNumber(product.dividendTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.taxTotal)}" th:text="${@thymeleafService.formatNumber(product.taxTotal, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeToday)}" th:text="${@thymeleafService.formatNumber(product.percentChangeToday, 2, '%')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeTotal)}" th:text="${@thymeleafService.formatNumber(product.percentChangeTotal, 2, '%')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeYearly)}" th:text="${@thymeleafService.formatNumber(product.percentChangeYearly, 2, '%')}"></td>
@@ -134,6 +208,7 @@
                             <th style="text-align: center">Summe</th>
                             <th style="text-align: center">Ertrag</th>
                             <th style="text-align: center">Dividenden</th>
+                            <th style="text-align: center">Steuern</th>
                             <th style="text-align: center">Prozent heute</th>
                             <th style="text-align: center">Prozent gesamt</th>
                             <th style="text-align: center">Prozent j&auml;hrlich</th>
@@ -147,6 +222,7 @@
                             <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentAmount, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.changeTotal)}" th:text="${@thymeleafService.formatNumber(product.changeTotal, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.dividendTotal)}" th:text="${@thymeleafService.formatNumber(product.dividendTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.taxTotal)}" th:text="${@thymeleafService.formatNumber(product.taxTotal, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeToday)}" th:text="${@thymeleafService.formatNumber(product.percentChangeToday, 2, '%')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeTotal)}" th:text="${@thymeleafService.formatNumber(product.percentChangeTotal, 2, '%')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeYearly)}" th:text="${@thymeleafService.formatNumber(product.percentChangeYearly, 2, '%')}"></td>
@@ -174,6 +250,7 @@
                             <th style="text-align: center">Summe</th>
                             <th style="text-align: center">Ertrag</th>
                             <th style="text-align: center">Dividenden</th>
+                            <th style="text-align: center">Steuern</th>
                             <th style="text-align: center">Prozent heute</th>
                             <th style="text-align: center">Prozent gesamt</th>
                             <th style="text-align: center">Prozent j&auml;hrlich</th>
@@ -187,6 +264,7 @@
                             <td style="text-align: right;" th:text="${@thymeleafService.formatNumber(product.currentAmount, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.changeTotal)}" th:text="${@thymeleafService.formatNumber(product.changeTotal, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.dividendTotal)}" th:text="${@thymeleafService.formatNumber(product.dividendTotal, 2, 'EUR')}"></td>
+                            <td th:class="${@thymeleafService.getNumberClass(product.taxTotal)}" th:text="${@thymeleafService.formatNumber(product.taxTotal, 2, 'EUR')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeToday)}" th:text="${@thymeleafService.formatNumber(product.percentChangeToday, 2, '%')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeTotal)}" th:text="${@thymeleafService.formatNumber(product.percentChangeTotal, 2, '%')}"></td>
                             <td th:class="${@thymeleafService.getNumberClass(product.percentChangeYearly)}" th:text="${@thymeleafService.formatNumber(product.percentChangeYearly, 2, '%')}"></td>

@@ -4,6 +4,8 @@ import at.v3rtumnus.planman.dto.credit.Payment;
 import at.v3rtumnus.planman.dto.expense.ExpenseGraphItem;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
 import at.v3rtumnus.planman.dto.finance.FinancialSnapshotDto;
+import at.v3rtumnus.planman.dto.finance.PositionChangeDto;
+import at.v3rtumnus.planman.dto.finance.PositionVariant;
 import at.v3rtumnus.planman.service.FinanceImportService;
 import at.v3rtumnus.planman.service.FinanceService;
 import lombok.AllArgsConstructor;
@@ -14,12 +16,13 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
+import java.util.function.Function;
 
 @Controller
 @RequestMapping("/finance")
@@ -34,10 +37,6 @@ public class FinanceController {
 
     private static final List<String> LABELS_PIE = Arrays.asList(
             "'Aktien'", "'Sparen'", "'Fonds'", "'ETF'"
-    );
-
-    private static final List<String> LABELS_GRAPH = Arrays.asList(
-            "'Aktien'", "'Sparen'", "'Fonds'", "'ETF'", "'Kredit'", "'Bruttovermögen'", "'Nettovermögen'"
     );
 
     private final FinanceService financeService;
@@ -60,6 +59,8 @@ public class FinanceController {
         modelAndView.addObject("creditSum", currentSnapshot.getCreditSum());
         modelAndView.addObject("netAssets", currentSnapshot.getNetAssets());
 
+        modelAndView.addObject("positionChanges", buildPositionChanges(currentSnapshot));
+
         List<BigDecimal> amounts = Arrays.asList(currentSnapshot.getSharesSum(), currentSnapshot.getSavingsSum(),
                 currentSnapshot.getFundsSum(), currentSnapshot.getEtfSum());
 
@@ -67,36 +68,64 @@ public class FinanceController {
         modelAndView.addObject("amountsPie", amounts);
         modelAndView.addObject("colorsPie", COLORS.subList(0, LABELS_PIE.size()));
 
-        List<String> dates = snapshots
-                .stream()
-                .map(FinancialSnapshotDto::getDate)
-                .filter(d -> d.getDayOfMonth() == 1)
-                .map(date -> "'" + DateTimeFormatter.ofPattern("MM/yy").format(date) + "'")
-                .collect(Collectors.toList());
-
-        List<List<BigDecimal>> amountsForGraph = new ArrayList<>();
-
-        LABELS_GRAPH.forEach(l -> amountsForGraph.add(new ArrayList<>()));
-
-        snapshots
-                .forEach(s -> {
-                    if (s.getDate().getDayOfMonth() == 1) {
-                        amountsForGraph.get(0).add(s.getSharesSum());
-                        amountsForGraph.get(1).add(s.getSavingsSum());
-                        amountsForGraph.get(2).add(s.getFundsSum());
-                        amountsForGraph.get(3).add(s.getEtfSum());
-                        amountsForGraph.get(4).add(s.getCreditSum());
-                        amountsForGraph.get(5).add(s.getGrossAssets());
-                        amountsForGraph.get(6).add(s.getNetAssets());
-                    }
-                });
-
-        modelAndView.addObject("datesGraph", dates);
-        modelAndView.addObject("amountsGraph", amountsForGraph);
-        modelAndView.addObject("categoriesGraph", LABELS_GRAPH);
-        modelAndView.addObject("colorsGraph", COLORS.subList(0, LABELS_GRAPH.size()));
-
         return modelAndView;
+    }
+
+    private List<PositionChangeDto> buildPositionChanges(FinancialSnapshotDto currentSnapshot) {
+        LocalDate now = LocalDate.now();
+        Optional<FinancialSnapshotDto> oneMonthAgo = financeService.getFinancialSnapshotAsOf(now.minusMonths(1));
+        Optional<FinancialSnapshotDto> oneYearAgo = financeService.getFinancialSnapshotAsOf(now.minusYears(1));
+        Optional<FinancialSnapshotDto> threeYearsAgo = financeService.getFinancialSnapshotAsOf(now.minusYears(3));
+
+        List<PositionChangeDto> positionChanges = new ArrayList<>();
+
+        List<Function<FinancialSnapshotDto, BigDecimal>> metricExtractors = List.of(
+                FinancialSnapshotDto::getSharesSum, FinancialSnapshotDto::getFundsSum,
+                FinancialSnapshotDto::getEtfSum, FinancialSnapshotDto::getSavingsSum,
+                FinancialSnapshotDto::getGrossAssets, FinancialSnapshotDto::getCreditSum,
+                FinancialSnapshotDto::getNetAssets);
+
+        List<String> labels = List.of("Aktien", "Aktienfonds", "ETFs", "Sparen", "Vermögen", "Kredit", "Nettovermögen");
+        List<PositionVariant> variants = List.of(
+                PositionVariant.ASSET, PositionVariant.ASSET, PositionVariant.ASSET, PositionVariant.ASSET,
+                PositionVariant.TOTAL, PositionVariant.LIABILITY, PositionVariant.TOTAL);
+
+        for (int i = 0; i < labels.size(); i++) {
+            Function<FinancialSnapshotDto, BigDecimal> extractor = metricExtractors.get(i);
+            BigDecimal currentValue = extractor.apply(currentSnapshot);
+
+            Change oneMonth = computeChange(currentValue, oneMonthAgo, extractor);
+            Change oneYear = computeChange(currentValue, oneYearAgo, extractor);
+            Change threeYears = computeChange(currentValue, threeYearsAgo, extractor);
+
+            positionChanges.add(new PositionChangeDto(
+                    labels.get(i),
+                    "Sparen".equals(labels.get(i)),
+                    variants.get(i),
+                    currentValue,
+                    oneMonth.delta(), oneMonth.percent(),
+                    oneYear.delta(), oneYear.percent(),
+                    threeYears.delta(), threeYears.percent()
+            ));
+        }
+
+        return positionChanges;
+    }
+
+    private Change computeChange(BigDecimal currentValue, Optional<FinancialSnapshotDto> historical,
+                                  Function<FinancialSnapshotDto, BigDecimal> extractor) {
+        return historical.map(s -> {
+            BigDecimal historicalValue = extractor.apply(s);
+            BigDecimal delta = currentValue.subtract(historicalValue);
+            BigDecimal percent = historicalValue.compareTo(BigDecimal.ZERO) == 0
+                    ? null
+                    : delta.divide(historicalValue.abs(), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100L));
+
+            return new Change(delta, percent);
+        }).orElse(new Change(null, null));
+    }
+
+    private record Change(BigDecimal delta, BigDecimal percent) {
     }
 
     @PostMapping(path = "/savingsAmount")

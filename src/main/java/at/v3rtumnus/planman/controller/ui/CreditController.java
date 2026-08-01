@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +38,16 @@ public class CreditController {
     public ModelAndView getCreditPlan() {
         ModelAndView modelAndView = new ModelAndView("credit/plan");
 
-        modelAndView.addObject("currentCreditPlan", creditService.generateCurrentCreditPlan());
+        List<CreditPlanRow> currentCreditPlan = creditService.generateCurrentCreditPlan();
+
+        modelAndView.addObject("currentCreditPlan", currentCreditPlan);
+
+        modelAndView.addObject("planDates", currentCreditPlan.stream()
+                .map(row -> "'" + DateTimeFormatter.ofPattern("MM/yy").format(row.getDate()) + "'")
+                .collect(Collectors.toList()));
+        modelAndView.addObject("planBalances", currentCreditPlan.stream()
+                .map(CreditPlanRow::getNewBalance)
+                .collect(Collectors.toList()));
 
         return modelAndView;
     }

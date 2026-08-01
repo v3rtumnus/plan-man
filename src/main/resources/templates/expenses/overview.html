@@ -32,6 +32,13 @@
             $("#graphContainer").load(graphUrl);
         }
 
+        function selectGraphRange(lastMonths, button) {
+            $(button).siblings().removeClass('active');
+            $(button).addClass('active');
+
+            retrieveGraph(lastMonths);
+        }
+
         function initializeMonthData() {
             retrieveMonthlyOverview($("#monthSelection :selected").val());
             retrievePie($("#monthSelection :selected").val());
@@ -164,9 +171,11 @@
                 <div class="card-body">
 
                     <h4 class="card-title">Ausgabenverlauf</h4>
-                    &nbsp;&nbsp;<a href="#" onclick="retrieveGraph(3); return false;">Letzte 3 Monate</a>
-                    &nbsp;&nbsp;<a href="#" onclick="retrieveGraph(12); return false;">Letztes Jahr</a>
-                    &nbsp;&nbsp;<a href="#" onclick="retrieveGraph(-1); return false;">Von Beginn</a>
+                    <div class="btn-group mb-3" role="group" aria-label="Zeitraum">
+                        <button type="button" class="btn btn-outline-primary active" onclick="selectGraphRange(3, this); return false;">Letzte 3 Monate</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="selectGraphRange(12, this); return false;">Letztes Jahr</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="selectGraphRange(-1, this); return false;">Von Beginn</button>
+                    </div>
                     <div id="graphContainer">
                     </div>
                 </div>

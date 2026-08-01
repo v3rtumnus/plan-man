@@ -282,6 +282,18 @@ public class CreditService {
         creditSinglePaymentRepository.deleteById(transactionId);
     }
 
+    public BigDecimal getCurrentBalance() {
+        List<CreditPlanRow> creditPlanRows = generateCurrentCreditPlan();
+
+        for (int i = 0; i < creditPlanRows.size(); i++) {
+            if (creditPlanRows.get(i).getDate().isAfter(LocalDate.now())) {
+                return creditPlanRows.get(i - 1).getNewBalance();
+            }
+        }
+
+        return creditPlanRows.get(creditPlanRows.size() - 1).getNewBalance();
+    }
+
     public BigDecimal getMinimumInstallment() {
         List<CreditPlanRow> originalCreditPlan = generateOriginalCreditPlan();
 

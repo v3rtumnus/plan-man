@@ -117,7 +117,7 @@ class FinanceServiceTest {
         FinancialTransaction tx = new FinancialTransaction(
                 LocalDate.of(2024, 3, 1), BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ZERO,
                 FinancialTransactionType.BUY, product);
-        Dividend div = new Dividend(LocalDate.of(2024, 2, 1), BigDecimal.ONE, product);
+        Dividend div = new Dividend(LocalDate.of(2024, 2, 1), BigDecimal.ONE, FinancialTransactionType.DIVIDEND, product);
 
         when(financialTransactionRepository.findAllByOrderByTransactionDateDesc()).thenReturn(List.of(tx));
         when(dividendRepository.findAllByOrderByTransactionDateDesc()).thenReturn(List.of(div));
@@ -127,6 +127,7 @@ class FinanceServiceTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getTransactionDate()).isEqualTo(LocalDate.of(2024, 3, 1));
         assertThat(result.get(1).getTransactionDate()).isEqualTo(LocalDate.of(2024, 2, 1));
+        assertThat(result.get(1).getTransactionType()).isEqualTo(FinancialTransactionType.DIVIDEND);
     }
 
     @Test
@@ -155,6 +156,37 @@ class FinanceServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getCurrentPrice()).isEqualByComparingTo(BigDecimal.valueOf(12));
         assertThat(result.get(0).getCurrentAmount()).isEqualByComparingTo(BigDecimal.valueOf(120));
+    }
+
+    @Test
+    void retrieveFinancialProducts_withDividendAndTax_netsTaxOutOfPercentChangeTotal() {
+        FinancialProduct product = new FinancialProduct();
+        product.setIsin("AT0000000003");
+        product.setName("Test Fund");
+        product.setType(FinancialProductType.FUND);
+
+        FinancialTransaction buyTx = new FinancialTransaction(
+                LocalDate.of(2024, 1, 1), BigDecimal.valueOf(100), BigDecimal.valueOf(10),
+                BigDecimal.ZERO, FinancialTransactionType.BUY, product);
+        product.setTransactions(List.of(buyTx));
+        product.setDividends(List.of(
+                new Dividend(LocalDate.of(2024, 6, 1), BigDecimal.valueOf(20), FinancialTransactionType.DIVIDEND, product),
+                new Dividend(LocalDate.of(2024, 9, 1), BigDecimal.valueOf(-5), FinancialTransactionType.TAX, product)
+        ));
+
+        FinancialProductStockQuote quote = new FinancialProductStockQuote(
+                LocalDate.now(), BigDecimal.valueOf(12), BigDecimal.valueOf(0.5),
+                BigDecimal.ONE, "EUR", product);
+
+        when(financialProductRepository.findAll()).thenReturn(List.of(product));
+        when(quoteRepository.findByProduct(eq("AT0000000003"), any()))
+                .thenReturn(new PageImpl<>(List.of(quote)));
+
+        var result = service.retrieveFinancialProducts();
+
+        assertThat(result).hasSize(1);
+        // (currentPrice 12 + netDividend(20-5)/qty(10)=1.5 - purchasePrice 10) / purchasePrice 10 = 35%
+        assertThat(result.get(0).getPercentChangeTotal()).isEqualByComparingTo(BigDecimal.valueOf(35));
     }
 
     @Test

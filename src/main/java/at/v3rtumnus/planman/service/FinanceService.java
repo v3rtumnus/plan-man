@@ -4,6 +4,7 @@ import at.v3rtumnus.planman.dao.*;
 import at.v3rtumnus.planman.dto.StockInfo;
 import at.v3rtumnus.planman.dto.credit.CreditPlanRow;
 import at.v3rtumnus.planman.dto.finance.FinancialProductDTO;
+import at.v3rtumnus.planman.dto.finance.FinancialSnapshotDto;
 import at.v3rtumnus.planman.dto.finance.FinancialTransactionDTO;
 import at.v3rtumnus.planman.dto.finance.SavingsPlanDto;
 import at.v3rtumnus.planman.entity.finance.*;
@@ -73,7 +74,7 @@ public class FinanceService {
         for (Dividend dividend : dividends) {
             FinancialTransactionDTO transactionDTO = new FinancialTransactionDTO();
             transactionDTO.setTransactionDate(dividend.getTransactionDate());
-            transactionDTO.setTransactionType(FinancialTransactionType.DIVIDEND);
+            transactionDTO.setTransactionType(dividend.getType());
             transactionDTO.setAmount(dividend.getAmount());
 
             FinancialProduct financialProduct = dividend.getFinancialProduct();
@@ -178,7 +179,8 @@ public class FinanceService {
                         }
 
                         if (product.getCombinedPurchasePrice().compareTo(BigDecimal.ZERO) != 0 && !product.isGift()) {
-                            BigDecimal dividendPerItem = product.getDividendTotal().divide(product.getCurrentQuantity(), RoundingMode.HALF_UP);
+                            BigDecimal netDividend = product.getDividendTotal().add(product.getTaxTotal());
+                            BigDecimal dividendPerItem = netDividend.divide(product.getCurrentQuantity(), RoundingMode.HALF_UP);
                             BigDecimal totalChangeBase = product.getCurrentPrice().add(dividendPerItem).subtract(product.getCombinedPurchasePrice()).setScale(4, RoundingMode.HALF_UP).divide(product.getCombinedPurchasePrice(), RoundingMode.HALF_UP);
                             product.setPercentChangeTotal(totalChangeBase.multiply(BigDecimal.valueOf(100L)));
 
@@ -205,6 +207,13 @@ public class FinanceService {
     @Cacheable("snapshots")
     public List<FinancialSnapshot> getFinancialSnapshots() {
         return snapshotRepository.findAllByOrderBySnapshotDate();
+    }
+
+    public Optional<FinancialSnapshotDto> getFinancialSnapshotAsOf(LocalDate targetDate) {
+        return getFinancialSnapshots().stream()
+                .map(FinancialSnapshotDto::fromEntity)
+                .filter(s -> !s.getDate().isAfter(targetDate))
+                .max(Comparator.comparing(FinancialSnapshotDto::getDate));
     }
 
     @CacheEvict(value = "snapshots", allEntries = true)

@@ -28,6 +28,7 @@ public class FinancialProductDTO {
 
     private BigDecimal combinedPurchasePrice;
     private BigDecimal dividendTotal;
+    private BigDecimal taxTotal;
 
     private BigDecimal changeToday;
     private BigDecimal changeTotal;
@@ -62,9 +63,17 @@ public class FinancialProductDTO {
         ));
 
         financialProductDTO.setDividendTotal(
-                BigDecimal.valueOf(product.getDividends().stream().map(
-                                Dividend::getAmount
-                        ).mapToDouble(BigDecimal::doubleValue)
+                BigDecimal.valueOf(product.getDividends().stream()
+                        .filter(d -> d.getType() == FinancialTransactionType.DIVIDEND)
+                        .map(Dividend::getAmount)
+                        .mapToDouble(BigDecimal::doubleValue)
+                        .sum()));
+
+        financialProductDTO.setTaxTotal(
+                BigDecimal.valueOf(product.getDividends().stream()
+                        .filter(d -> d.getType() == FinancialTransactionType.TAX)
+                        .map(Dividend::getAmount)
+                        .mapToDouble(BigDecimal::doubleValue)
                         .sum()));
 
 

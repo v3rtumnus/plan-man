@@ -12,6 +12,55 @@
 </head>
 <body>
 <div th:fragment="monthlySection"  class="container">
+    <div class="dashboard">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card info-card sales-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Summe Einnahmen</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-arrow-down-circle"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(incomeSum, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card info-card customers-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Summe Ausgaben</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-arrow-up-circle"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:text="${@thymeleafService.formatNumber(expenditureSum, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card info-card revenue-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Liquide Mittel</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6 th:class="${@thymeleafService.getNumberClass(totalSum)}" th:text="${@thymeleafService.formatNumber(totalSum, 2, 'EUR')}"></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-6">
             <div class="table-responsive">
@@ -37,7 +86,7 @@
                 </tr>
                 <tr>
                     <td style="font-weight: bold">Liquide Mittel</td>
-                    <td style="text-align: right; font-weight: bold" th:text="${@thymeleafService.formatNumber(totalSum, 2, 'EUR')}"></td>
+                    <td style="text-align: right; font-weight: bold" th:class="${@thymeleafService.getNumberClass(totalSum)}" th:text="${@thymeleafService.formatNumber(totalSum, 2, 'EUR')}"></td>
                 </tr>
                 </tbody>
             </table>
@@ -48,7 +97,7 @@
             <table class="table table-borderless table-sm">
                 <tbody th:each="expenditureGroup: ${expenditureGroups}">
                 <tr class="expenditureGroupRow" style="cursor: pointer;">
-                    <td style="font-weight: bold">[[${expenditureGroup.name}]]</td>
+                    <td style="font-weight: bold"><i class="bi bi-chevron-down"></i> [[${expenditureGroup.name}]]</td>
                     <td style="text-align: right; font-weight: bold" th:text="${@thymeleafService.formatNumber(expenditureGroup.sum, 2, 'EUR')}"></td>
                 </tr>
                 <tr th:each="expenditureItem: ${expenditureGroup.activeItems}">
