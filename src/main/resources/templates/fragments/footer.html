@@ -1,6 +1,6 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <div th:fragment="footer-js">
+    <th:block th:fragment="footer-js">
         <!-- Vendor JS Files -->
         <script type="text/javascript" th:src="@{/resources/vendor/bootstrap/js/bootstrap.bundle.min.js}"
                 src="/resources/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -21,7 +21,7 @@
         <!-- Template Main JS File -->
         <script type="text/javascript" th:src="@{/resources/js/main.js}"
                 src="/resources/js/main.js"></script>
-    </div>
+    </th:block>
 </head>
 <body>
 </body>

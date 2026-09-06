@@ -1,6 +1,6 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <div th:fragment="header-css">
+    <th:block th:fragment="header-css">
         <meta content='maximum-scale=1.0, initial-scale=1.0, width=device-width' name='viewport'>
 
         <link href="https://fonts.gstatic.com" rel="preconnect">
@@ -17,7 +17,7 @@
         <link th:href="@{/resources/css/style.css}" href="/resources/css/style.css" rel="stylesheet">
 
         <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
-    </div>
+    </th:block>
 </head>
 <body>
 <div th:fragment="header">
