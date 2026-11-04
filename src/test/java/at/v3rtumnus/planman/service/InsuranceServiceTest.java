@@ -203,6 +203,20 @@ class InsuranceServiceTest {
         verify(insuranceEntryRepository).getFilteredInsuranceEntries("2024", "Alice", InsuranceEntryState.RECORDED);
     }
 
+    @Test
+    void getInsuranceEntries_emptyDoctorShownAsApotheke() {
+        InsuranceEntryDTO pharmacy = new InsuranceEntryDTO();
+        pharmacy.setDoctor("");
+        InsuranceEntryDTO doctor = new InsuranceEntryDTO();
+        doctor.setDoctor("Dr. Smith");
+        when(insuranceEntryRepository.getFilteredInsuranceEntries(null, null, null))
+                .thenReturn(java.util.List.of(pharmacy, doctor));
+
+        java.util.List<InsuranceEntryDTO> result = insuranceService.getInsuranceEntries(null, null, null);
+
+        assertThat(result).extracting(InsuranceEntryDTO::getDoctor).containsExactly("Apotheke", "Dr. Smith");
+    }
+
     // --- getPersons ---
 
     @Test

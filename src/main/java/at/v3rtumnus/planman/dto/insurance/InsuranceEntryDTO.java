@@ -50,12 +50,31 @@ public class InsuranceEntryDTO {
         this.invoiceData = invoiceData;
     }
 
-    public static InsuranceEntryDTO fromInsuranceEntry(InsuranceEntry entry) {
-        BigDecimal insuranceAmount = Optional.ofNullable(entry.getHealthInsuranceAmount()).orElse(BigDecimal.ZERO)
-                .add(Optional.ofNullable(entry.getPrivateInsuranceAmount()).orElse(BigDecimal.ZERO));
+    /**
+     * List-view constructor used by the JPQL projection in FilterableInsuranceEntryRepositoryImpl.
+     * Leaves out the attachment BLOBs so listing entries doesn't load every file into memory.
+     */
+    public InsuranceEntryDTO(Long id, LocalDate entryDate, String person, InsuranceEntryType type, InsuranceType insuranceType,
+                             String doctor, InsuranceEntryState state, BigDecimal amount, String invoiceFilename,
+                             String healthInsuranceFilename, BigDecimal healthInsuranceAmount, boolean healthInsuranceAmountReceived,
+                             String privateInsuranceFilename, BigDecimal privateInsuranceAmount, boolean privateInsuranceAmountReceived) {
+        this(id, entryDate, person, type, insuranceType, doctor, state, amount, invoiceFilename, null,
+                healthInsuranceFilename, null, healthInsuranceAmount, healthInsuranceAmountReceived,
+                privateInsuranceFilename, null, privateInsuranceAmount, privateInsuranceAmountReceived,
+                calculateRetention(state, amount, healthInsuranceAmount, privateInsuranceAmount));
+    }
 
-        BigDecimal retention = entry.getState() == InsuranceEntryState.DONE ?
-                entry.getAmount().subtract(insuranceAmount) : null;
+    private static BigDecimal calculateRetention(InsuranceEntryState state, BigDecimal amount,
+                                                 BigDecimal healthInsuranceAmount, BigDecimal privateInsuranceAmount) {
+        BigDecimal insuranceAmount = Optional.ofNullable(healthInsuranceAmount).orElse(BigDecimal.ZERO)
+                .add(Optional.ofNullable(privateInsuranceAmount).orElse(BigDecimal.ZERO));
+
+        return state == InsuranceEntryState.DONE ? amount.subtract(insuranceAmount) : null;
+    }
+
+    public static InsuranceEntryDTO fromInsuranceEntry(InsuranceEntry entry) {
+        BigDecimal retention = calculateRetention(entry.getState(), entry.getAmount(),
+                entry.getHealthInsuranceAmount(), entry.getPrivateInsuranceAmount());
 
 
         return new InsuranceEntryDTO(entry.getId(), entry.getEntryDate(), entry.getPerson().getName(),

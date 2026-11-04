@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.dao;
 
+import at.v3rtumnus.planman.dto.insurance.InsuranceEntryDTO;
 import at.v3rtumnus.planman.entity.UserProfile;
 import at.v3rtumnus.planman.entity.expense.Expense;
 import at.v3rtumnus.planman.entity.expense.ExpenseCategory;
@@ -92,11 +93,11 @@ class InsuranceEntryRepositoryTest {
         em.persist(entry(bob, LocalDate.of(2024, 3, 5), InsuranceEntryState.RECORDED));
         em.flush();
 
-        List<InsuranceEntry> results = insuranceEntryRepository.getFilteredInsuranceEntries(
+        List<InsuranceEntryDTO> results = insuranceEntryRepository.getFilteredInsuranceEntries(
                 null, "Alice", null);
 
         assertThat(results).hasSize(1);
-        assertThat(results.get(0).getPerson().getName()).isEqualTo("Alice");
+        assertThat(results.get(0).getPerson()).isEqualTo("Alice");
     }
 
     @Test
@@ -105,7 +106,7 @@ class InsuranceEntryRepositoryTest {
         em.persist(entry(alice, LocalDate.of(2024, 3, 5), InsuranceEntryState.DONE));
         em.flush();
 
-        List<InsuranceEntry> results = insuranceEntryRepository.getFilteredInsuranceEntries(
+        List<InsuranceEntryDTO> results = insuranceEntryRepository.getFilteredInsuranceEntries(
                 null, null, InsuranceEntryState.RECORDED);
 
         assertThat(results).hasSize(1);
@@ -118,7 +119,7 @@ class InsuranceEntryRepositoryTest {
         em.persist(entry(bob, LocalDate.of(2024, 4, 1), InsuranceEntryState.DONE));
         em.flush();
 
-        List<InsuranceEntry> results = insuranceEntryRepository.getFilteredInsuranceEntries(
+        List<InsuranceEntryDTO> results = insuranceEntryRepository.getFilteredInsuranceEntries(
                 null, null, null);
 
         assertThat(results).hasSize(2);
@@ -131,11 +132,11 @@ class InsuranceEntryRepositoryTest {
         em.persist(entry(bob, LocalDate.of(2024, 5, 1), InsuranceEntryState.RECORDED));
         em.flush();
 
-        List<InsuranceEntry> results = insuranceEntryRepository.getFilteredInsuranceEntries(
+        List<InsuranceEntryDTO> results = insuranceEntryRepository.getFilteredInsuranceEntries(
                 null, "Alice", InsuranceEntryState.RECORDED);
 
         assertThat(results).hasSize(1);
-        assertThat(results.get(0).getPerson().getName()).isEqualTo("Alice");
+        assertThat(results.get(0).getPerson()).isEqualTo("Alice");
         assertThat(results.get(0).getState()).isEqualTo(InsuranceEntryState.RECORDED);
     }
 
@@ -146,11 +147,37 @@ class InsuranceEntryRepositoryTest {
         em.persist(entry(alice, LocalDate.of(2024, 3, 1), InsuranceEntryState.RECORDED));
         em.flush();
 
-        List<InsuranceEntry> results = insuranceEntryRepository.getFilteredInsuranceEntries(
+        List<InsuranceEntryDTO> results = insuranceEntryRepository.getFilteredInsuranceEntries(
                 null, null, null);
 
         assertThat(results).hasSize(3);
         assertThat(results.get(0).getEntryDate()).isAfterOrEqualTo(results.get(1).getEntryDate());
         assertThat(results.get(1).getEntryDate()).isAfterOrEqualTo(results.get(2).getEntryDate());
+    }
+
+    @Test
+    void getFilteredInsuranceEntries_doesNotLoadAttachmentData() {
+        InsuranceEntry e = entry(alice, LocalDate.of(2024, 3, 1), InsuranceEntryState.DONE);
+        e.setInvoiceFilename("invoice.jpg");
+        e.setInvoiceData(new byte[]{1, 2, 3});
+        e.setHealthInsuranceFilename("health.pdf");
+        e.setHealthInsuranceData(new byte[]{4, 5});
+        e.setHealthInsuranceAmount(new BigDecimal("60"));
+        e.setPrivateInsuranceAmount(new BigDecimal("30"));
+        em.persist(e);
+        em.flush();
+        em.clear();
+
+        List<InsuranceEntryDTO> results = insuranceEntryRepository.getFilteredInsuranceEntries(
+                null, null, null);
+
+        assertThat(results).hasSize(1);
+        InsuranceEntryDTO dto = results.get(0);
+        assertThat(dto.getInvoiceFilename()).isEqualTo("invoice.jpg");
+        assertThat(dto.getHealthInsuranceFilename()).isEqualTo("health.pdf");
+        assertThat(dto.getInvoiceData()).isNull();
+        assertThat(dto.getHealthInsuranceData()).isNull();
+        assertThat(dto.getPrivateInsuranceData()).isNull();
+        assertThat(dto.getRetention()).isEqualByComparingTo("10");
     }
 }

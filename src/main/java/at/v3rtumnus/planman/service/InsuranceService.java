@@ -75,11 +75,10 @@ public class InsuranceService {
     public List<InsuranceEntryDTO> getInsuranceEntries(String year, String person, InsuranceEntryState insuranceEntryState) {
         return insuranceEntryRepository.getFilteredInsuranceEntries(year, person, insuranceEntryState)
                 .stream().peek(e -> {
-                    if (e.getName().isEmpty()) {
-                        e.setName("Apotheke");
+                    if (e.getDoctor() == null || e.getDoctor().isEmpty()) {
+                        e.setDoctor("Apotheke");
                     }
                 })
-                .map(InsuranceEntryDTO::fromInsuranceEntry)
                 .toList();
     }
 
