@@ -17,6 +17,12 @@
         <link th:href="@{/resources/css/style.css}" href="/resources/css/style.css" rel="stylesheet">
 
         <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+
+        <!-- Home-screen install: use-credentials sends the login cookie, which the proxy in front requires -->
+        <link rel="manifest" th:href="@{/manifest.webmanifest}" href="/manifest.webmanifest" crossorigin="use-credentials">
+        <meta name="theme-color" content="#ffffff">
+        <link rel="apple-touch-icon" th:href="@{/resources/img/pwa/apple-touch-icon.png}" href="/resources/img/pwa/apple-touch-icon.png">
+        <script defer th:src="@{/resources/js/pwa.js}" src="/resources/js/pwa.js"></script>
     </th:block>
 </head>
 <body>
@@ -173,6 +179,8 @@
     </nav><!-- End Icons Navigation -->
 
 </header><!-- End Header -->
+
+<div th:replace="~{fragments/bottom-nav :: bottom-nav}"></div>
 </div>
 
 </body>

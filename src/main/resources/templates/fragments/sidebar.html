@@ -93,6 +93,24 @@
           </ul>
         </li>
 
+        <li class="nav-item">
+          <a th:class="${#strings.startsWith(currentPath, '/health')} ? 'nav-link' : 'nav-link collapsed'" data-bs-target="#health-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-heart-pulse"></i><span>Gesundheit</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="health-nav" th:class="${#strings.startsWith(currentPath, '/health')} ? 'nav-content collapse show' : 'nav-content collapse'" data-bs-parent="#sidebar-nav">
+            <li>
+              <a th:href="@{/health}" th:class="${currentPath == '/health'} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>Heute</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="@{/health/goal}" th:class="${currentPath == '/health/goal'} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>Ziel &amp; Verlauf</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+
       </ul>
     </aside>
   </div>

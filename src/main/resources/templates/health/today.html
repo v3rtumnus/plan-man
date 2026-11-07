@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Heute · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Heute</h1>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item">Gesundheit</li><li class="breadcrumb-item active" th:text="${todayLabel}"></li></ol></nav>
+    </div>
+
+    <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
+    <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
+
+    <div class="alert alert-secondary d-flex justify-content-between align-items-center" role="status" th:if="${pause}">
+        <span>Pause aktiv seit <b th:text="${#temporals.format(pause.startDate, 'dd.MM.yyyy')}"></b><span th:if="${pause.reason}" th:text="' (' + ${pause.reason} + ')'"></span>: keine Erinnerungen, nichts zählt als verpasst.</span>
+        <a th:href="@{/health/goal}" class="btn btn-sm btn-outline-secondary ms-2">Beenden</a>
+    </div>
+
+    <div class="card" th:unless="${goal}">
+        <div class="card-body pt-3">
+            <h5 class="card-title pt-0">Noch kein Ziel</h5>
+            <p class="small text-muted">Lege Zielgewicht, Kalorien- und Proteinziel fest. Jede spätere Änderung legt einen neuen Eintrag an.</p>
+            <a th:href="@{/health/goal}" class="btn btn-primary">Ziel festlegen</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6" th:if="${goal}">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title pt-0 pb-2">Tagesziel</h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:56px;height:56px;background:#f6f6fe;color:#4154f1;font-size:28px">
+                            <i class="bi bi-fire" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <div class="health-big" th:text="${#numbers.formatInteger(day.kcalTarget, 1, 'POINT')} + ' kcal'">2.000 kcal</div>
+                            <div class="small text-muted" th:text="${day.proteinTargetG} + ' g Protein'">160 g Protein</div>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-2"
+                         th:text="'+' + ${goal.footballBonusKcal} + ' kcal an Fußballtagen, +' + ${goal.freeleticsBonusKcal} + ' kcal an Freeletics-Tagen'"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="row g-3">
+                <div class="col-6">
+                    <a th:href="@{/health/goal}" class="card health-tile h-100 mb-0">
+                        <div class="card-body pt-3 pb-3">
+                            <div class="small text-muted">Gewicht-Trend<span th:if="${goal}" th:text="' · Ziel ' + ${#numbers.formatDecimal(goal.targetWeightKg, 1, 'POINT', 0, 'COMMA')}"></span></div>
+                            <div class="health-tile-value"
+                                 th:text="${trend.trendKg != null} ? ${#numbers.formatDecimal(trend.trendKg, 1, 'POINT', 1, 'COMMA')} + ' kg' : '–'">82,6 kg</div>
+                            <div class="small fw-semibold" th:if="${trend.weeklyRateKg != null}"
+                                 th:classappend="${trend.weeklyRateKg.signum() <= 0} ? 'text-success' : 'text-warning'"
+                                 th:text="(${trend.weeklyRateKg.signum() > 0} ? '+' : '') + ${#numbers.formatDecimal(trend.weeklyRateKg, 1, 'POINT', 1, 'COMMA')} + ' kg / Woche'"></div>
+                            <div class="small text-muted" th:if="${trend.weeklyRateKg == null}">Verlauf ab einer Woche Daten</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <div class="card health-tile h-100 mb-0">
+                        <div class="card-body pt-3 pb-3">
+                            <div class="small text-muted">Schritte</div>
+                            <div class="health-tile-value" th:text="${day.steps != null} ? ${#numbers.formatInteger(day.steps, 1, 'POINT')} : '–'">6.240</div>
+                            <div class="small text-muted" th:if="${day.stepsTarget}" th:text="'Ziel ' + ${#numbers.formatInteger(day.stepsTarget, 1, 'POINT')}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card" id="gewicht">
+                <div class="card-body pt-3">
+                    <h5 class="card-title pt-0">Gewicht heute</h5>
+                    <p class="mb-2" th:if="${weightToday}">
+                        Eingetragen: <b th:text="${#numbers.formatDecimal(weightToday, 1, 'POINT', 1, 'COMMA')} + ' kg'"></b>
+                        <span class="small text-muted">· erneut speichern ersetzt den Wert</span>
+                    </p>
+                    <form method="post" th:action="@{/health/measurements}" class="d-flex gap-2 align-items-start">
+                        <input type="hidden" name="type" value="WEIGHT">
+                        <input type="hidden" name="date" th:value="${today}">
+                        <input type="hidden" name="returnTo" value="/health">
+                        <div class="input-group">
+                            <label class="visually-hidden" for="weight-value">Gewicht in kg</label>
+                            <input id="weight-value" type="number" name="value" class="form-control" inputmode="decimal"
+                                   step="0.1" min="30" max="300" required
+                                   th:value="${weightToday != null ? weightToday : weightPrefill}">
+                            <span class="input-group-text">kg</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Speichern</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6" th:if="${pause == null and !dueMeasurements.isEmpty()}">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title pt-0">Messen fällig</h5>
+                    <div class="health-row" th:each="m : ${dueMeasurements}">
+                        <span>
+                            <b th:text="${m.type.label}" style="color:#012970"></b>
+                            <span class="small text-muted" th:if="${m.latestDate}" th:text="'zuletzt ' + ${#temporals.format(m.latestDate, 'dd.MM.')}"></span>
+                            <span class="small text-muted" th:unless="${m.latestDate}">noch nie gemessen</span>
+                        </span>
+                        <a class="btn btn-outline-primary btn-sm" th:href="@{/health/measure(type=${m.type})}">Jetzt messen</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>
