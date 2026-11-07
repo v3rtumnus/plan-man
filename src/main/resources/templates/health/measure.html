@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Messwert eintragen · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1 th:text="${type.label} + ' eintragen'">Gewicht eintragen</h1>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li><li class="breadcrumb-item active">Messwert</li></ol></nav>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <ul class="nav nav-pills mb-3">
+                <li class="nav-item" th:each="t : ${types}">
+                    <a class="nav-link" th:classappend="${t == type} ? 'active'" th:href="@{/health/measure(type=${t})}" th:text="${t.label}"></a>
+                </li>
+            </ul>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <form method="post" th:action="@{/health/measurements}" th:object="${form}" class="row g-3">
+                        <input type="hidden" th:field="*{type}">
+                        <input type="hidden" name="returnTo" th:value="${returnTo}">
+                        <div class="col-6">
+                            <label class="form-label small" for="date">Datum</label>
+                            <input class="form-control" type="date" id="date" th:field="*{date}" th:max="${today}" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small" for="value" th:text="${type.unit.isEmpty()} ? 'Anzahl' : 'Wert (' + ${type.unit} + ')'">Wert</label>
+                            <input class="form-control" type="number" id="value" th:field="*{value}" required autofocus
+                                   th:attr="step=${type.fractionDigits > 0 ? '0.1' : '1'}, inputmode=${type.fractionDigits > 0 ? 'decimal' : 'numeric'}"
+                                   th:min="${type.min}" th:max="${type.max}">
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Speichern</button>
+                            <a th:href="@{${returnTo}}" class="btn btn-outline-secondary">Abbrechen</a>
+                        </div>
+                        <p class="small text-muted mb-0">Ein zweiter Wert für denselben Tag ersetzt den ersten.</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

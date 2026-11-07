@@ -1,0 +1,196 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ziel &amp; Verlauf · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Ziel &amp; Verlauf</h1>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li><li class="breadcrumb-item active">Ziel</li></ol></nav>
+    </div>
+
+    <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
+    <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
+
+    <div class="row">
+        <div class="col-lg-6">
+
+            <div class="card" th:if="${goal}">
+                <div class="card-body pt-3">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <h5 class="card-title pt-0 pb-2" th:text="${goal.title}">Fett verlieren + Kraft</h5>
+                        <span class="small text-muted" th:text="'seit ' + ${#temporals.format(goal.validFrom, 'dd.MM.yyyy')}"></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span th:if="${progress}">
+                            <b style="color:#012970" th:text="${#numbers.formatDecimal(progress.currentKg, 1, 'POINT', 1, 'COMMA')} + ' kg'"></b>
+                            <span class="small text-muted" th:text="'Trend · Start ' + ${#numbers.formatDecimal(goal.startWeightKg, 1, 'POINT', 1, 'COMMA')}"></span>
+                        </span>
+                        <span th:unless="${progress}" class="small text-muted"
+                              th:text="'Start ' + ${#numbers.formatDecimal(goal.startWeightKg, 1, 'POINT', 1, 'COMMA')} + ' kg · noch kein Gewicht eingetragen'"></span>
+                        <span>
+                            <b style="color:#012970" th:text="${#numbers.formatDecimal(goal.targetWeightKg, 1, 'POINT', 1, 'COMMA')} + ' kg'"></b>
+                            <span class="small text-muted" th:text="'bis ' + ${#temporals.format(goal.targetDate, 'dd.MM.yyyy')}"></span>
+                        </span>
+                    </div>
+                    <div class="progress health-bar my-2" th:if="${progress}" role="progressbar" aria-label="Fortschritt zum Zielgewicht"
+                         th:attr="aria-valuenow=${progress.percent}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" th:style="'width:' + ${progress.percent} + '%'"></div>
+                    </div>
+                    <div class="small" th:if="${progress != null and progress.requiredWeeklyRate != null}">
+                        <span th:if="${progress.actualWeeklyRate != null}"
+                              th:text="'Aktuell ' + (${progress.actualWeeklyRate.signum() > 0} ? '+' : '') + ${#numbers.formatDecimal(progress.actualWeeklyRate, 1, 'POINT', 1, 'COMMA')} + ' kg/Woche'"></span>
+                        <span th:unless="${progress.actualWeeklyRate != null}" class="text-muted">Wochenverlauf ab einer Woche Daten</span>
+                        <span class="text-muted" th:text="'(nötig ' + ${#numbers.formatDecimal(progress.requiredWeeklyRate, 1, 'POINT', 1, 'COMMA')} + ')'"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <div class="d-flex justify-content-between"><h5 class="card-title pt-0 pb-2">Messwerte</h5><span class="small text-muted">Taille alle 2 Wochen</span></div>
+
+                    <div class="health-row">
+                        <span>
+                            <b style="color:#012970">Gewicht</b>
+                            <span class="small text-muted" th:if="${trend.latestKg}"
+                                  th:text="'zuletzt ' + ${#numbers.formatDecimal(trend.latestKg, 1, 'POINT', 1, 'COMMA')} + ' kg am ' + ${#temporals.format(trend.latestDate, 'dd.MM.')}"></span>
+                        </span>
+                        <a class="btn btn-outline-primary btn-sm" th:href="@{/health/measure(type=WEIGHT)}">Eintragen</a>
+                    </div>
+
+                    <div class="health-row" th:with="m=${waist}">
+                        <span>
+                            <b style="color:#012970">Taille</b>
+                            <span class="small text-muted" th:if="${m.latest != null and m.first != null and m.first.compareTo(m.latest) != 0}"
+                                  th:text="${#numbers.formatDecimal(m.first, 1, 'POINT', 1, 'COMMA')} + ' → ' + ${#numbers.formatDecimal(m.latest, 1, 'POINT', 1, 'COMMA')} + ' cm'"></span>
+                            <span class="small text-muted" th:if="${m.latest != null and (m.first == null or m.first.compareTo(m.latest) == 0)}"
+                                  th:text="${#numbers.formatDecimal(m.latest, 1, 'POINT', 1, 'COMMA')} + ' cm'"></span>
+                            <span class="badge bg-warning text-dark" th:if="${m.due and pause == null}">fällig</span>
+                        </span>
+                        <a class="btn btn-sm" th:classappend="${m.due} ? 'btn-primary' : 'btn-outline-primary'" th:href="@{/health/measure(type=WAIST)}">Jetzt messen</a>
+                    </div>
+
+                    <div class="health-row" th:with="m=${pushUps}">
+                        <span>
+                            <b style="color:#012970">Liegestütze am Stück</b>
+                            <span class="small text-muted" th:if="${m.latest != null}"
+                                  th:text="${#numbers.formatInteger(m.latest, 1, 'NONE')} + (${m.target != null} ? ' → Ziel ' + ${m.target} : '')"></span>
+                            <span class="small text-muted" th:if="${m.latest == null and m.target != null}" th:text="'Ziel ' + ${m.target}"></span>
+                            <span class="badge bg-warning text-dark" th:if="${m.due and pause == null}">fällig</span>
+                        </span>
+                        <a class="btn btn-outline-primary btn-sm" th:href="@{/health/measure(type=PUSH_UPS)}">Test</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <form method="post" th:action="@{/health/pause}" class="card-body pt-3">
+                    <input type="hidden" name="active" th:value="${pause == null}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold" style="color:#012970">Pause (krank, Urlaub)</div>
+                            <div class="small text-muted" th:if="${pause}"
+                                 th:text="'Aktiv seit ' + ${#temporals.format(pause.startDate, 'dd.MM.yyyy')} + (${pause.reason != null} ? ' (' + ${pause.reason} + ')' : '') + ': keine Erinnerungen, Training zählt nicht als verpasst, Wochen-Feedback ausgesetzt.'"></div>
+                            <div class="small text-muted" th:unless="${pause}">Aus. Einschalten stoppt Erinnerungen und „verpasst“-Hinweise.</div>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="pause-switch" style="width:3em;height:1.6em"
+                                   th:checked="${pause != null}" onchange="this.form.submit()" aria-label="Pause">
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-2" th:unless="${pause}">
+                        <label class="small text-muted" for="pause-reason">Grund (optional)</label>
+                        <select id="pause-reason" name="reason" class="form-select form-select-sm w-auto">
+                            <option value="">–</option>
+                            <option>krank</option>
+                            <option>Urlaub</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title pt-0 pb-2">Ziele bisher</h5>
+                        <button type="button" class="btn btn-outline-primary btn-sm" th:if="${goal != null and !editGoal}"
+                                data-bs-toggle="collapse" data-bs-target="#goal-form">Ziel ändern</button>
+                    </div>
+                    <p class="small text-muted" th:if="${history.isEmpty()}">Noch kein Ziel festgelegt.</p>
+                    <div class="small mb-2" th:each="g : ${history}">
+                        <b th:if="${g.validTo == null}" th:text="'seit ' + ${#temporals.format(g.validFrom, 'dd.MM.yyyy')}"></b>
+                        <b th:unless="${g.validTo == null}" th:text="${#temporals.format(g.validFrom, 'dd.MM.yyyy')} + '–' + ${#temporals.format(g.validTo.minusDays(1), 'dd.MM.yyyy')}"></b>
+                        <span th:text="${g.title} + ' · ' + ${#numbers.formatInteger(g.kcalTarget, 1, 'POINT')} + ' kcal (+' + ${g.footballBonusKcal} + ' Fußball) · ' + ${g.proteinTargetG} + ' g Protein · Ziel ' + ${#numbers.formatDecimal(g.targetWeightKg, 1, 'POINT', 1, 'COMMA')} + ' kg'"></span>
+                    </div>
+                    <p class="small text-muted mb-0" th:unless="${history.isEmpty()}">Jede Änderung legt eine neue Zeile an; alte Tage behalten ihre damaligen Ziele.</p>
+
+                    <div id="goal-form" class="collapse" th:classappend="${editGoal} ? 'show'">
+                        <hr>
+                        <form method="post" th:action="@{/health/goal}" th:object="${goalForm}" class="row g-2">
+                            <div class="col-12">
+                                <label class="form-label small" for="title">Bezeichnung</label>
+                                <input class="form-control" id="title" th:field="*{title}" required maxlength="255">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="startWeightKg">Startgewicht (kg)</label>
+                                <input class="form-control" type="number" step="0.1" min="30" max="300" inputmode="decimal" id="startWeightKg" th:field="*{startWeightKg}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="targetWeightKg">Zielgewicht (kg)</label>
+                                <input class="form-control" type="number" step="0.1" min="30" max="300" inputmode="decimal" id="targetWeightKg" th:field="*{targetWeightKg}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="targetDate">Zieldatum</label>
+                                <input class="form-control" type="date" id="targetDate" th:field="*{targetDate}" th:min="${today.plusDays(1)}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="kcalTarget">Kalorien pro Tag</label>
+                                <input class="form-control" type="number" min="800" max="6000" id="kcalTarget" th:field="*{kcalTarget}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="proteinTargetG">Protein (g/Tag)</label>
+                                <input class="form-control" type="number" min="0" max="400" id="proteinTargetG" th:field="*{proteinTargetG}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="stepsTarget">Schritte pro Tag</label>
+                                <input class="form-control" type="number" min="0" max="100000" step="500" id="stepsTarget" th:field="*{stepsTarget}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="footballBonusKcal">Bonus Fußball (kcal)</label>
+                                <input class="form-control" type="number" min="0" max="2000" id="footballBonusKcal" th:field="*{footballBonusKcal}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="freeleticsBonusKcal">Bonus Freeletics (kcal)</label>
+                                <input class="form-control" type="number" min="0" max="2000" id="freeleticsBonusKcal" th:field="*{freeleticsBonusKcal}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="pushUpsTarget">Ziel Liegestütze</label>
+                                <input class="form-control" type="number" min="0" max="500" id="pushUpsTarget" th:field="*{pushUpsTarget}">
+                            </div>
+                            <div class="col-12 d-flex gap-2 mt-3">
+                                <button type="submit" class="btn btn-primary" th:text="${goal} ? 'Neues Ziel ab heute speichern' : 'Ziel speichern'">Speichern</button>
+                                <a th:if="${goal}" th:href="@{/health/goal}" class="btn btn-outline-secondary">Abbrechen</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

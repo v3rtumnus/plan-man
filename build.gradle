@@ -75,6 +75,7 @@ def jacocoExclusions = [
 	'**/entity/**',             // Lombok-generated JPA POJOs – no business logic
 	'**/dto/**',                // Lombok-generated DTOs – no business logic
 	'**/conf/CacheConfig*',     // Bean wiring only – no business logic
+	'**/conf/ClockConfig*',     // Bean wiring only – no business logic
 	'**/conf/McpToolsConfig*',  // Bean wiring only – no business logic
 ]
 
