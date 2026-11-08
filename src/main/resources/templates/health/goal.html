@@ -17,6 +17,8 @@
         <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li><li class="breadcrumb-item active">Ziel</li></ol></nav>
     </div>
 
+    <div th:replace="~{fragments/health-tabs :: health-tabs}"></div>
+
     <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
     <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
 

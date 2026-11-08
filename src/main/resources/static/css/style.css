@@ -1360,3 +1360,159 @@ a.card.health-tile {
   color: inherit;
   text-decoration: none;
 }
+
+/* Health tab row (Heute · Ziel; Training and Woche follow) */
+.health-tabs {
+  display: flex;
+  gap: 4px;
+  margin: -6px 0 16px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.health-tab {
+  padding: 10px 14px;
+  min-height: 44px;
+  color: #5f6f94;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+
+.health-tab.active,
+.health-tab:hover {
+  color: #4154f1;
+  border-bottom-color: #4154f1;
+}
+
+.bottom-nav-menu {
+  min-width: 220px;
+}
+
+.bottom-nav-menu .dropdown-item {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* Meals */
+.health-chip {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.health-input {
+  font-size: 16px; /* below 16px phones zoom into the field */
+}
+
+.health-tool {
+  min-height: 44px;
+}
+
+.health-photo {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.health-name {
+  color: #012970;
+}
+
+.health-protein {
+  color: #a8470a;
+}
+
+.health-bar .progress-bar.health-bar-protein {
+  background: #a8470a;
+}
+
+.health-quick,
+.health-meal-row {
+  padding: 10px 20px;
+}
+
+a.health-meal-row {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.health-meal-row:hover {
+  background: #f6f9ff;
+}
+
+.health-add {
+  min-width: 44px;
+  min-height: 40px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.health-icon-btn {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.health-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 20px;
+  border-top: 1px solid #eef1f7;
+}
+
+.health-item input.health-name {
+  border-color: transparent;
+  padding-left: 0;
+  font-size: 15px;
+}
+
+.health-item input.health-name:focus {
+  border-color: #dee2e6;
+  padding-left: 8px;
+}
+
+.health-warn {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7a4b00;
+  background: #fff3cd;
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.health-step {
+  width: 44px;
+  height: 38px;
+  padding: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.health-grams {
+  width: 110px;
+}
+
+.health-add-item {
+  min-height: 46px;
+  padding: 0 20px;
+  border-top: 1px solid #eef1f7;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+@media (max-width: 767.98px) {
+  /* Save stays reachable above the bottom bar */
+  .health-save {
+    position: sticky;
+    bottom: calc(68px + env(safe-area-inset-bottom));
+    background: #fff;
+    margin: 0 -16px;
+    padding: 10px 16px;
+    box-shadow: 0 -2px 20px rgba(1, 41, 112, 0.08);
+    z-index: 5;
+  }
+}

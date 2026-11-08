@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Mahlzeit erfassen · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Mahlzeit erfassen</h1>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li><li class="breadcrumb-item active">Mahlzeit</li></ol></nav>
+    </div>
+
+    <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
+    <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <form id="meal-capture" method="post" th:action="@{/health/meals/recognize}" class="d-flex flex-column gap-3"
+                  th:attr="data-open-camera=${openCamera}">
+                <div role="radiogroup" aria-label="Mahlzeit" class="d-flex gap-2 flex-wrap">
+                    <th:block th:each="s : ${slots}">
+                        <input type="radio" class="btn-check" name="slot" th:id="'slot-' + ${s}" th:value="${s}"
+                               th:checked="${s == slot}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm health-chip" th:for="'slot-' + ${s}" th:text="${s.label}">Mittag</label>
+                    </th:block>
+                </div>
+
+                <div class="card mb-0">
+                    <div class="card-body pt-3 d-flex flex-column gap-2">
+                        <label for="description" class="small text-muted">Ein Satz reicht. Mengen nur, wenn du sie weißt.</label>
+                        <textarea id="description" name="description" rows="2" class="form-control health-input"
+                                  maxlength="1000" placeholder="z. B. Putenschnitzel mit Erdäpfelsalat"
+                                  th:text="${description}"></textarea>
+                        <input type="hidden" name="photo" id="photo-data">
+                        <input type="file" id="photo-input" accept="image/*" capture="environment" class="d-none">
+                        <div class="d-flex gap-2 align-items-center">
+                            <button type="button" class="btn btn-outline-primary health-tool" id="photo-button"
+                                    th:disabled="${!aiAvailable}">
+                                <i class="bi bi-camera" aria-hidden="true"></i> Foto
+                            </button>
+                            <img id="photo-preview" class="health-photo d-none" alt="Foto der Mahlzeit">
+                            <button type="button" class="btn btn-link btn-sm d-none" id="photo-remove">Foto entfernen</button>
+                        </div>
+                        <div class="small text-muted">Foto + Satz = beste Schätzung. Das Foto wird nur zur Erkennung gesendet, nicht gespeichert.</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1" id="recognize-button"
+                            th:disabled="${!aiAvailable}">
+                        <span class="spinner-border spinner-border-sm me-2 d-none" aria-hidden="true"></span>
+                        <span class="label">Erkennen</span>
+                    </button>
+                    <button type="submit" class="btn btn-outline-secondary btn-lg" formmethod="get"
+                            th:formaction="@{/health/meals/manual}">Manuell</button>
+                </div>
+                <div class="small text-muted" th:unless="${aiAvailable}">Erkennung ist aus (kein API-Schlüssel): bitte manuell eintragen.</div>
+            </form>
+        </div>
+
+        <div class="col-lg-6 mt-3 mt-lg-0" th:unless="${quickMeals.isEmpty()}">
+            <div class="card">
+                <div class="card-body pt-3 pb-0">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <h5 class="card-title pt-0 pb-2">Schnell wieder</h5>
+                        <span class="small text-muted">ein Tipp, ohne KI</span>
+                    </div>
+                </div>
+                <div class="health-row health-quick" th:each="q : ${quickMeals}">
+                    <div class="flex-grow-1 me-2">
+                        <div class="fw-semibold health-name" th:text="${q.name}">Frühstücksjause</div>
+                        <div class="small text-muted"
+                             th:text="${q.detail != null ? q.detail + ' · ' : ''} + ${#numbers.formatInteger(q.kcal, 1, 'POINT')} + ' kcal · ' + ${#numbers.formatDecimal(q.proteinG, 1, 0)} + ' g Protein'">460 kcal · 28 g</div>
+                    </div>
+                    <form method="post" th:action="@{/health/meals/saved/{id}/delete(id=${q.savedMealId})}" th:if="${q.savedMealId}"
+                          onsubmit="return confirm('Aus „Schnell wieder“ entfernen?')">
+                        <input type="hidden" name="slot" class="quick-slot" th:value="${slot}">
+                        <button type="submit" class="btn btn-link text-muted health-icon-btn" th:attr="aria-label=${q.name} + ' entfernen'">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                    <form method="post" th:action="@{/health/meals/quick}">
+                        <input type="hidden" name="slot" class="quick-slot" th:value="${slot}">
+                        <input type="hidden" name="savedMealId" th:value="${q.savedMealId}" th:if="${q.savedMealId}">
+                        <input type="hidden" name="mealId" th:value="${q.mealId}" th:if="${q.mealId}">
+                        <button type="submit" class="btn btn-outline-primary health-add" th:attr="aria-label=${q.name} + ' eintragen'">+</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+<script type="text/javascript" th:src="@{/resources/js/health-meal.js}" src="/resources/js/health-meal.js"></script>
+</body>
+</html>

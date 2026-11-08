@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Health H2: meals. Items keep per-100 g values plus grams, so a later gram change
+         recalculates; the meal row holds the totals for fast day sums. -->
+
+    <!-- Favourites for "Schnell wieder": logging one is a copy, no AI. -->
+    <changeSet id="1_34_create_saved_meal" author="plan-man">
+        <createTable tableName="saved_meal">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="saved_meal_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="usual_slot" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="use_count" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_used_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="saved_meal" columnNames="user_profile_id, name"
+                             constraintName="saved_meal_user_name_uq"/>
+    </changeSet>
+
+    <changeSet id="1_34_create_saved_meal_item" author="plan-man">
+        <createTable tableName="saved_meal_item">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="saved_meal_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="saved_meal_item_meal_fk"
+                             referencedTableName="saved_meal" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="position" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="grams" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="kcal_per_100g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="protein_per_100g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="carbs_per_100g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fat_per_100g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="portion_hint" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- What the model(s) returned for one capture. During the Haiku vs Sonnet test both run
+         and result_b is filled; the saved meal (after your corrections) is the yardstick. -->
+    <changeSet id="1_34_create_meal_recognition" author="plan-man">
+        <createTable tableName="meal_recognition">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="meal_recognition_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="had_photo" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="model_a" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="result_a" type="TEXT"/>
+            <column name="kcal_a" type="INT"/>
+            <column name="latency_a_ms" type="INT"/>
+            <column name="model_b" type="VARCHAR(64)"/>
+            <column name="result_b" type="TEXT"/>
+            <column name="kcal_b" type="INT"/>
+            <column name="latency_b_ms" type="INT"/>
+            <column name="shown_model" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1_34_create_meal" author="plan-man">
+        <createTable tableName="meal">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="meal_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+            <column name="eaten_on" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slot" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="kcal" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="protein_g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="carbs_g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fat_g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="saved_meal_id" type="BIGINT">
+                <constraints foreignKeyName="meal_saved_meal_fk"
+                             referencedTableName="saved_meal" referencedColumnNames="id" deleteCascade="false"/>
+            </column>
+            <column name="meal_recognition_id" type="BIGINT">
+                <constraints foreignKeyName="meal_recognition_fk"
+                             referencedTableName="meal_recognition" referencedColumnNames="id"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="meal" indexName="meal_user_day_idx">
+            <column name="user_profile_id"/>
+            <column name="eaten_on"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1_34_create_meal_item" author="plan-man">
+        <createTable tableName="meal_item">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="meal_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="meal_item_meal_fk"
+                             referencedTableName="meal" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="position" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="grams" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="kcal_per_100g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="protein_per_100g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="carbs_per_100g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fat_per_100g" type="DECIMAL(6,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unsure" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="portion_hint" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

@@ -7,6 +7,7 @@ import at.v3rtumnus.planman.dto.health.WeightTrend;
 import at.v3rtumnus.planman.entity.health.HealthGoal;
 import at.v3rtumnus.planman.entity.health.MeasurementType;
 import at.v3rtumnus.planman.service.health.HealthService;
+import at.v3rtumnus.planman.service.health.MealService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class HealthController {
     private static final Set<String> RETURN_PATHS = Set.of("/health", "/health/goal");
 
     private final HealthService healthService;
+    private final MealService mealService;
 
     @GetMapping
     public ModelAndView today() {
@@ -45,6 +47,8 @@ public class HealthController {
         mav.addObject("todayLabel", DAY_FORMAT.format(today));
         mav.addObject("today", today);
         mav.addObject("day", healthService.day(today));
+        mav.addObject("nutrition", mealService.nutritionDay(today));
+        mav.addObject("slotNow", mealService.slotNow());
         mav.addObject("goal", goal.orElse(null));
         mav.addObject("pause", healthService.activePause().orElse(null));
         mav.addObject("trend", trend);

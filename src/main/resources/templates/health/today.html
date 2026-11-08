@@ -17,6 +17,8 @@
         <nav><ol class="breadcrumb"><li class="breadcrumb-item">Gesundheit</li><li class="breadcrumb-item active" th:text="${todayLabel}"></li></ol></nav>
     </div>
 
+    <div th:replace="~{fragments/health-tabs :: health-tabs}"></div>
+
     <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
     <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
 
@@ -37,14 +39,31 @@
         <div class="col-lg-6" th:if="${goal}">
             <div class="card">
                 <div class="card-body pt-3">
-                    <h5 class="card-title pt-0 pb-2">Tagesziel</h5>
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:56px;height:56px;background:#f6f6fe;color:#4154f1;font-size:28px">
-                            <i class="bi bi-fire" aria-hidden="true"></i>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="health-big" th:text="${#numbers.formatInteger(day.kcalTarget, 1, 'POINT')} + ' kcal'">2.000 kcal</div>
-                            <div class="small text-muted" th:text="${day.proteinTargetG} + ' g Protein'">160 g Protein</div>
+                            <div class="small text-muted">Noch übrig</div>
+                            <div class="health-big" th:classappend="${nutrition.kcalLeft() < 0} ? 'text-danger'"
+                                 th:text="${#numbers.formatInteger(nutrition.kcalLeft(), 1, 'POINT')} + ' kcal'">1.280 kcal</div>
+                        </div>
+                        <a th:href="@{/health/meals/new(slot=${slotNow})}" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Mahlzeit</a>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small">
+                            <span>Kalorien</span>
+                            <span th:text="${#numbers.formatInteger(nutrition.kcalEaten, 1, 'POINT')} + ' / ' + ${#numbers.formatInteger(day.kcalTarget, 1, 'POINT')}">720 / 2.000</span>
+                        </div>
+                        <div class="progress health-bar" role="progressbar" aria-label="Kalorien"
+                             th:attr="aria-valuenow=${nutrition.kcalPercent()}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" th:style="'width:' + ${nutrition.kcalPercent()} + '%'"></div>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-2">
+                            <span>Protein</span>
+                            <span th:text="${#numbers.formatDecimal(nutrition.proteinEatenG, 1, 0)} + ' / ' + ${day.proteinTargetG} + ' g'">54 / 160 g</span>
+                        </div>
+                        <div class="progress health-bar" role="progressbar" aria-label="Protein"
+                             th:attr="aria-valuenow=${nutrition.proteinPercent()}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar health-bar-protein" th:style="'width:' + ${nutrition.proteinPercent()} + '%'"></div>
                         </div>
                     </div>
                     <div class="small text-muted mt-2"
@@ -77,6 +96,31 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body pt-3 pb-0">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <h5 class="card-title pt-0 pb-2">Mahlzeiten</h5>
+                        <a th:href="@{/health/meals/new(slot=${slotNow})}" class="small">+ erfassen</a>
+                    </div>
+                    <p class="small text-muted" th:if="${nutrition.meals.isEmpty()}">Heute noch nichts eingetragen.</p>
+                </div>
+                <a class="health-row health-meal-row" th:each="m : ${nutrition.meals}"
+                   th:href="@{/health/meals/{id}/edit(id=${m.id})}">
+                    <span class="flex-grow-1 me-2">
+                        <span class="small text-muted d-block" th:text="${m.slot.label}">Mittag</span>
+                        <span class="fw-semibold health-name" th:text="${m.title}">Putenschnitzel</span>
+                    </span>
+                    <span class="text-nowrap small text-end">
+                        <b th:text="${#numbers.formatInteger(m.kcal, 1, 'POINT')}">720</b> kcal<br>
+                        <span class="health-protein" th:text="${#numbers.formatDecimal(m.proteinG, 1, 0)} + ' g'">54 g</span>
+                    </span>
+                </a>
             </div>
         </div>
     </div>
