@@ -33,7 +33,7 @@ class AnthropicMealRecognizerTest {
     private final SimpleMeterRegistry meters = new SimpleMeterRegistry();
 
     private AnthropicMealRecognizer recognizer(WireMockRuntimeInfo wm) {
-        return new AnthropicMealRecognizer("test-key", wm.getHttpBaseUrl(), meters);
+        return new AnthropicMealRecognizer(new AnthropicGateway("test-key", wm.getHttpBaseUrl(), meters));
     }
 
     private double counter(String name, String... tags) {
@@ -43,10 +43,10 @@ class AnthropicMealRecognizerTest {
 
     @Test
     void withoutKey_isUnavailableAndRefuses() {
-        AnthropicMealRecognizer recognizer = new AnthropicMealRecognizer("", "", meters);
+        AnthropicMealRecognizer recognizer = new AnthropicMealRecognizer(new AnthropicGateway("", "", meters));
         assertThat(recognizer.available()).isFalse();
         assertThatThrownBy(() -> recognizer.recognize("m", MealSlot.LUNCH, "x", null))
-                .isInstanceOf(MealRecognitionException.class);
+                .isInstanceOf(AiRequestException.class);
     }
 
     @Test
@@ -63,10 +63,10 @@ class AnthropicMealRecognizerTest {
         assertThat(result.draft().question().asked()).isFalse();
         assertThat(result.kcal()).isEqualTo(158 + 112);
         assertThat(result.rawJson()).contains("Skyr natur");
-        assertThat(counter("planman.ai.tokens", "model", "claude-haiku-5-5", "type", "input")).isEqualTo(120);
-        assertThat(counter("planman.ai.tokens", "model", "claude-haiku-5-5", "type", "output")).isEqualTo(80);
-        assertThat(counter("planman.ai.cost.usd", "model", "claude-haiku-5-5")).isCloseTo(0.000052, within(1e-9));
-        assertThat(counter("planman.ai.requests", "model", "claude-haiku-5-5", "outcome", "ok")).isEqualTo(1);
+        assertThat(counter("planman.ai.tokens", "model", "claude-haiku-5-5", "purpose", "meal", "type", "input")).isEqualTo(120);
+        assertThat(counter("planman.ai.tokens", "model", "claude-haiku-5-5", "purpose", "meal", "type", "output")).isEqualTo(80);
+        assertThat(counter("planman.ai.cost.usd", "model", "claude-haiku-5-5", "purpose", "meal")).isCloseTo(0.000052, within(1e-9));
+        assertThat(counter("planman.ai.requests", "model", "claude-haiku-5-5", "purpose", "meal", "outcome", "ok")).isEqualTo(1);
 
         var request = getAllServeEvents().getFirst().getRequest();
         assertThat(request.getHeader("Authorization")).isEqualTo("Bearer test-key");
@@ -96,7 +96,7 @@ class AnthropicMealRecognizerTest {
         stubFor(post("/v1/messages").willReturn(okJson(message("max_tokens", DRAFT))));
 
         assertThatThrownBy(() -> recognizer(wm).recognize("claude-haiku-5-5", MealSlot.LUNCH, "x", null))
-                .isInstanceOf(MealRecognitionException.class);
+                .isInstanceOf(AiRequestException.class);
     }
 
     @Test
@@ -105,7 +105,7 @@ class AnthropicMealRecognizerTest {
                 "{\"title\":\"\",\"items\":[],\"question\":{\"asked\":false,\"text\":\"\",\"itemIndex\":0,\"options\":[]}}"))));
 
         assertThatThrownBy(() -> recognizer(wm).recognize("claude-haiku-5-5", MealSlot.LUNCH, "x", null))
-                .isInstanceOf(MealRecognitionException.class)
+                .isInstanceOf(AiRequestException.class)
                 .hasMessageContaining("Keine Lebensmittel");
     }
 
@@ -116,7 +116,7 @@ class AnthropicMealRecognizerTest {
                 .withBody("{\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"bad\"}}")));
 
         assertThatThrownBy(() -> recognizer(wm).recognize("claude-haiku-5-5", MealSlot.LUNCH, "x", null))
-                .isInstanceOf(MealRecognitionException.class)
+                .isInstanceOf(AiRequestException.class)
                 .hasMessageContaining("nicht erreichbar");
     }
 
@@ -128,11 +128,11 @@ class AnthropicMealRecognizerTest {
                         + "\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"}}")));
 
         assertThatThrownBy(() -> recognizer(wm).recognize("claude-sonnet-5-5", MealSlot.LUNCH, "x", null))
-                .isInstanceOfSatisfying(MealRecognitionException.class, e -> {
-                    assertThat(e.getReason()).isEqualTo(MealRecognitionException.Reason.BILLING);
+                .isInstanceOfSatisfying(AiRequestException.class, e -> {
+                    assertThat(e.getReason()).isEqualTo(AiRequestException.Reason.BILLING);
                     assertThat(e.getMessage()).contains("Guthaben");
                 });
-        assertThat(counter("planman.ai.requests", "model", "claude-sonnet-5-5", "outcome", "billing")).isEqualTo(1);
+        assertThat(counter("planman.ai.requests", "model", "claude-sonnet-5-5", "purpose", "meal", "outcome", "billing")).isEqualTo(1);
     }
 
     @Test
@@ -143,8 +143,8 @@ class AnthropicMealRecognizerTest {
                         + "\"You have reached your specified API usage limits. You will regain access on 2026-12-01.\"}}")));
 
         assertThatThrownBy(() -> recognizer(wm).recognize("claude-sonnet-5-5", MealSlot.LUNCH, "x", null))
-                .isInstanceOfSatisfying(MealRecognitionException.class,
-                        e -> assertThat(e.getReason()).isEqualTo(MealRecognitionException.Reason.BILLING));
+                .isInstanceOfSatisfying(AiRequestException.class,
+                        e -> assertThat(e.getReason()).isEqualTo(AiRequestException.Reason.BILLING));
     }
 
     @Test
@@ -154,9 +154,9 @@ class AnthropicMealRecognizerTest {
                 .withBody("{\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"bad\"}}")));
 
         assertThatThrownBy(() -> recognizer(wm).recognize("claude-sonnet-5-5", MealSlot.LUNCH, "x", null))
-                .isInstanceOfSatisfying(MealRecognitionException.class,
-                        e -> assertThat(e.getReason()).isEqualTo(MealRecognitionException.Reason.UNAVAILABLE));
-        assertThat(counter("planman.ai.requests", "model", "claude-sonnet-5-5", "outcome", "unavailable")).isEqualTo(1);
+                .isInstanceOfSatisfying(AiRequestException.class,
+                        e -> assertThat(e.getReason()).isEqualTo(AiRequestException.Reason.UNAVAILABLE));
+        assertThat(counter("planman.ai.requests", "model", "claude-sonnet-5-5", "purpose", "meal", "outcome", "unavailable")).isEqualTo(1);
     }
 
     @Test
@@ -164,7 +164,7 @@ class AnthropicMealRecognizerTest {
         stubFor(post("/v1/messages").willReturn(okJson(message("max_tokens", DRAFT))));
 
         assertThatThrownBy(() -> recognizer(wm).recognize("claude-sonnet-5-5", MealSlot.LUNCH, "x", null))
-                .isInstanceOf(MealRecognitionException.class);
-        assertThat(counter("planman.ai.requests", "model", "claude-sonnet-5-5", "outcome", "stop_max_tokens")).isEqualTo(1);
+                .isInstanceOf(AiRequestException.class);
+        assertThat(counter("planman.ai.requests", "model", "claude-sonnet-5-5", "purpose", "meal", "outcome", "stop_max_tokens")).isEqualTo(1);
     }
 }

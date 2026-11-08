@@ -4,7 +4,7 @@ import at.v3rtumnus.planman.dto.health.*;
 import at.v3rtumnus.planman.entity.health.Meal;
 import at.v3rtumnus.planman.entity.health.MealSlot;
 import at.v3rtumnus.planman.service.PlanManUserDetailsService;
-import at.v3rtumnus.planman.service.health.MealRecognitionException;
+import at.v3rtumnus.planman.service.health.AiRequestException;
 import at.v3rtumnus.planman.service.health.MealService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,7 +66,7 @@ class MealControllerTest {
                 new QuickMeal(3L, null, "Frühstücksjause", "31× gegessen", 460, new BigDecimal("28.0")),
                 new QuickMeal(null, 9L, "Wie gestern Mittag", "Spaghetti", 780, new BigDecimal("38.0"))));
         when(mealService.nutritionDay(any())).thenReturn(
-                new NutritionDay(2000, 160, 500, new BigDecimal("30.0"), List.of()));
+                new NutritionDay(2000, 0, 160, 500, new BigDecimal("30.0"), List.of()));
     }
 
     @Test
@@ -116,7 +116,7 @@ class MealControllerTest {
 
     @Test
     void recognize_failure_returnsToCaptureWithText() throws Exception {
-        when(mealService.recognize(any(), any(), any())).thenThrow(new MealRecognitionException("Gerade nicht erreichbar"));
+        when(mealService.recognize(any(), any(), any())).thenThrow(new AiRequestException("Gerade nicht erreichbar"));
 
         mockMvc.perform(post("/health/meals/recognize").param("slot", "LUNCH").param("description", "Gulasch"))
                 .andExpect(status().isOk())

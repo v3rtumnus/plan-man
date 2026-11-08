@@ -49,6 +49,16 @@
       ]
     },
     {
+      "name": "Training eintragen",
+      "url": "/health/training",
+      "icons": [
+        {
+          "src": "/resources/img/pwa/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
       "name": "Gewicht eintragen",
       "url": "/health/measure?type=WEIGHT",
       "icons": [

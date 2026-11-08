@@ -65,7 +65,6 @@ public class HealthService {
         goal.setKcalTarget(form.getKcalTarget());
         goal.setProteinTargetG(form.getProteinTargetG());
         goal.setFootballBonusKcal(form.getFootballBonusKcal());
-        goal.setFreeleticsBonusKcal(form.getFreeleticsBonusKcal());
         goal.setStepsTarget(form.getStepsTarget());
         goal.setStartWeightKg(form.getStartWeightKg().setScale(1, RoundingMode.HALF_UP));
         goal.setTargetWeightKg(form.getTargetWeightKg().setScale(1, RoundingMode.HALF_UP));

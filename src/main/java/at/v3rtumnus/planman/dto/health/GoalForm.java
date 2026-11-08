@@ -26,9 +26,6 @@ public class GoalForm {
     @NotNull @Min(0) @Max(2000)
     private Integer footballBonusKcal = 250;
 
-    @NotNull @Min(0) @Max(2000)
-    private Integer freeleticsBonusKcal = 100;
-
     @NotNull @Min(0) @Max(100000)
     private Integer stepsTarget = 8000;
 
@@ -51,7 +48,6 @@ public class GoalForm {
         form.setKcalTarget(goal.getKcalTarget());
         form.setProteinTargetG(goal.getProteinTargetG());
         form.setFootballBonusKcal(goal.getFootballBonusKcal());
-        form.setFreeleticsBonusKcal(goal.getFreeleticsBonusKcal());
         form.setStepsTarget(goal.getStepsTarget());
         form.setStartWeightKg(goal.getStartWeightKg());
         form.setTargetWeightKg(goal.getTargetWeightKg());

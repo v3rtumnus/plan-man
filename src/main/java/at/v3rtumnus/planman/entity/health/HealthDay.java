@@ -46,4 +46,8 @@ public class HealthDay {
     private Integer sleepMinutes;
 
     private boolean paused;
+
+    /** "Fällt aus" was tapped on the football question. */
+    @Column(name = "FOOTBALL_CANCELLED")
+    private boolean footballCancelled;
 }

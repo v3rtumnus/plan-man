@@ -37,8 +37,6 @@ public class HealthGoal {
 
     private int footballBonusKcal;
 
-    private int freeleticsBonusKcal;
-
     private int stepsTarget;
 
     private BigDecimal startWeightKg;

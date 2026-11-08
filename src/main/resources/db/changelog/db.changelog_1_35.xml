@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Health H3: training. A workout's bonus_kcal is what it adds to that day's eating target
+         (Freeletics and other activities: net kcal; football: the goal's flat bonus). -->
+    <changeSet id="1_35_create_workout" author="plan-man">
+        <createTable tableName="workout">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="workout_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+            <column name="done_on" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="duration_min" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="intensity" type="VARCHAR(32)"/>
+            <column name="met" type="DECIMAL(4,1)"/>
+            <column name="kcal" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bonus_kcal" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="kcal_source" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="workout" indexName="workout_user_day_idx">
+            <column name="user_profile_id"/>
+            <column name="done_on"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Freeletics exercises done with a dumbbell; the weight history lives in exercise_weight. -->
+    <changeSet id="1_35_create_exercise" author="plan-man">
+        <createTable tableName="exercise">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="exercise_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- One row per weight change; the newest row is the current weight. -->
+    <changeSet id="1_35_create_exercise_weight" author="plan-man">
+        <createTable tableName="exercise_weight">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="exercise_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="exercise_weight_exercise_fk"
+                             referencedTableName="exercise" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="weight_kg" type="DECIMAL(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_from" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="exercise_weight" columnNames="exercise_id, valid_from"
+                             constraintName="exercise_weight_day_uq"/>
+    </changeSet>
+
+    <!-- "Fällt aus" on the football question: the day stays without football, the question stops. -->
+    <changeSet id="1_35_health_day_football_cancelled" author="plan-man">
+        <addColumn tableName="health_day">
+            <column name="football_cancelled" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Freeletics now adds each session's net kcal instead of a flat bonus (health H3). -->
+    <changeSet id="1_35_drop_freeletics_bonus" author="plan-man">
+        <dropColumn tableName="health_goal" columnName="freeletics_bonus_kcal"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -33,6 +33,7 @@ public class MealService {
     private final MealRepository mealRepository;
     private final SavedMealRepository savedMealRepository;
     private final MealRecognitionRepository recognitionRepository;
+    private final WorkoutRepository workoutRepository;
     private final UserProfileRepository userProfileRepository;
     private final HealthService healthService;
     private final MealRecognizer recognizer;
@@ -43,7 +44,8 @@ public class MealService {
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public MealService(MealRepository mealRepository, SavedMealRepository savedMealRepository,
-                       MealRecognitionRepository recognitionRepository, UserProfileRepository userProfileRepository,
+                       MealRecognitionRepository recognitionRepository, WorkoutRepository workoutRepository,
+                       UserProfileRepository userProfileRepository,
                        HealthService healthService, MealRecognizer recognizer, Clock clock,
                        @Value("${planman.health.ai.meal-model:claude-sonnet-5-5}") String mealModel,
                        @Value("${planman.health.ai.compare-model:}") String compareModel,
@@ -51,6 +53,7 @@ public class MealService {
         this.mealRepository = mealRepository;
         this.savedMealRepository = savedMealRepository;
         this.recognitionRepository = recognitionRepository;
+        this.workoutRepository = workoutRepository;
         this.userProfileRepository = userProfileRepository;
         this.healthService = healthService;
         this.recognizer = recognizer;
@@ -79,7 +82,9 @@ public class MealService {
         List<Meal> meals = mealRepository.findByUserUsernameAndEatenOnOrderByCreatedAtAsc(username(), date);
         int kcal = meals.stream().mapToInt(Meal::getKcal).sum();
         BigDecimal protein = meals.stream().map(Meal::getProteinG).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new NutritionDay(day.getKcalTarget(), day.getProteinTargetG(), kcal, protein, meals);
+        int training = workoutRepository.findByUserUsernameAndDoneOnOrderByCreatedAtAsc(username(), date).stream()
+                .mapToInt(Workout::getBonusKcal).sum();
+        return new NutritionDay(day.getKcalTarget(), training, day.getProteinTargetG(), kcal, protein, meals);
     }
 
     // --- capture ---
@@ -90,7 +95,7 @@ public class MealService {
         boolean hasText = description != null && !description.isBlank();
         boolean hasPhoto = photoJpegBase64 != null && !photoJpegBase64.isBlank();
         if (!hasText && !hasPhoto) {
-            throw new MealRecognitionException("Bitte einen Satz schreiben oder ein Foto aufnehmen");
+            throw new AiRequestException("Bitte einen Satz schreiben oder ein Foto aufnehmen");
         }
         UserProfile user = currentUser();
         boolean compare = compareModel != null
@@ -145,22 +150,22 @@ public class MealService {
     }
 
     /** Both models failed: report billing first, since retrying will not help then. */
-    private static MealRecognitionException firstError(CompletableFuture<?> a, CompletableFuture<?> b) {
-        MealRecognitionException ea = errorOf(a);
-        MealRecognitionException eb = errorOf(b);
-        if (eb != null && eb.getReason() == MealRecognitionException.Reason.BILLING) {
+    private static AiRequestException firstError(CompletableFuture<?> a, CompletableFuture<?> b) {
+        AiRequestException ea = errorOf(a);
+        AiRequestException eb = errorOf(b);
+        if (eb != null && eb.getReason() == AiRequestException.Reason.BILLING) {
             return eb;
         }
-        return ea != null ? ea : eb != null ? eb : new MealRecognitionException(MealRecognitionException.Reason.UNAVAILABLE,
+        return ea != null ? ea : eb != null ? eb : new AiRequestException(AiRequestException.Reason.UNAVAILABLE,
                 "Die Erkennung ist gerade nicht erreichbar. Bitte nochmal versuchen oder manuell eintragen.", null);
     }
 
-    private static MealRecognitionException errorOf(CompletableFuture<?> future) {
+    private static AiRequestException errorOf(CompletableFuture<?> future) {
         try {
             future.join();
             return null;
         } catch (CompletionException e) {
-            return e.getCause() instanceof MealRecognitionException m ? m : null;
+            return e.getCause() instanceof AiRequestException m ? m : null;
         }
     }
 

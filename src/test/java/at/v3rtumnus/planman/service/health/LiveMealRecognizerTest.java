@@ -15,7 +15,7 @@ class LiveMealRecognizerTest {
 
     @Test
     void recognizesAnAustrianLunch() {
-        AnthropicMealRecognizer recognizer = new AnthropicMealRecognizer(System.getenv("ANTHROPIC_API_KEY"), "", new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
+        AnthropicMealRecognizer recognizer = new AnthropicMealRecognizer(new AnthropicGateway(System.getenv("ANTHROPIC_API_KEY"), "", new io.micrometer.core.instrument.simple.SimpleMeterRegistry()));
         for (String model : new String[]{"claude-haiku-5-5", "claude-sonnet-5-5"}) {
             for (String meal : new String[]{"Putenschnitzel mit Erdäpfelsalat und Preiselbeeren",
                     "Acht Schätze vom Chinarestaurant mit Reis"}) {

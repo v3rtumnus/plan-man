@@ -23,7 +23,7 @@ class MealSlotTest {
 
     @Test
     void nutritionDay_withoutTargets_hasNoLeftValues() {
-        NutritionDay day = new NutritionDay(null, null, 500, new BigDecimal("20.0"), List.of());
+        NutritionDay day = new NutritionDay(null, 0, null, 500, new BigDecimal("20.0"), List.of());
         assertThat(day.kcalLeft()).isNull();
         assertThat(day.proteinLeftG()).isNull();
         assertThat(day.kcalPercent()).isZero();
@@ -31,10 +31,17 @@ class MealSlotTest {
 
     @Test
     void nutritionDay_capsPercentAndProteinLeft() {
-        NutritionDay day = new NutritionDay(2000, 160, 2500, new BigDecimal("170.0"), List.of());
+        NutritionDay day = new NutritionDay(2000, 0, 160, 2500, new BigDecimal("170.0"), List.of());
         assertThat(day.kcalLeft()).isEqualTo(-500);
         assertThat(day.kcalPercent()).isEqualTo(100);
         assertThat(day.proteinLeftG()).isZero();
         assertThat(day.proteinPercent()).isEqualTo(100);
+    }
+
+    @Test
+    void nutritionDay_trainingRaisesTheTarget() {
+        NutritionDay day = new NutritionDay(2000, 250, 160, 1500, new BigDecimal("100.0"), List.of());
+        assertThat(day.kcalTarget()).isEqualTo(2250);
+        assertThat(day.kcalLeft()).isEqualTo(750);
     }
 }

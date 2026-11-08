@@ -2,9 +2,9 @@ package at.v3rtumnus.planman.service.health;
 
 import lombok.Getter;
 
-/** The model could not produce a usable draft; the message is shown to the user. */
+/** A Claude API request gave no usable answer; the message is shown to the user. */
 @Getter
-public class MealRecognitionException extends RuntimeException {
+public class AiRequestException extends RuntimeException {
 
     public enum Reason {
         /** Nothing to recognise, or nothing recognised. */
@@ -17,11 +17,11 @@ public class MealRecognitionException extends RuntimeException {
 
     private final Reason reason;
 
-    public MealRecognitionException(String message) {
+    public AiRequestException(String message) {
         this(Reason.INPUT, message, null);
     }
 
-    public MealRecognitionException(Reason reason, String message, Throwable cause) {
+    public AiRequestException(Reason reason, String message, Throwable cause) {
         super(message, cause);
         this.reason = reason;
     }

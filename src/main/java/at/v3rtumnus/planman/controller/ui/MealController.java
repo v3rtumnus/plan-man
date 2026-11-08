@@ -5,7 +5,7 @@ import at.v3rtumnus.planman.dto.health.MealItemForm;
 import at.v3rtumnus.planman.dto.health.MealQuestion;
 import at.v3rtumnus.planman.dto.health.NutritionDay;
 import at.v3rtumnus.planman.entity.health.MealSlot;
-import at.v3rtumnus.planman.service.health.MealRecognitionException;
+import at.v3rtumnus.planman.service.health.AiRequestException;
 import at.v3rtumnus.planman.service.health.MealService;
 import at.v3rtumnus.planman.entity.health.Meal;
 import jakarta.validation.Valid;
@@ -49,11 +49,11 @@ public class MealController {
         String photoData = stripDataUrl(photo);
         try {
             if (photoData != null && photoData.length() > MAX_PHOTO_BASE64) {
-                throw new MealRecognitionException("Das Foto ist zu groß. Bitte nochmal aufnehmen.");
+                throw new AiRequestException("Das Foto ist zu groß. Bitte nochmal aufnehmen.");
             }
             MealService.Recognized recognized = mealService.recognize(slot, description, photoData);
             return review(recognized.form(), recognized.question(), photoData != null);
-        } catch (MealRecognitionException e) {
+        } catch (AiRequestException e) {
             ModelAndView mav = capture(slot, false);
             mav.addObject("description", description);
             mav.addObject("errorMessage", e.getMessage());
