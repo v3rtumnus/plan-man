@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Prüfen &amp; speichern · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1 th:text="${mealForm.mealId != null} ? 'Mahlzeit bearbeiten' : 'Prüfen & speichern'">Prüfen &amp; speichern</h1>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li><li class="breadcrumb-item active">Mahlzeit</li></ol></nav>
+    </div>
+
+    <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <form id="meal-review" method="post" th:action="@{/health/meals}" th:object="${mealForm}"
+                  class="d-flex flex-column gap-3"
+                  th:attr="data-kcal-before=${kcalBefore}, data-protein-before=${proteinBefore},
+                           data-kcal-target=${kcalTarget}, data-protein-target=${proteinTarget}">
+                <input type="hidden" th:field="*{mealId}">
+                <input type="hidden" th:field="*{recognitionId}">
+
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-grow-1">
+                        <div class="health-big"><span id="meal-kcal">0</span> kcal</div>
+                        <div class="fw-semibold health-protein"><span id="meal-protein">0</span> g Protein</div>
+                    </div>
+                    <input type="date" class="form-control w-auto" th:field="*{date}" th:max="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"
+                           aria-label="Datum" required>
+                </div>
+
+                <div role="radiogroup" aria-label="Mahlzeit" class="d-flex gap-2 flex-wrap">
+                    <th:block th:each="s : ${slots}">
+                        <input type="radio" class="btn-check" name="slot" th:value="${s}" th:id="'rslot-' + ${s}"
+                               th:checked="${s == mealForm.slot}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm health-chip" th:for="'rslot-' + ${s}" th:text="${s.label}">Mittag</label>
+                    </th:block>
+                </div>
+
+                <div>
+                    <label class="form-label small text-muted" for="title">Name</label>
+                    <input class="form-control health-input" type="text" th:field="*{title}" maxlength="255" required>
+                </div>
+
+                <div class="card mb-0" th:if="${question}" id="meal-question" th:attr="data-item-index=${question.itemIndex}">
+                    <div class="card-body pt-3 d-flex flex-column gap-2">
+                        <div class="fw-semibold health-name" th:text="${question.text}">Wie wurde das Schnitzel gebacken?</div>
+                        <div role="radiogroup" th:attr="aria-label=${question.text}" class="d-flex gap-2 flex-wrap">
+                            <th:block th:each="o, st : ${question.options}">
+                                <input type="radio" class="btn-check question-option" name="question-option" th:id="'q-' + ${st.index}"
+                                       th:checked="${st.first}" autocomplete="off"
+                                       th:attr="data-kcal=${o.kcalPer100g}, data-protein=${o.proteinPer100g},
+                                                data-carbs=${o.carbsPer100g}, data-fat=${o.fatPer100g}">
+                                <label class="btn btn-outline-primary btn-sm health-chip" th:for="'q-' + ${st.index}" th:text="${o.label}">Öl</label>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-0">
+                    <div class="card-body pt-3 pb-1">
+                        <div class="small text-muted" th:text="${mealForm.recognitionId != null} ? 'Erkannt · Menge mit − / + anpassen' : 'Zutaten · Menge mit − / + anpassen'">Erkannt</div>
+                    </div>
+                    <div id="meal-items">
+                        <div class="health-item" th:each="item, st : *{items}" th:attr="data-index=${st.index}">
+                            <div class="d-flex gap-2 align-items-start">
+                                <input class="form-control form-control-sm fw-semibold health-name flex-grow-1" type="text"
+                                       th:field="*{items[__${st.index}__].name}" maxlength="255" required aria-label="Zutat"
+                                       placeholder="Zutat">
+                                <span class="text-nowrap small pt-1"><b class="item-kcal">0</b> kcal · <span class="health-protein"><span class="item-protein">0</span> g</span></span>
+                                <button type="button" class="btn btn-link text-muted p-0 ps-1 item-remove" aria-label="Zutat entfernen">
+                                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <span class="health-warn" th:if="${item.unsure}">Menge geschätzt, bitte prüfen</span>
+                            <input type="hidden" th:field="*{items[__${st.index}__].unsure}">
+                            <input type="hidden" th:field="*{items[__${st.index}__].portionHint}">
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-primary health-step item-dec" aria-label="10 g weniger">−</button>
+                                <div class="input-group input-group-sm health-grams">
+                                    <input class="form-control text-center fw-bold item-grams" type="number" inputmode="numeric"
+                                           min="0" max="5000" step="1" th:field="*{items[__${st.index}__].grams}" aria-label="Gramm">
+                                    <span class="input-group-text">g</span>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary health-step item-inc" aria-label="10 g mehr">+</button>
+                                <span class="small text-muted ms-auto text-end" th:text="${item.portionHint}"></span>
+                            </div>
+                            <details class="small" th:open="${item.kcalPer100g == null or item.kcalPer100g.signum() == 0}">
+                                <summary class="text-muted">Nährwerte pro 100 g</summary>
+                                <div class="row g-2 mt-1">
+                                    <div class="col-3"><label class="form-label mb-0">kcal</label>
+                                        <input class="form-control form-control-sm item-kcal100" type="number" step="0.1" min="0" max="900" inputmode="decimal"
+                                               th:field="*{items[__${st.index}__].kcalPer100g}" required></div>
+                                    <div class="col-3"><label class="form-label mb-0">Protein</label>
+                                        <input class="form-control form-control-sm item-protein100" type="number" step="0.1" min="0" max="100" inputmode="decimal"
+                                               th:field="*{items[__${st.index}__].proteinPer100g}" required></div>
+                                    <div class="col-3"><label class="form-label mb-0">KH</label>
+                                        <input class="form-control form-control-sm item-carbs100" type="number" step="0.1" min="0" max="100" inputmode="decimal"
+                                               th:field="*{items[__${st.index}__].carbsPer100g}" required></div>
+                                    <div class="col-3"><label class="form-label mb-0">Fett</label>
+                                        <input class="form-control form-control-sm item-fat100" type="number" step="0.1" min="0" max="100" inputmode="decimal"
+                                               th:field="*{items[__${st.index}__].fatPer100g}" required></div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link text-start health-add-item" id="item-add">+ Zutat ergänzen</button>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" th:field="*{remember}" id="remember">
+                    <label class="form-check-label" for="remember">Für „Schnell wieder“ merken</label>
+                </div>
+
+                <div class="health-save">
+                    <div class="small text-center mb-2" id="meal-left" th:if="${kcalTarget}">
+                        Danach heute: noch <b><span id="left-kcal">–</span> kcal</b> · Protein noch <b><span id="left-protein">–</span> g</b>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Speichern</button>
+                </div>
+            </form>
+
+            <form method="post" class="mt-2" th:if="${mealForm.mealId}"
+                  th:action="@{/health/meals/{id}/delete(id=${mealForm.mealId})}"
+                  onsubmit="return confirm('Diese Mahlzeit löschen?')">
+                <button type="submit" class="btn btn-outline-danger w-100">Mahlzeit löschen</button>
+            </form>
+        </div>
+    </div>
+
+    <template id="item-template">
+        <div class="health-item" data-index="__i__">
+            <div class="d-flex gap-2 align-items-start">
+                <input class="form-control form-control-sm fw-semibold health-name flex-grow-1" type="text" name="items[__i__].name"
+                       maxlength="255" required aria-label="Zutat" placeholder="Zutat">
+                <span class="text-nowrap small pt-1"><b class="item-kcal">0</b> kcal · <span class="health-protein"><span class="item-protein">0</span> g</span></span>
+                <button type="button" class="btn btn-link text-muted p-0 ps-1 item-remove" aria-label="Zutat entfernen">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+            <input type="hidden" name="items[__i__].unsure" value="false">
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-primary health-step item-dec" aria-label="10 g weniger">−</button>
+                <div class="input-group input-group-sm health-grams">
+                    <input class="form-control text-center fw-bold item-grams" type="number" inputmode="numeric" min="0" max="5000"
+                           step="1" name="items[__i__].grams" value="100" aria-label="Gramm">
+                    <span class="input-group-text">g</span>
+                </div>
+                <button type="button" class="btn btn-outline-primary health-step item-inc" aria-label="10 g mehr">+</button>
+            </div>
+            <details class="small" open>
+                <summary class="text-muted">Nährwerte pro 100 g</summary>
+                <div class="row g-2 mt-1">
+                    <div class="col-3"><label class="form-label mb-0">kcal</label>
+                        <input class="form-control form-control-sm item-kcal100" type="number" step="0.1" min="0" max="900" inputmode="decimal" name="items[__i__].kcalPer100g" value="0" required></div>
+                    <div class="col-3"><label class="form-label mb-0">Protein</label>
+                        <input class="form-control form-control-sm item-protein100" type="number" step="0.1" min="0" max="100" inputmode="decimal" name="items[__i__].proteinPer100g" value="0" required></div>
+                    <div class="col-3"><label class="form-label mb-0">KH</label>
+                        <input class="form-control form-control-sm item-carbs100" type="number" step="0.1" min="0" max="100" inputmode="decimal" name="items[__i__].carbsPer100g" value="0" required></div>
+                    <div class="col-3"><label class="form-label mb-0">Fett</label>
+                        <input class="form-control form-control-sm item-fat100" type="number" step="0.1" min="0" max="100" inputmode="decimal" name="items[__i__].fatPer100g" value="0" required></div>
+                </div>
+            </details>
+        </div>
+    </template>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+<script type="text/javascript" th:src="@{/resources/js/health-meal.js}" src="/resources/js/health-meal.js"></script>
+</body>
+</html>

@@ -1,41 +1,40 @@
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <body>
-<!-- Phone navigation below the md breakpoint. Health pages get their own bar; the sidebar
-     (hamburger in the header) still reaches every page. -->
+<!-- Phone navigation below the md breakpoint: the same five slots on every page, so a tab is
+     always in the same place. Health sub-pages have their own tab row (fragments/health-tabs). -->
 <nav th:fragment="bottom-nav" class="bottom-nav d-md-none" aria-label="Schnellnavigation"
-     th:with="path=${currentPath != null ? currentPath : ''}, inHealth=${#strings.startsWith(path, '/health')}">
+     th:with="path=${currentPath != null ? currentPath : ''}">
 
-    <th:block th:if="${inHealth}">
-        <a th:href="@{/health}" th:classappend="${path == '/health'} ? 'active'" class="bottom-nav-link">
-            <i class="bi bi-house-heart" aria-hidden="true"></i><span>Heute</span>
-        </a>
-        <div class="dropup bottom-nav-add">
-            <button type="button" class="bottom-nav-fab" data-bs-toggle="dropdown" aria-expanded="false"
-                    aria-label="Eintragen">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" th:href="@{/health/measure(type=WEIGHT)}"><i class="bi bi-speedometer2 me-2"></i>Gewicht</a></li>
-                <li><a class="dropdown-item" th:href="@{/health/measure(type=WAIST)}"><i class="bi bi-rulers me-2"></i>Taille</a></li>
-                <li><a class="dropdown-item" th:href="@{/health/measure(type=PUSH_UPS)}"><i class="bi bi-activity me-2"></i>Liegestütze</a></li>
-            </ul>
-        </div>
-        <a th:href="@{/health/goal}" th:classappend="${path == '/health/goal'} ? 'active'" class="bottom-nav-link">
-            <i class="bi bi-bullseye" aria-hidden="true"></i><span>Ziel</span>
-        </a>
-    </th:block>
-
-    <th:block th:unless="${inHealth}">
-        <a th:href="@{/}" th:classappend="${path == '/'} ? 'active'" class="bottom-nav-link">
-            <i class="bi bi-grid" aria-hidden="true"></i><span>Home</span>
-        </a>
-        <a th:href="@{/expenses}" th:classappend="${#strings.startsWith(path, '/expenses')} ? 'active'" class="bottom-nav-link">
-            <i class="bi bi-cart2" aria-hidden="true"></i><span>Ausgaben</span>
-        </a>
-        <a th:href="@{/health}" class="bottom-nav-link">
-            <i class="bi bi-heart-pulse" aria-hidden="true"></i><span>Gesundheit</span>
-        </a>
-    </th:block>
+    <a th:href="@{/}" th:classappend="${path == '/'} ? 'active'" class="bottom-nav-link"
+       th:attr="aria-current=${path == '/'} ? 'page'">
+        <i class="bi bi-grid" aria-hidden="true"></i><span>Home</span>
+    </a>
+    <a th:href="@{/expenses}" th:classappend="${#strings.startsWith(path, '/expenses')} ? 'active'" class="bottom-nav-link">
+        <i class="bi bi-cart2" aria-hidden="true"></i><span>Ausgaben</span>
+    </a>
+    <div class="dropup bottom-nav-add">
+        <button type="button" class="bottom-nav-fab" data-bs-toggle="dropdown" aria-expanded="false"
+                aria-label="Eintragen">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-center bottom-nav-menu">
+            <li><a class="dropdown-item fw-semibold" th:href="@{/health/meals/new}"><i class="bi bi-egg-fried me-2"></i>Mahlzeit erfassen</a></li>
+            <li><a class="dropdown-item" th:href="@{/health/meals/new(photo=true)}"><i class="bi bi-camera me-2"></i>Foto vom Teller</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" th:href="@{/health/measure(type=WEIGHT)}"><i class="bi bi-speedometer2 me-2"></i>Gewicht</a></li>
+            <li><a class="dropdown-item" th:href="@{/health/measure(type=WAIST)}"><i class="bi bi-rulers me-2"></i>Taille</a></li>
+            <li><a class="dropdown-item" th:href="@{/health/measure(type=PUSH_UPS)}"><i class="bi bi-activity me-2"></i>Liegestütze</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" th:href="@{/expenses#neue-ausgabe}"><i class="bi bi-cart-plus me-2"></i>Ausgabe</a></li>
+        </ul>
+    </div>
+    <a th:href="@{/health}" th:classappend="${#strings.startsWith(path, '/health')} ? 'active'" class="bottom-nav-link">
+        <i class="bi bi-heart-pulse" aria-hidden="true"></i><span>Gesundheit</span>
+    </a>
+    <button type="button" class="bottom-nav-link border-0 bg-transparent"
+            onclick="document.body.classList.toggle('toggle-sidebar')" aria-label="Menü öffnen">
+        <i class="bi bi-list" aria-hidden="true"></i><span>Menü</span>
+    </button>
 </nav>
 </body>
 </html>

@@ -7,6 +7,8 @@ import at.v3rtumnus.planman.dto.health.WeightTrend;
 import at.v3rtumnus.planman.entity.health.*;
 import at.v3rtumnus.planman.service.PlanManUserDetailsService;
 import at.v3rtumnus.planman.service.health.HealthService;
+import at.v3rtumnus.planman.service.health.MealService;
+import at.v3rtumnus.planman.dto.health.NutritionDay;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,8 @@ class HealthControllerTest {
 
     @MockitoBean
     private HealthService healthService;
+    @MockitoBean
+    private MealService mealService;
     @MockitoBean
     private PlanManUserDetailsService userDetailsService;
     @MockitoBean
@@ -88,6 +92,16 @@ class HealthControllerTest {
         when(healthService.status(eq(MeasurementType.PUSH_UPS), any())).thenReturn(
                 new MeasurementStatus(MeasurementType.PUSH_UPS, null, new BigDecimal("12"), TODAY.minusDays(3), false, 25));
         when(healthService.goalFormForChange()).thenReturn(GoalForm.from(goal));
+
+        Meal lunch = new Meal();
+        lunch.setId(4L);
+        lunch.setSlot(MealSlot.LUNCH);
+        lunch.setTitle("Putenschnitzel mit Erdäpfelsalat");
+        lunch.setKcal(720);
+        lunch.setProteinG(new BigDecimal("54.0"));
+        when(mealService.nutritionDay(TODAY)).thenReturn(
+                new NutritionDay(2000, 160, 720, new BigDecimal("54.0"), List.of(lunch)));
+        when(mealService.slotNow()).thenReturn(MealSlot.LUNCH);
     }
 
     @Test
@@ -95,7 +109,13 @@ class HealthControllerTest {
         mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("health/today"))
-                .andExpect(content().string(containsString("2.000 kcal")))
+                .andExpect(content().string(containsString("1.280 kcal")))
+                .andExpect(content().string(containsString("720 / 2.000")))
+                .andExpect(content().string(containsString("54 / 160 g")))
+                .andExpect(content().string(containsString("Putenschnitzel mit Erdäpfelsalat")))
+                .andExpect(content().string(containsString("/health/meals/4/edit")))
+                .andExpect(content().string(containsString("health-tabs")))
+                .andExpect(content().string(containsString("Mahlzeit erfassen")))
                 .andExpect(content().string(containsString("82,6 kg")))
                 .andExpect(content().string(containsString("-0,4 kg / Woche")))
                 .andExpect(content().string(containsString("Messen fällig")))
