@@ -15,14 +15,16 @@ class LiveMealRecognizerTest {
 
     @Test
     void recognizesAnAustrianLunch() {
-        AnthropicMealRecognizer recognizer = new AnthropicMealRecognizer(System.getenv("ANTHROPIC_API_KEY"), "");
+        AnthropicMealRecognizer recognizer = new AnthropicMealRecognizer(System.getenv("ANTHROPIC_API_KEY"), "", new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
         for (String model : new String[]{"claude-haiku-5-5", "claude-sonnet-5-5"}) {
-            MealRecognizer.Result result = recognizer.recognize(model, MealSlot.LUNCH,
-                    "Putenschnitzel mit Erdäpfelsalat und Preiselbeeren", null);
-            System.out.println("LIVE>> " + model + " " + result.latencyMs() + " ms, " + result.kcal() + " kcal: "
-                    + result.draft());
-            assertThat(result.draft().items()).isNotEmpty();
-            assertThat(result.kcal()).isBetween(400, 1600);
+            for (String meal : new String[]{"Putenschnitzel mit Erdäpfelsalat und Preiselbeeren",
+                    "Acht Schätze vom Chinarestaurant mit Reis"}) {
+                MealRecognizer.Result result = recognizer.recognize(model, MealSlot.LUNCH, meal, null);
+                System.out.println("LIVE>> " + model + " " + result.latencyMs() + " ms, " + result.kcal() + " kcal: "
+                        + result.draft());
+                assertThat(result.draft().items()).isNotEmpty();
+                assertThat(result.kcal()).isBetween(400, 1800);
+            }
         }
     }
 }

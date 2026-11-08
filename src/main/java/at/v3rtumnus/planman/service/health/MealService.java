@@ -45,7 +45,7 @@ public class MealService {
     public MealService(MealRepository mealRepository, SavedMealRepository savedMealRepository,
                        MealRecognitionRepository recognitionRepository, UserProfileRepository userProfileRepository,
                        HealthService healthService, MealRecognizer recognizer, Clock clock,
-                       @Value("${planman.health.ai.meal-model:claude-haiku-5-5}") String mealModel,
+                       @Value("${planman.health.ai.meal-model:claude-sonnet-5-5}") String mealModel,
                        @Value("${planman.health.ai.compare-model:}") String compareModel,
                        @Value("${planman.health.ai.compare-count:10}") int compareCount) {
         this.mealRepository = mealRepository;
@@ -131,7 +131,7 @@ public class MealService {
         MealRecognizer.Result resultA = join(a);
         MealRecognizer.Result resultB = join(b);
         if (resultA == null && resultB == null) {
-            throw new MealRecognitionException("Die Erkennung ist gerade nicht erreichbar. Bitte nochmal versuchen oder manuell eintragen.");
+            throw firstError(a, b);
         }
         if (resultA == null || resultB == null) {
             MealRecognizer.Result only = resultA != null ? resultA : resultB;
@@ -142,6 +142,26 @@ public class MealService {
         fill(recognition, false, resultB);
         boolean showA = recognitionRepository.countByUserUsernameAndModelBIsNotNull(username) % 2 == 0;
         return showA ? resultA : resultB;
+    }
+
+    /** Both models failed: report billing first, since retrying will not help then. */
+    private static MealRecognitionException firstError(CompletableFuture<?> a, CompletableFuture<?> b) {
+        MealRecognitionException ea = errorOf(a);
+        MealRecognitionException eb = errorOf(b);
+        if (eb != null && eb.getReason() == MealRecognitionException.Reason.BILLING) {
+            return eb;
+        }
+        return ea != null ? ea : eb != null ? eb : new MealRecognitionException(MealRecognitionException.Reason.UNAVAILABLE,
+                "Die Erkennung ist gerade nicht erreichbar. Bitte nochmal versuchen oder manuell eintragen.", null);
+    }
+
+    private static MealRecognitionException errorOf(CompletableFuture<?> future) {
+        try {
+            future.join();
+            return null;
+        } catch (CompletionException e) {
+            return e.getCause() instanceof MealRecognitionException m ? m : null;
+        }
     }
 
     private MealRecognizer.Result join(CompletableFuture<MealRecognizer.Result> future) {
