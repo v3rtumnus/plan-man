@@ -60,6 +60,8 @@ class MealServiceTest {
     private SavedMealRepository savedMealRepository;
     @Autowired
     private MealRecognitionRepository recognitionRepository;
+    @Autowired
+    private WorkoutRepository workoutRepository;
 
     private FakeRecognizer recognizer;
     private LocalTime now = LocalTime.of(12, 40);
@@ -90,7 +92,7 @@ class MealServiceTest {
         Clock clock = Clock.fixed(TODAY.atTime(now).atZone(ZONE).toInstant(), ZONE);
         HealthService health = new HealthService(goalRepository, dayRepository, pauseRepository, measurementRepository,
                 userProfileRepository, clock);
-        return new MealService(mealRepository, savedMealRepository, recognitionRepository, userProfileRepository,
+        return new MealService(mealRepository, savedMealRepository, recognitionRepository, workoutRepository, userProfileRepository,
                 health, recognizer, clock, HAIKU, compareModel, 2);
     }
 
@@ -128,7 +130,7 @@ class MealServiceTest {
     @Test
     void recognize_withoutTextAndPhoto_fails() {
         assertThatThrownBy(() -> service().recognize(MealSlot.LUNCH, "  ", null))
-                .isInstanceOf(MealRecognitionException.class);
+                .isInstanceOf(AiRequestException.class);
     }
 
     @Test
@@ -171,7 +173,7 @@ class MealServiceTest {
         recognizer.failing.add(SONNET);
         recognizer.failing.add(HAIKU);
         assertThatThrownBy(() -> service(SONNET).recognize(MealSlot.LUNCH, "Schnitzel", null))
-                .isInstanceOf(MealRecognitionException.class);
+                .isInstanceOf(AiRequestException.class);
     }
 
     @Test
@@ -179,8 +181,8 @@ class MealServiceTest {
         recognizer.failing.add(HAIKU);
         recognizer.billing.add(SONNET);
         assertThatThrownBy(() -> service(SONNET).recognize(MealSlot.LUNCH, "Schnitzel", null))
-                .isInstanceOfSatisfying(MealRecognitionException.class,
-                        e -> assertThat(e.getReason()).isEqualTo(MealRecognitionException.Reason.BILLING));
+                .isInstanceOfSatisfying(AiRequestException.class,
+                        e -> assertThat(e.getReason()).isEqualTo(AiRequestException.Reason.BILLING));
     }
 
     @Test
@@ -431,10 +433,10 @@ class MealServiceTest {
                 photos.add(photo);
             }
             if (billing.contains(model)) {
-                throw new MealRecognitionException(MealRecognitionException.Reason.BILLING, "Guthaben", null);
+                throw new AiRequestException(AiRequestException.Reason.BILLING, "Guthaben", null);
             }
             if (failing.contains(model)) {
-                throw new MealRecognitionException(MealRecognitionException.Reason.UNAVAILABLE, "down", null);
+                throw new AiRequestException(AiRequestException.Reason.UNAVAILABLE, "down", null);
             }
             MealDraft draft = new MealDraft("Putenschnitzel mit Erdäpfelsalat", List.of(
                     new MealDraft.DraftItem("Putenschnitzel, paniert", 180, 238.9, 23.35, 10, 12, true, "≈ 1 Stück"),

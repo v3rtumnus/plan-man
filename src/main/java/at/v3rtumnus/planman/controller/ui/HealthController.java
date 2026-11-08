@@ -8,6 +8,7 @@ import at.v3rtumnus.planman.entity.health.HealthGoal;
 import at.v3rtumnus.planman.entity.health.MeasurementType;
 import at.v3rtumnus.planman.service.health.HealthService;
 import at.v3rtumnus.planman.service.health.MealService;
+import at.v3rtumnus.planman.service.health.TrainingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class HealthController {
 
     private final HealthService healthService;
     private final MealService mealService;
+    private final TrainingService trainingService;
 
     @GetMapping
     public ModelAndView today() {
@@ -49,6 +51,9 @@ public class HealthController {
         mav.addObject("day", healthService.day(today));
         mav.addObject("nutrition", mealService.nutritionDay(today));
         mav.addObject("slotNow", mealService.slotNow());
+        mav.addObject("football", trainingService.footballState(today));
+        mav.addObject("footballMinutes", trainingService.footballMinutes());
+        mav.addObject("workouts", trainingService.workoutsOn(today));
         mav.addObject("goal", goal.orElse(null));
         mav.addObject("pause", healthService.activePause().orElse(null));
         mav.addObject("trend", trend);

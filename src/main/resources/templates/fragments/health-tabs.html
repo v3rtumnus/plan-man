@@ -1,10 +1,12 @@
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <body>
-<!-- Sub-navigation of the health section, at the top of its pages (phone and desktop). -->
+<!-- Sub-navigation of the health section, at the top of its pages (phone and desktop); Woche joins in H4. -->
 <nav th:fragment="health-tabs" class="health-tabs" aria-label="Gesundheit"
      th:with="path=${currentPath != null ? currentPath : ''}">
     <a th:href="@{/health}" class="health-tab" th:classappend="${path == '/health'} ? 'active'"
        th:attr="aria-current=${path == '/health'} ? 'page'">Heute</a>
+    <a th:href="@{/health/training}" class="health-tab" th:classappend="${#strings.startsWith(path, '/health/training')} ? 'active'"
+       th:attr="aria-current=${#strings.startsWith(path, '/health/training')} ? 'page'">Training</a>
     <a th:href="@{/health/goal}" class="health-tab" th:classappend="${path == '/health/goal'} ? 'active'"
        th:attr="aria-current=${path == '/health/goal'} ? 'page'">Ziel</a>
 </nav>

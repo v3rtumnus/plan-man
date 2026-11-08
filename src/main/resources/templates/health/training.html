@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Training · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Training</h1>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li>
+            <li class="breadcrumb-item active"
+                th:text="'Diese Woche: Freeletics ' + ${week.freeletics} + ' von ' + ${week.freeleticsTarget} + ' · ' + ${week.footballLabel()}">Diese Woche</li></ol></nav>
+    </div>
+
+    <div th:replace="~{fragments/health-tabs :: health-tabs}"></div>
+
+    <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
+    <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title pt-0 pb-2">Freeletics eintragen</h5>
+                    <form method="post" th:action="@{/health/training/freeletics}" id="freeletics-form"
+                          class="d-flex flex-column gap-2"
+                          th:attr="data-body-kg=${bodyKg}, data-met-light=${mets['LIGHT']},
+                                   data-met-medium=${mets['MEDIUM']}, data-met-hard=${mets['HARD']}">
+                        <div role="radiogroup" aria-label="Dauer" class="d-flex gap-2">
+                            <th:block th:each="m : ${freeleticsMinutes}">
+                                <input type="radio" class="btn-check" name="minutes" th:id="'fl-min-' + ${m}" th:value="${m}"
+                                       th:checked="${m == 30}" autocomplete="off">
+                                <label class="btn btn-outline-primary btn-sm health-chip flex-fill justify-content-center"
+                                       th:for="'fl-min-' + ${m}" th:text="${m} + ' min'">30 min</label>
+                            </th:block>
+                        </div>
+                        <div role="radiogroup" aria-label="Wie hart" class="d-flex gap-2">
+                            <th:block th:each="i : ${intensities}">
+                                <input type="radio" class="btn-check" name="intensity" th:id="'fl-int-' + ${i}" th:value="${i}"
+                                       th:checked="${i.name() == 'MEDIUM'}" autocomplete="off">
+                                <label class="btn btn-outline-primary btn-sm health-chip flex-fill justify-content-center"
+                                       th:for="'fl-int-' + ${i}" th:text="${i.label}">mittel</label>
+                            </th:block>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">Eintragen · <span id="fl-kcal">+250</span> kcal</button>
+                        <a th:href="@{/health/training/weights}" class="small fw-semibold">Hantelgewicht geändert? → Gewichte</a>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3" th:with="fb=${football.name()}">
+                    <h5 class="card-title pt-0 pb-2">Fußball (meist Dienstag)</h5>
+                    <th:block th:if="${fb == 'PLAYED'}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold text-success" th:text="'Heute ' + ${footballMinutes} + ' min eingetragen'">Heute 70 min eingetragen</span>
+                            <form method="post" th:action="@{/health/training/football}">
+                                <input type="hidden" name="answer" value="reset">
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Ändern</button>
+                            </form>
+                        </div>
+                    </th:block>
+                    <th:block th:if="${fb == 'CANCELLED'}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold text-muted">Fällt heute aus</span>
+                            <form method="post" th:action="@{/health/training/football}">
+                                <input type="hidden" name="answer" value="reset">
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Ändern</button>
+                            </form>
+                        </div>
+                    </th:block>
+                    <th:block th:if="${fb == 'OPEN' or fb == 'NOT_ASKED'}">
+                        <p class="small text-muted mb-2">Nichts ist fix: nur was du einträgst, zählt.</p>
+                        <div class="d-flex gap-2">
+                            <form method="post" th:action="@{/health/training/football}" class="flex-fill">
+                                <input type="hidden" name="answer" value="played">
+                                <button type="submit" class="btn btn-outline-primary w-100 health-tool"
+                                        th:text="${footballMinutes} + ' min gespielt'">70 min gespielt</button>
+                            </form>
+                            <form method="post" th:action="@{/health/training/football}" class="flex-fill">
+                                <input type="hidden" name="answer" value="cancelled">
+                                <button type="submit" class="btn btn-outline-secondary w-100 health-tool">Fällt aus</button>
+                            </form>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title pt-0 pb-2">Gehen / Rad</h5>
+                    <form method="post" th:action="@{/health/training/activity}" class="d-flex flex-column gap-2">
+                        <div role="radiogroup" aria-label="Art" class="d-flex gap-2">
+                            <input type="radio" class="btn-check" name="type" id="act-walk" value="WALK" checked autocomplete="off">
+                            <label class="btn btn-outline-primary btn-sm health-chip flex-fill justify-content-center" for="act-walk">Gehen</label>
+                            <input type="radio" class="btn-check" name="type" id="act-bike" value="CYCLING" autocomplete="off">
+                            <label class="btn btn-outline-primary btn-sm health-chip flex-fill justify-content-center" for="act-bike">Rad</label>
+                        </div>
+                        <div role="radiogroup" aria-label="Dauer" class="d-flex gap-2 flex-wrap">
+                            <th:block th:each="m : ${activityMinutes}">
+                                <input type="radio" class="btn-check" name="minutes" th:id="'act-min-' + ${m}" th:value="${m}"
+                                       th:checked="${m == 30}" autocomplete="off">
+                                <label class="btn btn-outline-primary btn-sm health-chip flex-fill justify-content-center"
+                                       th:for="'act-min-' + ${m}" th:text="${m} + ' min'">30 min</label>
+                            </th:block>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary health-tool">Eintragen</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title pt-0 pb-2">Etwas anderes</h5>
+                    <form method="post" th:action="@{/health/training/other}" class="d-flex flex-column gap-2" id="other-form">
+                        <label for="other-description" class="small text-muted">Ein Satz, die KI schätzt die Anstrengung.</label>
+                        <input type="text" id="other-description" name="description" class="form-control health-input" maxlength="500"
+                               placeholder="z. B. 1 Stunde Tennis Doppel" required th:value="${otherDescription}">
+                        <div class="input-group">
+                            <input type="number" name="minutes" class="form-control" min="1" max="600" inputmode="numeric"
+                                   placeholder="Dauer, falls nicht im Satz" aria-label="Dauer in Minuten">
+                            <span class="input-group-text">min</span>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary health-tool" th:disabled="${!aiAvailable}">
+                            <span class="spinner-border spinner-border-sm me-2 d-none" aria-hidden="true"></span>
+                            <span class="label">Schätzen &amp; eintragen</span>
+                        </button>
+                        <div class="small text-muted" th:unless="${aiAvailable}">KI ist aus (kein API-Schlüssel): bitte Gehen / Rad wählen.</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body pt-3 pb-0">
+                    <h5 class="card-title pt-0 pb-2">Zuletzt</h5>
+                    <p class="small text-muted" th:if="${recent.isEmpty()}">Noch kein Training eingetragen.</p>
+                </div>
+                <div class="health-row health-quick" th:each="w : ${recent}">
+                    <span class="flex-grow-1 me-2">
+                        <b th:text="${w.dayLabel()}">Mo</b>
+                        <span th:text="${w.label()} + ' · ' + ${w.durationMin} + ' min' + (${w.intensity != null and w.type.name() == 'FREELETICS'} ? ' · ' + ${w.intensity.label} : '')">Freeletics · 35 min · mittel</span>
+                    </span>
+                    <span class="small text-muted text-nowrap" th:text="'+' + ${w.bonusKcal} + ' kcal'">+250 kcal</span>
+                    <form method="post" th:action="@{/health/training/{id}/delete(id=${w.id})}"
+                          onsubmit="return confirm('Dieses Training löschen?')">
+                        <button type="submit" class="btn btn-link text-muted health-icon-btn" th:attr="aria-label=${w.label()} + ' löschen'">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+<script type="text/javascript" th:src="@{/resources/js/health-training.js}" src="/resources/js/health-training.js"></script>
+</body>
+</html>

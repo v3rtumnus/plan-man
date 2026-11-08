@@ -1,0 +1,349 @@
+package at.v3rtumnus.planman.service.health;
+
+import at.v3rtumnus.planman.dao.*;
+import at.v3rtumnus.planman.dto.health.ExerciseView;
+import at.v3rtumnus.planman.dto.health.FootballState;
+import at.v3rtumnus.planman.dto.health.TrainingWeek;
+import at.v3rtumnus.planman.dto.health.WeightTrend;
+import at.v3rtumnus.planman.dto.health.ai.ActivityDraft;
+import at.v3rtumnus.planman.entity.UserProfile;
+import at.v3rtumnus.planman.entity.health.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+import java.util.List;
+import java.util.Optional;
+
+/** Workouts, the football question and the dumbbell weights of the logged-in user. */
+@Service
+public class TrainingService {
+
+    /** Used for the MET formula until a weight is entered. */
+    static final BigDecimal DEFAULT_BODY_WEIGHT_KG = new BigDecimal("83");
+    static final BigDecimal WEIGHT_STEP_KG = new BigDecimal("2.5");
+    /** A weight unchanged this long, with enough easy sessions, gets the "+2.5 kg" tip. */
+    static final int TIP_AFTER_DAYS = 21;
+    static final int TIP_MIN_SESSIONS = 3;
+
+    private final WorkoutRepository workoutRepository;
+    private final ExerciseRepository exerciseRepository;
+    private final HealthDayRepository dayRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final HealthService healthService;
+    private final ActivityEstimator activityEstimator;
+    private final Clock clock;
+    private final DayOfWeek footballDay;
+    private final int footballMinutes;
+    private final int freeleticsPerWeek;
+
+    public TrainingService(WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository,
+                           HealthDayRepository dayRepository, UserProfileRepository userProfileRepository,
+                           HealthService healthService, ActivityEstimator activityEstimator, Clock clock,
+                           @Value("${planman.health.football-day:TUESDAY}") DayOfWeek footballDay,
+                           @Value("${planman.health.football-minutes:70}") int footballMinutes,
+                           @Value("${planman.health.freeletics-per-week:2}") int freeleticsPerWeek) {
+        this.workoutRepository = workoutRepository;
+        this.exerciseRepository = exerciseRepository;
+        this.dayRepository = dayRepository;
+        this.userProfileRepository = userProfileRepository;
+        this.healthService = healthService;
+        this.activityEstimator = activityEstimator;
+        this.clock = clock;
+        this.footballDay = footballDay;
+        this.footballMinutes = footballMinutes;
+        this.freeleticsPerWeek = freeleticsPerWeek;
+    }
+
+    public LocalDate today() {
+        return healthService.today();
+    }
+
+    public int footballMinutes() {
+        return footballMinutes;
+    }
+
+    public boolean aiAvailable() {
+        return activityEstimator.available();
+    }
+
+    // --- kcal ---
+
+    /** Burn above what you burn anyway (~1 MET), rounded to 10 kcal: what a session adds to the target. */
+    static int netKcal(double met, BigDecimal bodyKg, int minutes) {
+        return roundTo10(Math.max(0, met - 1) * bodyKg.doubleValue() * minutes / 60.0);
+    }
+
+    static int grossKcal(double met, BigDecimal bodyKg, int minutes) {
+        return roundTo10(met * bodyKg.doubleValue() * minutes / 60.0);
+    }
+
+    private static int roundTo10(double kcal) {
+        return (int) Math.round(kcal / 10.0) * 10;
+    }
+
+    /** Weight trend, else the latest weight, else 83 kg. */
+    public BigDecimal bodyWeightKg() {
+        WeightTrend trend = healthService.weightTrend();
+        if (trend.trendKg() != null) {
+            return trend.trendKg();
+        }
+        return trend.latestKg() != null ? trend.latestKg() : DEFAULT_BODY_WEIGHT_KG;
+    }
+
+    /** Preview for the chips: what a Freeletics session would add. */
+    public int freeleticsBonus(int minutes, Intensity intensity) {
+        return netKcal(WorkoutType.FREELETICS.met(intensity), bodyWeightKg(), minutes);
+    }
+
+    // --- logging ---
+
+    @Transactional
+    public Workout logFreeletics(int minutes, Intensity intensity) {
+        checkMinutes(minutes);
+        double met = WorkoutType.FREELETICS.met(intensity);
+        BigDecimal kg = bodyWeightKg();
+        return save(WorkoutType.FREELETICS, null, minutes, intensity, met,
+                grossKcal(met, kg, minutes), netKcal(met, kg, minutes), KcalSource.MET);
+    }
+
+    @Transactional
+    public Workout logActivity(WorkoutType type, int minutes) {
+        if (type != WorkoutType.WALK && type != WorkoutType.CYCLING) {
+            throw new IllegalArgumentException("Nur Gehen oder Rad");
+        }
+        checkMinutes(minutes);
+        double met = type.met(null);
+        BigDecimal kg = bodyWeightKg();
+        return save(type, null, minutes, null, met, grossKcal(met, kg, minutes), netKcal(met, kg, minutes), KcalSource.MET);
+    }
+
+    /** "Etwas anderes": the model picks title and MET; minutes from the form, else from the sentence. */
+    @Transactional
+    public Workout logOther(String description, Integer minutes) {
+        ActivityDraft draft = activityEstimator.estimate(description);
+        int duration = minutes != null && minutes > 0 ? minutes : draft.durationMin();
+        if (duration <= 0) {
+            throw new IllegalArgumentException("Wie lange? Bitte die Dauer in Minuten eintragen.");
+        }
+        checkMinutes(duration);
+        BigDecimal kg = bodyWeightKg();
+        String title = draft.title() == null || draft.title().isBlank() ? description.trim() : draft.title().trim();
+        return save(WorkoutType.OTHER, title.length() > 255 ? title.substring(0, 255) : title, duration, null,
+                draft.met(), grossKcal(draft.met(), kg, duration), netKcal(draft.met(), kg, duration), KcalSource.AI);
+    }
+
+    /** Football adds the goal's flat bonus: the daily burn already assumes two-thirds of it. */
+    @Transactional
+    public Workout logFootball() {
+        LocalDate today = healthService.today();
+        UserProfile user = currentUser();
+        workoutRepository.findByUserUsernameAndDoneOnOrderByCreatedAtAsc(user.getUsername(), today).stream()
+                .filter(w -> w.getType() == WorkoutType.FOOTBALL)
+                .forEach(workoutRepository::delete);
+        HealthDay day = healthService.day(today);
+        day.setFootballCancelled(false);
+        dayRepository.save(day);
+        int bonus = healthService.currentGoal().map(HealthGoal::getFootballBonusKcal).orElse(0);
+        double met = WorkoutType.FOOTBALL.met(Intensity.MEDIUM);
+        return save(WorkoutType.FOOTBALL, null, footballMinutes, Intensity.MEDIUM, met,
+                grossKcal(met, bodyWeightKg(), footballMinutes), bonus, KcalSource.MET);
+    }
+
+    @Transactional
+    public void cancelFootball() {
+        resetFootball();
+        HealthDay day = healthService.day(healthService.today());
+        day.setFootballCancelled(true);
+        dayRepository.save(day);
+    }
+
+    /** "Ändern": back to the open question. */
+    @Transactional
+    public void resetFootball() {
+        LocalDate today = healthService.today();
+        workoutRepository.findByUserUsernameAndDoneOnOrderByCreatedAtAsc(username(), today).stream()
+                .filter(w -> w.getType() == WorkoutType.FOOTBALL)
+                .forEach(workoutRepository::delete);
+        HealthDay day = healthService.day(today);
+        day.setFootballCancelled(false);
+        dayRepository.save(day);
+    }
+
+    @Transactional
+    public void delete(Long workoutId) {
+        workoutRepository.findByIdAndUserUsername(workoutId, username()).ifPresent(workoutRepository::delete);
+    }
+
+    private Workout save(WorkoutType type, String title, int minutes, Intensity intensity, double met,
+                         int kcal, int bonus, KcalSource source) {
+        LocalDate today = healthService.today();
+        healthService.day(today);
+        Workout workout = new Workout();
+        workout.setUser(currentUser());
+        workout.setDoneOn(today);
+        workout.setType(type);
+        workout.setTitle(title);
+        workout.setDurationMin(minutes);
+        workout.setIntensity(intensity);
+        workout.setMet(BigDecimal.valueOf(met).setScale(1, RoundingMode.HALF_UP));
+        workout.setKcal(kcal);
+        workout.setBonusKcal(bonus);
+        workout.setKcalSource(source);
+        workout.setCreatedAt(LocalDateTime.now(clock));
+        return workoutRepository.save(workout);
+    }
+
+    private static void checkMinutes(int minutes) {
+        if (minutes < 1 || minutes > 600) {
+            throw new IllegalArgumentException("Bitte eine Dauer zwischen 1 und 600 Minuten angeben");
+        }
+    }
+
+    // --- reading ---
+
+    public List<Workout> recent() {
+        return workoutRepository.findTop10ByUserUsernameOrderByDoneOnDescCreatedAtDesc(username());
+    }
+
+    public List<Workout> workoutsOn(LocalDate date) {
+        return workoutRepository.findByUserUsernameAndDoneOnOrderByCreatedAtAsc(username(), date);
+    }
+
+    /** The football card on Heute: asked on the football weekday, shown any day once answered. */
+    public FootballState footballState(LocalDate date) {
+        boolean played = workoutsOn(date).stream().anyMatch(w -> w.getType() == WorkoutType.FOOTBALL);
+        if (played) {
+            return FootballState.PLAYED;
+        }
+        boolean cancelled = dayRepository.findByUserUsernameAndDate(username(), date)
+                .map(HealthDay::isFootballCancelled).orElse(false);
+        if (cancelled) {
+            return FootballState.CANCELLED;
+        }
+        return date.getDayOfWeek() == footballDay ? FootballState.OPEN : FootballState.NOT_ASKED;
+    }
+
+    public TrainingWeek week() {
+        LocalDate today = healthService.today();
+        LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        List<Workout> workouts = workoutRepository.findByUserUsernameAndDoneOnBetweenOrderByDoneOnAscCreatedAtAsc(
+                username(), monday, monday.plusDays(6));
+        int freeletics = (int) workouts.stream().filter(w -> w.getType() == WorkoutType.FREELETICS).count();
+        boolean football = workouts.stream().anyMatch(w -> w.getType() == WorkoutType.FOOTBALL);
+        LocalDate footballDate = monday.plusDays(footballDay.getValue() - 1L);
+        boolean cancelled = !football && dayRepository.findByUserUsernameAndDate(username(), footballDate)
+                .map(HealthDay::isFootballCancelled).orElse(false);
+        return new TrainingWeek(freeletics, freeleticsPerWeek,
+                football ? FootballState.PLAYED : cancelled ? FootballState.CANCELLED : FootballState.OPEN);
+    }
+
+    // --- dumbbell weights ---
+
+    public List<ExerciseView> exercises() {
+        String username = username();
+        LocalDate today = healthService.today();
+        return exerciseRepository.findByUserUsernameAndActiveTrueOrderByCreatedAtAscIdAsc(username).stream()
+                .map(exercise -> {
+                    ExerciseWeight current = exercise.current();
+                    if (current == null) {
+                        return new ExerciseView(exercise.getId(), exercise.getName(), null, null, null);
+                    }
+                    return new ExerciseView(exercise.getId(), exercise.getName(), current.getWeightKg(),
+                            current.getValidFrom(), tip(username, current, today));
+                })
+                .toList();
+    }
+
+    /**
+     * +2.5 kg once a weight has stayed for 3 weeks with at least 3 Freeletics sessions since, none
+     * rated hart. No upper limit: a tip your plates cannot build means it is time to buy more.
+     */
+    private BigDecimal tip(String username, ExerciseWeight current, LocalDate today) {
+        if (ChronoUnit.DAYS.between(current.getValidFrom(), today) < TIP_AFTER_DAYS) {
+            return null;
+        }
+        List<Workout> sessions = workoutRepository.findByUserUsernameAndTypeAndDoneOnGreaterThanEqual(
+                username, WorkoutType.FREELETICS, current.getValidFrom());
+        boolean easyEnough = sessions.size() >= TIP_MIN_SESSIONS
+                && sessions.stream().noneMatch(w -> w.getIntensity() == Intensity.HARD);
+        return easyEnough ? current.getWeightKg().add(WEIGHT_STEP_KG) : null;
+    }
+
+    @Transactional
+    public Exercise addExercise(String name, BigDecimal weightKg) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Bitte den Namen der Übung angeben");
+        }
+        UserProfile user = currentUser();
+        String trimmed = name.trim().length() > 255 ? name.trim().substring(0, 255) : name.trim();
+        Exercise exercise = exerciseRepository.findByUserUsernameAndNameIgnoreCase(user.getUsername(), trimmed)
+                .orElseGet(() -> {
+                    Exercise created = new Exercise();
+                    created.setUser(user);
+                    created.setName(trimmed);
+                    created.setCreatedAt(LocalDateTime.now(clock));
+                    return created;
+                });
+        exercise.setActive(true);
+        Exercise saved = exerciseRepository.save(exercise);
+        if (weightKg != null) {
+            setWeight(saved, weightKg);
+        }
+        return saved;
+    }
+
+    @Transactional
+    public Exercise changeWeight(Long exerciseId, BigDecimal weightKg) {
+        Exercise exercise = exerciseRepository.findByIdAndUserUsername(exerciseId, username())
+                .orElseThrow(() -> new IllegalArgumentException("Übung nicht gefunden"));
+        setWeight(exercise, weightKg);
+        return exerciseRepository.save(exercise);
+    }
+
+    /** One row per day: a second change on the same day replaces the first. */
+    private void setWeight(Exercise exercise, BigDecimal weightKg) {
+        if (weightKg.signum() <= 0 || weightKg.compareTo(new BigDecimal("200")) > 0) {
+            throw new IllegalArgumentException("Gewicht zwischen 0 und 200 kg angeben");
+        }
+        LocalDate today = healthService.today();
+        BigDecimal kg = weightKg.setScale(2, RoundingMode.HALF_UP);
+        Optional<ExerciseWeight> sameDay = exercise.getWeights().stream()
+                .filter(w -> w.getValidFrom().equals(today)).findFirst();
+        ExerciseWeight row = sameDay.orElseGet(() -> {
+            ExerciseWeight created = new ExerciseWeight();
+            created.setExercise(exercise);
+            created.setValidFrom(today);
+            exercise.getWeights().addFirst(created);
+            return created;
+        });
+        row.setWeightKg(kg);
+        row.setCreatedAt(LocalDateTime.now(clock));
+    }
+
+    @Transactional
+    public void removeExercise(Long exerciseId) {
+        exerciseRepository.findByIdAndUserUsername(exerciseId, username()).ifPresent(exercise -> {
+            exercise.setActive(false);
+            exerciseRepository.save(exercise);
+        });
+    }
+
+    private String username() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private UserProfile currentUser() {
+        return userProfileRepository.findByUsername(username())
+                .orElseThrow(() -> new IllegalStateException("Unknown user " + username()));
+    }
+}

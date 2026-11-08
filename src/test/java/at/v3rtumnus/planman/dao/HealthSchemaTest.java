@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests run on H2 with Hibernate's own schema, not the Liquibase changelog. This pins the
- * column names Hibernate expects to the ones changelog 1_34 creates in MariaDB, so a
+ * column names Hibernate expects to the ones the health changelogs create in MariaDB, so a
  * naming-strategy surprise (modelB → "modelb") fails here instead of in production.
  */
 @DataJpaTest
@@ -26,10 +26,23 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.liquibase.enabled=false",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-class MealSchemaTest {
+class HealthSchemaTest {
 
-    /** Columns as created by db.changelog_1_34.xml (checked against MariaDB on 2026-11-08). */
+    /**
+     * Columns as created by the health changelogs 1_33–1_35 (1_33/1_34 checked against MariaDB on
+     * 2026-11-08; 1_35 adds workout, exercise, exercise_weight, health_day.football_cancelled and
+     * drops health_goal.freeletics_bonus_kcal).
+     */
     private static final Map<String, Set<String>> CHANGELOG = Map.of(
+            "health_day", Set.of("id", "user_profile_id", "day_date", "health_goal_id", "kcal_target", "protein_target_g",
+                    "steps_target", "steps", "resting_hr", "sleep_minutes", "paused", "football_cancelled"),
+            "health_goal", Set.of("id", "user_profile_id", "title", "valid_from", "valid_to", "kcal_target",
+                    "protein_target_g", "football_bonus_kcal", "steps_target", "start_weight_kg", "target_weight_kg",
+                    "target_date", "push_ups_target", "created_at"),
+            "workout", Set.of("id", "user_profile_id", "done_on", "type", "title", "duration_min", "intensity", "met",
+                    "kcal", "bonus_kcal", "kcal_source", "created_at"),
+            "exercise", Set.of("id", "user_profile_id", "name", "active", "created_at"),
+            "exercise_weight", Set.of("id", "exercise_id", "weight_kg", "valid_from", "created_at"),
             "meal", Set.of("id", "user_profile_id", "eaten_on", "slot", "title", "source", "kcal", "protein_g",
                     "carbs_g", "fat_g", "saved_meal_id", "meal_recognition_id", "created_at"),
             "meal_item", Set.of("id", "meal_id", "position", "name", "grams", "kcal_per_100g", "protein_per_100g",

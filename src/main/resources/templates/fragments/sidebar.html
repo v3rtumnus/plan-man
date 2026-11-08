@@ -104,6 +104,11 @@
               </a>
             </li>
             <li>
+              <a th:href="@{/health/training}" th:class="${#strings.startsWith(currentPath, '/health/training')} ? 'active' : ''">
+                <i class="bi bi-circle"></i><span>Training</span>
+              </a>
+            </li>
+            <li>
               <a th:href="@{/health/goal}" th:class="${currentPath == '/health/goal'} ? 'active' : ''">
                 <i class="bi bi-circle"></i><span>Ziel &amp; Verlauf</span>
               </a>

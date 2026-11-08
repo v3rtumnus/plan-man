@@ -8,6 +8,8 @@ import at.v3rtumnus.planman.entity.health.*;
 import at.v3rtumnus.planman.service.PlanManUserDetailsService;
 import at.v3rtumnus.planman.service.health.HealthService;
 import at.v3rtumnus.planman.service.health.MealService;
+import at.v3rtumnus.planman.service.health.TrainingService;
+import at.v3rtumnus.planman.dto.health.FootballState;
 import at.v3rtumnus.planman.dto.health.NutritionDay;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +48,8 @@ class HealthControllerTest {
     @MockitoBean
     private MealService mealService;
     @MockitoBean
+    private TrainingService trainingService;
+    @MockitoBean
     private PlanManUserDetailsService userDetailsService;
     @MockitoBean
     private DataSource dataSource;
@@ -62,7 +66,6 @@ class HealthControllerTest {
         goal.setKcalTarget(2000);
         goal.setProteinTargetG(160);
         goal.setFootballBonusKcal(250);
-        goal.setFreeleticsBonusKcal(100);
         goal.setStepsTarget(8000);
         goal.setStartWeightKg(new BigDecimal("83.0"));
         goal.setTargetWeightKg(new BigDecimal("77.0"));
@@ -100,8 +103,10 @@ class HealthControllerTest {
         lunch.setKcal(720);
         lunch.setProteinG(new BigDecimal("54.0"));
         when(mealService.nutritionDay(TODAY)).thenReturn(
-                new NutritionDay(2000, 160, 720, new BigDecimal("54.0"), List.of(lunch)));
+                new NutritionDay(2000, 250, 160, 720, new BigDecimal("54.0"), List.of(lunch)));
         when(mealService.slotNow()).thenReturn(MealSlot.LUNCH);
+        when(trainingService.footballState(TODAY)).thenReturn(FootballState.OPEN);
+        when(trainingService.footballMinutes()).thenReturn(70);
     }
 
     @Test
@@ -109,8 +114,11 @@ class HealthControllerTest {
         mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("health/today"))
-                .andExpect(content().string(containsString("1.280 kcal")))
-                .andExpect(content().string(containsString("720 / 2.000")))
+                .andExpect(content().string(containsString("1.530 kcal")))
+                .andExpect(content().string(containsString("720 / 2.250")))
+                .andExpect(content().string(containsString("Tagesziel 2.000 + 250 kcal Training")))
+                .andExpect(content().string(containsString("Fußball heute?")))
+                .andExpect(content().string(containsString("Training eintragen")))
                 .andExpect(content().string(containsString("54 / 160 g")))
                 .andExpect(content().string(containsString("Putenschnitzel mit Erdäpfelsalat")))
                 .andExpect(content().string(containsString("/health/meals/4/edit")))
@@ -121,6 +129,23 @@ class HealthControllerTest {
                 .andExpect(content().string(containsString("Messen fällig")))
                 .andExpect(content().string(containsString("bottom-nav")))
                 .andExpect(content().string(containsString("manifest.webmanifest")));
+    }
+
+    @Test
+    void today_footballPlayed_showsEntryWithChange() throws Exception {
+        when(trainingService.footballState(TODAY)).thenReturn(FootballState.PLAYED);
+
+        mockMvc.perform(get("/health"))
+                .andExpect(content().string(containsString("Fußball 70 min eingetragen · +250 kcal")))
+                .andExpect(content().string(containsString("value=\"reset\"")));
+    }
+
+    @Test
+    void today_notFootballDay_noCard() throws Exception {
+        when(trainingService.footballState(TODAY)).thenReturn(FootballState.NOT_ASKED);
+
+        mockMvc.perform(get("/health"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("Fußball heute?"))));
     }
 
     @Test
@@ -165,7 +190,6 @@ class HealthControllerTest {
                         .param("kcalTarget", "2200")
                         .param("proteinTargetG", "150")
                         .param("footballBonusKcal", "250")
-                        .param("freeleticsBonusKcal", "100")
                         .param("stepsTarget", "8000")
                         .param("startWeightKg", "77.0")
                         .param("targetWeightKg", "77.0")
@@ -193,7 +217,7 @@ class HealthControllerTest {
 
         mockMvc.perform(post("/health/goal")
                         .param("title", "Halten").param("kcalTarget", "2200").param("proteinTargetG", "150")
-                        .param("footballBonusKcal", "250").param("freeleticsBonusKcal", "100")
+                        .param("footballBonusKcal", "250")
                         .param("stepsTarget", "8000").param("startWeightKg", "77").param("targetWeightKg", "77")
                         .param("targetDate", "2026-01-01"))
                 .andExpect(status().isOk())

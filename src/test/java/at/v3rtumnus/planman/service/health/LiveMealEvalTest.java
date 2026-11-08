@@ -39,7 +39,7 @@ class LiveMealEvalTest {
 
     @Test
     void eval() {
-        AnthropicMealRecognizer recognizer = new AnthropicMealRecognizer(System.getenv("ANTHROPIC_API_KEY"), "", new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
+        AnthropicMealRecognizer recognizer = new AnthropicMealRecognizer(new AnthropicGateway(System.getenv("ANTHROPIC_API_KEY"), "", new io.micrometer.core.instrument.simple.SimpleMeterRegistry()));
         List<String> rows = new ArrayList<>();
         for (String model : new String[]{"claude-haiku-5-5", "claude-sonnet-5-5"}) {
             int hits = 0;

@@ -1516,3 +1516,16 @@ a.health-meal-row:hover {
     z-index: 5;
   }
 }
+
+/* Training */
+.health-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #146c43;
+  background: #e0f8e9;
+  border-radius: 4px;
+  padding: 4px 4px 4px 8px;
+}

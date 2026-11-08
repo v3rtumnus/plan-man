@@ -6,12 +6,19 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-/** What was eaten on a day against the day's targets (targets null without a goal). */
-public record NutritionDay(Integer kcalTarget, Integer proteinTargetG, int kcalEaten, BigDecimal proteinEatenG,
-                           List<Meal> meals) {
+/**
+ * What was eaten on a day against the day's targets (targets null without a goal). The kcal
+ * target is the goal's base plus what the day's logged training adds.
+ */
+public record NutritionDay(Integer baseKcalTarget, int trainingKcal, Integer proteinTargetG, int kcalEaten,
+                           BigDecimal proteinEatenG, List<Meal> meals) {
+
+    public Integer kcalTarget() {
+        return baseKcalTarget == null ? null : baseKcalTarget + trainingKcal;
+    }
 
     public Integer kcalLeft() {
-        return kcalTarget == null ? null : kcalTarget - kcalEaten;
+        return baseKcalTarget == null ? null : kcalTarget() - kcalEaten;
     }
 
     public Integer proteinLeftG() {
@@ -21,7 +28,7 @@ public record NutritionDay(Integer kcalTarget, Integer proteinTargetG, int kcalE
 
     /** 0–100, for the progress bars. */
     public int kcalPercent() {
-        return percent(kcalEaten, kcalTarget);
+        return percent(kcalEaten, kcalTarget());
     }
 
     public int proteinPercent() {

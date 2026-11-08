@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Hantelgewichte · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Hantelgewichte</h1>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/health/training}">Training</a></li>
+            <li class="breadcrumb-item active">Gewichte</li></ol></nav>
+    </div>
+
+    <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
+    <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <p class="small">Freeletics merkt sich keine Gewichte. Hier steht, womit du welche Übung machst.
+                <b>Nur ändern, wenn du ein anderes Gewicht nimmst</b> — sonst nichts eintragen.</p>
+
+            <div class="card">
+                <div class="card-body pt-3 pb-0" th:if="${exercises.isEmpty()}">
+                    <p class="small text-muted">Noch keine Übung. Trag die Hantel-Übungen aus deinem Freeletics-Plan ein.</p>
+                </div>
+                <div class="health-item" th:each="e : ${exercises}" th:id="'exercise-' + ${e.id}">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold health-name" th:text="${e.name}">Goblet Squat</div>
+                            <div class="small text-muted" th:if="${e.since}"
+                                 th:text="'seit ' + ${#temporals.format(e.since, 'dd.MM.yyyy')}">seit 3 Wochen</div>
+                        </div>
+                        <form method="post" th:action="@{/health/training/weights/{id}(id=${e.id})}" th:if="${e.weightKg}">
+                            <input type="hidden" name="weightKg" th:value="${e.lighterKg()}">
+                            <button type="submit" class="btn btn-outline-primary health-step" aria-label="2,5 kg leichter">−</button>
+                        </form>
+                        <span class="fw-bold health-name text-center" style="min-width: 64px" th:text="${e.weightLabel()}">12,5 kg</span>
+                        <form method="post" th:action="@{/health/training/weights/{id}(id=${e.id})}">
+                            <input type="hidden" name="weightKg" th:value="${e.heavierKg()}">
+                            <button type="submit" class="btn btn-outline-primary health-step" aria-label="2,5 kg schwerer">+</button>
+                        </form>
+                    </div>
+                    <div class="health-tip" th:if="${e.tipKg}">
+                        <span th:text="'Bereit für mehr: ' + ${e.tipLabel()} + ' probieren?'">Bereit für mehr: 15 kg probieren?</span>
+                        <form method="post" th:action="@{/health/training/weights/{id}(id=${e.id})}" class="ms-auto">
+                            <input type="hidden" name="weightKg" th:value="${e.tipKg}">
+                            <button type="submit" class="btn btn-success btn-sm"
+                                    th:text="${e.tipLabel()}">15 kg</button>
+                        </form>
+                    </div>
+                    <form method="post" th:action="@{/health/training/weights/{id}/remove(id=${e.id})}"
+                          onsubmit="return confirm('Übung aus der Liste entfernen?')">
+                        <button type="submit" class="btn btn-link btn-sm text-muted p-0">entfernen</button>
+                    </form>
+                </div>
+
+                <form method="post" th:action="@{/health/training/weights}" class="health-item">
+                    <div class="fw-semibold small">+ Übung aus Freeletics hinzufügen</div>
+                    <div class="d-flex gap-2">
+                        <input type="text" name="name" class="form-control health-input" maxlength="255" required
+                               placeholder="z. B. Goblet Squat" aria-label="Übung">
+                        <div class="input-group" style="max-width: 130px">
+                            <input type="number" name="weightKg" class="form-control" min="1.25" max="200" step="1.25"
+                                   inputmode="decimal" placeholder="kg" aria-label="Gewicht in kg">
+                            <span class="input-group-text">kg</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary health-tool">Hinzufügen</button>
+                </form>
+            </div>
+
+            <p class="small text-muted">Der Tipp kommt, wenn ein Gewicht 3 Wochen gleich war und du seither mindestens
+                3 Einheiten eingetragen hast, keine davon „hart“. Schritt = 2,5 kg (je Seite eine 1,25-kg-Scheibe).
+                Kannst du den Tipp mit deinen Scheiben nicht bauen, ist es Zeit für mehr Scheiben.
+                Leichte und schwere Hantel vor dem Training fertig machen.</p>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>
