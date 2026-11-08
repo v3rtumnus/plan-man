@@ -175,6 +175,15 @@ class MealServiceTest {
     }
 
     @Test
+    void recognize_compareMode_bothFail_reportsBillingFirst() {
+        recognizer.failing.add(HAIKU);
+        recognizer.billing.add(SONNET);
+        assertThatThrownBy(() -> service(SONNET).recognize(MealSlot.LUNCH, "Schnitzel", null))
+                .isInstanceOfSatisfying(MealRecognitionException.class,
+                        e -> assertThat(e.getReason()).isEqualTo(MealRecognitionException.Reason.BILLING));
+    }
+
+    @Test
     void questionFrom_ignoresIncompleteQuestions() {
         MealDraft.DraftItem item = new MealDraft.DraftItem("Brot", 50, 250, 8, 48, 1, false, null);
         MealDraft.DraftOption option = new MealDraft.DraftOption("a", 1, 1, 1, 1);
@@ -408,6 +417,7 @@ class MealServiceTest {
         final List<String> models = new ArrayList<>();
         final List<String> photos = new ArrayList<>();
         final Set<String> failing = new HashSet<>();
+        final Set<String> billing = new HashSet<>();
 
         @Override
         public boolean available() {
@@ -420,8 +430,11 @@ class MealServiceTest {
             if (photo != null) {
                 photos.add(photo);
             }
+            if (billing.contains(model)) {
+                throw new MealRecognitionException(MealRecognitionException.Reason.BILLING, "Guthaben", null);
+            }
             if (failing.contains(model)) {
-                throw new MealRecognitionException("down");
+                throw new MealRecognitionException(MealRecognitionException.Reason.UNAVAILABLE, "down", null);
             }
             MealDraft draft = new MealDraft("Putenschnitzel mit Erdäpfelsalat", List.of(
                     new MealDraft.DraftItem("Putenschnitzel, paniert", 180, 238.9, 23.35, 10, 12, true, "≈ 1 Stück"),
