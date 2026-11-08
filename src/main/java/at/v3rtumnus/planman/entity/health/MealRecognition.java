@@ -29,18 +29,25 @@ public class MealRecognition {
     private String description;
     private boolean hadPhoto;
 
+    // Explicit names: the naming strategy maps a trailing single capital (modelA) to "modela"
+    @Column(name = "MODEL_A")
     private String modelA;
     @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "RESULT_A", columnDefinition = "TEXT")
     private String resultA;
+    @Column(name = "KCAL_A")
     private Integer kcalA;
+    @Column(name = "LATENCY_A_MS")
     private Integer latencyAMs;
 
+    @Column(name = "MODEL_B")
     private String modelB;
     @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "RESULT_B", columnDefinition = "TEXT")
     private String resultB;
+    @Column(name = "KCAL_B")
     private Integer kcalB;
+    @Column(name = "LATENCY_B_MS")
     private Integer latencyBMs;
 
     private String shownModel;
