@@ -2,6 +2,15 @@
 // network as usual, so the app always shows current data and login redirects still work.
 // It shows plan-man's Web Push messages and sends their button taps back.
 
+// Shown on /notifications; raise it with every change to this file.
+const VERSION = 2;
+
+self.addEventListener('message', (event) => {
+    if (event.data === 'version' && event.ports[0]) {
+        event.ports[0].postMessage(VERSION);
+    }
+});
+
 self.addEventListener('install', () => {
     self.skipWaiting();
 });

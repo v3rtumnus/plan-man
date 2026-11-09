@@ -158,19 +158,43 @@
             enable.classList.toggle('d-none', !offerEnable);
         }
 
+        // Asks the active service worker for its version (old workers without push do not answer).
+        function workerVersion(registration) {
+            return new Promise(function (resolve) {
+                const worker = registration.active;
+                if (!worker) {
+                    resolve(null);
+                    return;
+                }
+                const channel = new MessageChannel();
+                channel.port1.onmessage = function (event) { resolve(event.data); };
+                worker.postMessage('version', [channel.port2]);
+                setTimeout(function () { resolve(null); }, 1500);
+            });
+        }
+
+        function withVersion(text, version) {
+            return text + (version ? ' (Service Worker v' + version + ')' : ' (alter Service Worker: App schließen und neu öffnen)');
+        }
+
         if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
             show('Dieser Browser kann keine Push-Nachrichten empfangen. Auf dem iPhone geht es nur in der installierten App.', false);
         } else if (Notification.permission === 'denied') {
             show('Benachrichtigungen sind für Plan-Man blockiert. In den Website-Einstellungen des Browsers erlauben, dann neu laden.', false);
         } else {
             navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then(function (registration) { return registration.update().catch(function () {}); })
                 .then(function () { return navigator.serviceWorker.ready; })
-                .then(function (registration) { return registration.pushManager.getSubscription(); })
-                .then(function (subscription) {
+                .then(function (registration) {
+                    return Promise.all([registration.pushManager.getSubscription(), workerVersion(registration)]);
+                })
+                .then(function (results) {
+                    const subscription = results[0];
+                    const version = results[1];
                     if (subscription && sameKey(subscription, key) && knownEndpoints().indexOf(subscription.endpoint) >= 0) {
-                        show('Push ist auf diesem Gerät an.', false);
+                        show(withVersion('Push ist auf diesem Gerät an.', version), false);
                     } else {
-                        show('Push ist auf diesem Gerät aus.', true);
+                        show(withVersion('Push ist auf diesem Gerät aus.', version), true);
                     }
                 })
                 .catch(function (error) { show('Push-Status unbekannt: ' + error.message, true); });
