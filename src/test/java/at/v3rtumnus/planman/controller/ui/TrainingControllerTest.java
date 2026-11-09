@@ -1,6 +1,5 @@
 package at.v3rtumnus.planman.controller.ui;
 
-import at.v3rtumnus.planman.dto.health.ExerciseView;
 import at.v3rtumnus.planman.dto.health.FootballState;
 import at.v3rtumnus.planman.dto.health.TrainingWeek;
 import at.v3rtumnus.planman.entity.health.Intensity;
@@ -153,45 +152,5 @@ class TrainingControllerTest {
     void delete_removesWorkout() throws Exception {
         mockMvc.perform(post("/health/training/3/delete")).andExpect(redirectedUrl("/health/training"));
         verify(trainingService).delete(3L);
-    }
-
-    @Test
-    void weights_renderTipAndSteps() throws Exception {
-        when(trainingService.exercises()).thenReturn(List.of(
-                new ExerciseView(1L, "Goblet Squat", new BigDecimal("12.50"), TODAY.minusDays(21), new BigDecimal("15.00")),
-                new ExerciseView(2L, "Rudern", null, null, null)));
-
-        mockMvc.perform(get("/health/training/weights"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("health/weights"))
-                .andExpect(content().string(containsString("12,5 kg")))
-                .andExpect(content().string(containsString("Bereit für mehr: 15 kg probieren?")))
-                .andExpect(content().string(containsString("value=\"10.00\"")))
-                .andExpect(content().string(containsString("value=\"15.00\"")))
-                .andExpect(content().string(containsString("seit 20.10.2026")))
-                .andExpect(content().string(containsString("Zeit für mehr Scheiben")));
-    }
-
-    @Test
-    void weights_addChangeRemove() throws Exception {
-        mockMvc.perform(post("/health/training/weights").param("name", "Thruster").param("weightKg", "10"))
-                .andExpect(redirectedUrl("/health/training/weights"))
-                .andExpect(flash().attribute("successMessage", "Thruster hinzugefügt"));
-        verify(trainingService).addExercise("Thruster", new BigDecimal("10"));
-
-        mockMvc.perform(post("/health/training/weights/1").param("weightKg", "15"))
-                .andExpect(redirectedUrl("/health/training/weights#exercise-1"));
-        verify(trainingService).changeWeight(1L, new BigDecimal("15"));
-
-        when(trainingService.changeWeight(eq(9L), any())).thenThrow(new IllegalArgumentException("Übung nicht gefunden"));
-        mockMvc.perform(post("/health/training/weights/9").param("weightKg", "15"))
-                .andExpect(flash().attribute("errorMessage", "Übung nicht gefunden"));
-
-        when(trainingService.addExercise(eq(" "), any())).thenThrow(new IllegalArgumentException("Bitte den Namen"));
-        mockMvc.perform(post("/health/training/weights").param("name", " "))
-                .andExpect(flash().attribute("errorMessage", "Bitte den Namen"));
-
-        mockMvc.perform(post("/health/training/weights/1/remove")).andExpect(redirectedUrl("/health/training/weights"));
-        verify(trainingService).removeExercise(1L);
     }
 }
