@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Benachrichtigungen · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+    <style>
+        .notification-row.is-read { opacity: .55; }
+        .notification-row.is-target { background: #fff8e1; }
+        .notification-row .notification-message { white-space: pre-line; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Benachrichtigungen</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title p-0 m-0">Posteingang</h5>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="notifications-read-all"
+                                th:if="${notifications.?[!read()].size() > 0}">Alle gelesen</button>
+                    </div>
+
+                    <p class="text-muted mb-0" th:if="${notifications.isEmpty()}">Keine Benachrichtigungen.</p>
+
+                    <ul class="list-group list-group-flush" th:unless="${notifications.isEmpty()}">
+                        <li class="list-group-item px-0 notification-row" th:each="n : ${notifications}"
+                            th:id="'notification-' + ${n.id()}" th:classappend="${n.read()} ? 'is-read'">
+                            <div class="d-flex gap-2">
+                                <i th:class="'bi fs-5 ' + ${n.iconClass()} + ' ' + ${n.textClass()}"></i>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between gap-2">
+                                        <strong th:text="${n.title()}">Titel</strong>
+                                        <small class="text-muted text-nowrap"
+                                               th:text="${#temporals.format(n.createdAt(), 'dd.MM. HH:mm')}">09.11. 20:00</small>
+                                    </div>
+                                    <div class="small notification-message" th:text="${n.message()}">Nachricht</div>
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        <th:block th:unless="${n.read()}">
+                                            <button type="button" class="btn btn-sm btn-primary" th:each="a : ${n.actions()}"
+                                                    th:attr="data-notification-action=${a.key()},data-notification-id=${n.id()}"
+                                                    th:text="${a.label()}">Aktion</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                    th:if="${n.actions().isEmpty()}"
+                                                    th:attr="data-notification-read=${n.id()}">Gelesen</button>
+                                        </th:block>
+                                        <a class="btn btn-sm btn-outline-primary" th:if="${n.url() != null and n.url() != '/notifications'}"
+                                           th:href="${n.url()}">Öffnen</a>
+                                        <button type="button" class="btn btn-sm btn-link text-muted ms-auto" title="Löschen"
+                                                th:attr="data-notification-delete=${n.id()}"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card" id="push">
+                <div class="card-body pt-3" id="push-card" th:attr="data-vapid-key=${vapidPublicKey}">
+                    <h5 class="card-title p-0 mb-2">Push</h5>
+
+                    <p class="small mb-2" th:if="${vapidPublicKey == null}">Push ist am Server nicht eingerichtet.</p>
+
+                    <th:block th:if="${vapidPublicKey != null}">
+                        <p class="small mb-2" id="push-status">Prüfe dieses Gerät …</p>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-primary d-none" id="push-enable">Push auf diesem Gerät aktivieren</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="push-test"
+                                    th:disabled="${devices.isEmpty()}">Test-Push senden</button>
+                        </div>
+                    </th:block>
+
+                    <h6 class="small text-muted text-uppercase mb-1">Geräte</h6>
+                    <p class="small text-muted mb-0" th:if="${devices.isEmpty()}"><i class="bi bi-bell-slash"></i> Push aus: kein Gerät.</p>
+                    <ul class="list-group list-group-flush small" th:unless="${devices.isEmpty()}">
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-2"
+                            th:each="d : ${devices}" th:attr="data-endpoint=${d.endpoint()}">
+                            <div>
+                                <div th:text="${d.deviceLabel()}">Android · Chrome</div>
+                                <div class="text-muted">
+                                    <span th:if="${d.lastSuccessAt() != null}"
+                                          th:text="'Zuletzt zugestellt ' + ${#temporals.format(d.lastSuccessAt(), 'dd.MM. HH:mm')}">Zuletzt zugestellt</span>
+                                    <span th:if="${d.lastSuccessAt() == null}"
+                                          th:text="'Seit ' + ${#temporals.format(d.createdAt(), 'dd.MM.yyyy')}">Seit</span>
+                                </div>
+                                <div class="text-danger" th:if="${d.lastError() != null}"
+                                     th:text="'Fehler ' + ${#temporals.format(d.lastFailureAt(), 'dd.MM. HH:mm')} + ': ' + ${d.lastError()}">Fehler</div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-link text-muted p-0" title="Entfernen"
+                                    th:attr="data-push-remove=${d.id()}"><i class="bi bi-x-lg"></i></button>
+                        </li>
+                    </ul>
+                    <p class="small text-muted mt-3 mb-0">Auf dem Handy: Chrome darf für Benachrichtigungen nicht
+                        im Energiesparmodus eingeschränkt sein, sonst kommen dringende Meldungen verspätet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>

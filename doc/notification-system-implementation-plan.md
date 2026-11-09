@@ -1,5 +1,21 @@
 # Notification System — Implementation Plan
 
+> **Built 2026-11-09 (homelab plan step N1), with these changes to the plan below:**
+> - Changelog is `db.changelog_1_37.xml` (1_28/1_29 were taken); recipient columns are
+>   `user_profile_id` like the health tables; read state is `read_at` (`READ` is reserved in MariaDB).
+> - Rule types are strings, and an evaluator returns a *list* of candidates (one rule can fire
+>   for several entries, e.g. one per claim).
+> - A notification also has `url`, up to two action buttons (`actions_json`, handled by a
+>   `NotificationActionHandler` per rule type; built-in `read`), and a `push` flag.
+> - Web Push (`push_subscription`, `WebPushService`, JDK-only crypto in `WebPushCrypto`),
+>   `/sw.js` shows pushes and posts button taps back. Overview page `/notifications` holds the
+>   push settings and a test push.
+> - `job_status` + gauge `planman_job_last_success_timestamp_seconds{task}` for every
+>   scheduled job; the Grafana alert *plan-man job stale* watches it.
+> - `GET /api/digest` (bearer token) for n8n.
+> - Not built yet: the budget rule (N2) and the admin rules page / rule CRUD API (with N2,
+>   when the first rules exist).
+
 ## Overview
 
 This module replaces the hard-coded Lorem Ipsum notification stub in `fragments/header.html` with a

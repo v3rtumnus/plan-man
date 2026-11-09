@@ -79,6 +79,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/resources/**", "/favicon.ico", "/manifest.webmanifest", "/sw.js", "/actuator/**").permitAll()
+                        // bearer token checked by DigestApiController (n8n calls inside dockernet)
+                        .requestMatchers("/api/digest").permitAll()
                         .requestMatchers("/credit/**").hasAnyRole("USER")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated())

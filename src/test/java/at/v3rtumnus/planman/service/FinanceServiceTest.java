@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -38,6 +39,7 @@ class FinanceServiceTest {
     @Mock private CreditService creditService;
     @Mock private OnVistaFinancialService onVistaFinancialService;
     @Mock private CacheManager cacheManager;
+    @Mock private JobStatusService jobStatusService;
 
     @InjectMocks
     private FinanceService service;
@@ -221,6 +223,37 @@ class FinanceServiceTest {
         service.persistFinancialSnapshots();
 
         verify(snapshotRepository).save(any(FinancialSnapshot.class));
+        verify(jobStatusService).success(JobStatusService.SNAPSHOT);
+    }
+
+    @Test
+    void persistFinancialSnapshots_failure_isRecordedAndRethrown() {
+        RuntimeException error = new RuntimeException("db down");
+        when(financialProductRepository.findAll()).thenThrow(error);
+
+        assertThatThrownBy(() -> service.persistFinancialSnapshots()).isSameAs(error);
+
+        verify(jobStatusService).failure(JobStatusService.SNAPSHOT, error);
+        verify(jobStatusService, never()).success(any());
+    }
+
+    @Test
+    void retrieveLatestQuotes_onVistaFailure_isRecordedAndRethrown() {
+        FinancialProduct product = new FinancialProduct();
+        product.setIsin("AT0000000004");
+        product.setUrl("http://test.com/broken");
+        product.setTransactions(List.of(new FinancialTransaction(LocalDate.of(2024, 1, 1), BigDecimal.TEN,
+                BigDecimal.ONE, BigDecimal.ZERO, FinancialTransactionType.BUY, product)));
+        product.setDividends(List.of());
+        when(financialProductRepository.findAll()).thenReturn(List.of(product));
+        when(quoteRepository.findByProduct(eq("AT0000000004"), any())).thenReturn(new PageImpl<>(List.of()));
+        RuntimeException error = new RuntimeException("onvista 503");
+        when(onVistaFinancialService.getStockInfo("http://test.com/broken")).thenThrow(error);
+
+        assertThatThrownBy(() -> service.retrieveLatestQuotes()).isSameAs(error);
+
+        verify(jobStatusService).failure(JobStatusService.QUOTES, error);
+        verify(jobStatusService, never()).success(any());
     }
 
     @Test
@@ -268,5 +301,6 @@ class FinanceServiceTest {
         service.retrieveLatestQuotes();
 
         verify(quoteRepository).save(any(FinancialProductStockQuote.class));
+        verify(jobStatusService).success(JobStatusService.QUOTES);
     }
 }

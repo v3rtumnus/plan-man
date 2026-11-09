@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @WireMockTest
 class OnVistaFinancialServiceTest {
 
-    private final OnVistaFinancialService service = new OnVistaFinancialService();
+    private final OnVistaFinancialService service = new OnVistaFinancialService(org.mockito.Mockito.mock(JobStatusService.class));
 
     /** Minimal HTML that mimics the data-attribute structure onvista.de serves. */
     private static String stockHtml(String price, String changeToday, String changePct, String currency) {

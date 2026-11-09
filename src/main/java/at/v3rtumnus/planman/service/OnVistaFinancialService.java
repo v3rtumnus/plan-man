@@ -1,7 +1,6 @@
 package at.v3rtumnus.planman.service;
 
 import at.v3rtumnus.planman.dto.StockInfo;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -21,10 +19,7 @@ public class OnVistaFinancialService {
 
     public static final String USD_EUR_URL = "https://www.onvista.de/devisen/Dollarkurs-USD-EUR";
 
-    @Getter
-    private volatile Instant lastSuccessfulImport = null;
-    @Getter
-    private volatile String lastImportError = null;
+    private final JobStatusService jobStatusService;
 
     public StockInfo getStockInfo(String url) {
         try {
@@ -38,15 +33,11 @@ public class OnVistaFinancialService {
 
             List<TextNode> currencyList = doc.selectXpath("//data[@value]/span/text()", TextNode.class);
 
-            lastSuccessfulImport = Instant.now();
-            lastImportError = null;
-
             return new StockInfo(marketPrice,
                     changeToday,
                     changePercent,
                     currencyList.get(1).text());
         } catch (IOException e) {
-            lastImportError = e.getMessage();
             throw new RuntimeException(e);
         }
     }
@@ -57,9 +48,12 @@ public class OnVistaFinancialService {
 
             List<TextNode> valueList = doc.selectXpath("//data[@value]/text()", TextNode.class);
 
-            return new BigDecimal(valueList.get(0).text().replace(",", "."));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            BigDecimal rate = new BigDecimal(valueList.get(0).text().replace(",", "."));
+            jobStatusService.success(JobStatusService.FX);
+            return rate;
+        } catch (IOException | RuntimeException e) {
+            jobStatusService.failure(JobStatusService.FX, e);
+            throw e instanceof RuntimeException re ? re : new RuntimeException(e);
         }
     }
 }
