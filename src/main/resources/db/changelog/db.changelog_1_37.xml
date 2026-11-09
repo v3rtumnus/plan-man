@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Notifications core (N1): rules, per-user notifications with read state, Web Push
+         subscriptions and the last success of each scheduled job (deadman metrics). -->
+
+    <changeSet id="1_37_create_notification_rule" author="plan-man">
+        <createTable tableName="notification_rule">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parameters_json" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="targeting_mode" type="VARCHAR(20)" defaultValue="ALL_USERS">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1_37_create_notification_rule_target_user" author="plan-man">
+        <createTable tableName="notification_rule_target_user">
+            <column name="rule_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="notification_rule_target_rule_fk"
+                             referencedTableName="notification_rule" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="notification_rule_target_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="notification_rule_target_user" columnNames="rule_id, user_profile_id"/>
+    </changeSet>
+
+    <!-- One row per recipient, so each user has their own read state. period_key deduplicates a
+         rule per user and period (e.g. "2026-11"); rows without a rule (test push) have none. -->
+    <changeSet id="1_37_create_notification" author="plan-man">
+        <createTable tableName="notification">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="rule_id" type="BIGINT">
+                <constraints foreignKeyName="notification_rule_fk"
+                             referencedTableName="notification_rule" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="notification_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="url" type="VARCHAR(500)"/>
+            <column name="actions_json" type="TEXT"/>
+            <column name="push" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="period_key" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="read_at" type="DATETIME"/>
+            <column name="pushed_at" type="DATETIME"/>
+        </createTable>
+        <addUniqueConstraint tableName="notification" columnNames="rule_id, user_profile_id, period_key"
+                             constraintName="notification_rule_user_period_uq"/>
+        <createIndex tableName="notification" indexName="notification_user_read_idx">
+            <column name="user_profile_id"/>
+            <column name="read_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1_37_create_push_subscription" author="plan-man">
+        <createTable tableName="push_subscription">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="push_subscription_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+            <column name="endpoint" type="VARCHAR(500)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="push_subscription_endpoint_uq"/>
+            </column>
+            <column name="p256dh" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="auth" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="device_label" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_success_at" type="DATETIME"/>
+            <column name="last_failure_at" type="DATETIME"/>
+            <column name="last_error" type="VARCHAR(500)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1_37_create_job_status" author="plan-man">
+        <createTable tableName="job_status">
+            <column name="name" type="VARCHAR(50)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="last_success_at" type="DATETIME"/>
+            <column name="last_failure_at" type="DATETIME"/>
+            <column name="last_error" type="VARCHAR(1000)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

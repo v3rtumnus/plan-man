@@ -45,6 +45,7 @@ public class FinanceService {
     private final CreditService creditService;
     private final OnVistaFinancialService onVistaFinancialService;
     private final CacheManager cacheManager;
+    private final JobStatusService jobStatusService;
 
     @Value("${financial.shares.quote.threshold.hours}")
     private long quoteThresholdInHours;
@@ -92,6 +93,16 @@ public class FinanceService {
     @Scheduled(cron = "${financial.shares.quote.retrieval}")
     @Transactional
     public void retrieveLatestQuotes() throws IOException {
+        try {
+            retrieveStaleQuotes();
+            jobStatusService.success(JobStatusService.QUOTES);
+        } catch (IOException | RuntimeException e) {
+            jobStatusService.failure(JobStatusService.QUOTES, e);
+            throw e;
+        }
+    }
+
+    private void retrieveStaleQuotes() throws IOException {
         log.info("Retrieving latest quotes");
 
         List<FinancialProduct> financialProducts = financialProductRepository.findAll().stream().filter(FinancialProduct::isActive).toList();
@@ -226,6 +237,16 @@ public class FinanceService {
     @Scheduled(cron = "${financial.shares.snapshot.persistence}")
     @Transactional
     public void persistFinancialSnapshots() {
+        try {
+            persistSnapshot();
+            jobStatusService.success(JobStatusService.SNAPSHOT);
+        } catch (RuntimeException e) {
+            jobStatusService.failure(JobStatusService.SNAPSHOT, e);
+            throw e;
+        }
+    }
+
+    private void persistSnapshot() {
         log.info("Starting persistence of financial snapshot");
 
         List<FinancialProductDTO> products = new LinkedList<>(this.retrieveFinancialProducts());
