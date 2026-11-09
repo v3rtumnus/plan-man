@@ -83,6 +83,9 @@ public class NotificationRuleEvaluationService {
         int created = 0;
         for (NotificationCandidate candidate : candidates) {
             for (UserProfile user : targets) {
+                if (candidate.recipient() != null && !candidate.recipient().equals(user.getUsername())) {
+                    continue;
+                }
                 if (notificationService.create(rule, user, candidate)) {
                     created++;
                 }

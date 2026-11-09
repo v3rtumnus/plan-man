@@ -1,6 +1,7 @@
 package at.v3rtumnus.planman.controller.api;
 
 import at.v3rtumnus.planman.dto.notification.DigestDTO;
+import at.v3rtumnus.planman.service.health.HealthDigestService;
 import at.v3rtumnus.planman.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -22,11 +23,13 @@ import java.security.MessageDigest;
 public class DigestApiController {
 
     private final NotificationService notificationService;
+    private final HealthDigestService healthDigestService;
     private final byte[] token;
 
-    public DigestApiController(NotificationService notificationService,
+    public DigestApiController(NotificationService notificationService, HealthDigestService healthDigestService,
                                @Value("${planman.digest.token:}") String token) {
         this.notificationService = notificationService;
+        this.healthDigestService = healthDigestService;
         this.token = token.getBytes(StandardCharsets.UTF_8);
     }
 
@@ -39,6 +42,6 @@ public class DigestApiController {
         if (!MessageDigest.isEqual(token, presented.getBytes(StandardCharsets.UTF_8))) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(notificationService.digest());
+        return ResponseEntity.ok(healthDigestService.withHealth(notificationService.digest()));
     }
 }

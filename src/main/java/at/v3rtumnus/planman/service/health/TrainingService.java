@@ -99,27 +99,43 @@ public class TrainingService {
 
     @Transactional
     public Workout logFreeletics(int minutes, Intensity intensity) {
+        return logFreeletics(healthService.today(), minutes, intensity);
+    }
+
+    @Transactional
+    public Workout logFreeletics(LocalDate date, int minutes, Intensity intensity) {
         checkMinutes(minutes);
         double met = WorkoutType.FREELETICS.met(intensity);
         BigDecimal kg = bodyWeightKg();
-        return save(WorkoutType.FREELETICS, null, minutes, intensity, met,
+        return save(date, WorkoutType.FREELETICS, null, minutes, intensity, met,
                 grossKcal(met, kg, minutes), netKcal(met, kg, minutes), KcalSource.MET);
     }
 
     @Transactional
     public Workout logActivity(WorkoutType type, int minutes) {
+        return logActivity(healthService.today(), type, minutes);
+    }
+
+    @Transactional
+    public Workout logActivity(LocalDate date, WorkoutType type, int minutes) {
         if (type != WorkoutType.WALK && type != WorkoutType.CYCLING) {
             throw new IllegalArgumentException("Nur Gehen oder Rad");
         }
         checkMinutes(minutes);
         double met = type.met(null);
         BigDecimal kg = bodyWeightKg();
-        return save(type, null, minutes, null, met, grossKcal(met, kg, minutes), netKcal(met, kg, minutes), KcalSource.MET);
+        return save(date, type, null, minutes, null, met, grossKcal(met, kg, minutes), netKcal(met, kg, minutes), KcalSource.MET);
     }
 
     /** "Etwas anderes": the model picks title and MET; minutes from the form, else from the sentence. */
     @Transactional
     public Workout logOther(String description, Integer minutes) {
+        return logOther(healthService.today(), description, minutes);
+    }
+
+    @Transactional
+    public Workout logOther(LocalDate date, String description, Integer minutes) {
+        checkDate(date);
         ActivityDraft draft = activityEstimator.estimate(description);
         int duration = minutes != null && minutes > 0 ? minutes : draft.durationMin();
         if (duration <= 0) {
@@ -128,31 +144,43 @@ public class TrainingService {
         checkMinutes(duration);
         BigDecimal kg = bodyWeightKg();
         String title = draft.title() == null || draft.title().isBlank() ? description.trim() : draft.title().trim();
-        return save(WorkoutType.OTHER, title.length() > 255 ? title.substring(0, 255) : title, duration, null,
+        return save(date, WorkoutType.OTHER, title.length() > 255 ? title.substring(0, 255) : title, duration, null,
                 draft.met(), grossKcal(draft.met(), kg, duration), netKcal(draft.met(), kg, duration), KcalSource.AI);
     }
 
     /** Football adds the goal's flat bonus: the daily burn already assumes two-thirds of it. */
     @Transactional
     public Workout logFootball() {
-        LocalDate today = healthService.today();
+        return logFootball(healthService.today());
+    }
+
+    /** Uses the football bonus of the goal in force on {@code date}. */
+    @Transactional
+    public Workout logFootball(LocalDate date) {
+        checkDate(date);
         UserProfile user = currentUser();
-        workoutRepository.findByUserUsernameAndDoneOnOrderByCreatedAtAsc(user.getUsername(), today).stream()
+        workoutRepository.findByUserUsernameAndDoneOnOrderByCreatedAtAsc(user.getUsername(), date).stream()
                 .filter(w -> w.getType() == WorkoutType.FOOTBALL)
                 .forEach(workoutRepository::delete);
-        HealthDay day = healthService.day(today);
+        HealthDay day = healthService.day(date);
         day.setFootballCancelled(false);
         dayRepository.save(day);
-        int bonus = healthService.currentGoal().map(HealthGoal::getFootballBonusKcal).orElse(0);
+        int bonus = day.getGoal() != null ? day.getGoal().getFootballBonusKcal() : 0;
         double met = WorkoutType.FOOTBALL.met(Intensity.MEDIUM);
-        return save(WorkoutType.FOOTBALL, null, footballMinutes, Intensity.MEDIUM, met,
+        return save(date, WorkoutType.FOOTBALL, null, footballMinutes, Intensity.MEDIUM, met,
                 grossKcal(met, bodyWeightKg(), footballMinutes), bonus, KcalSource.MET);
     }
 
     @Transactional
     public void cancelFootball() {
-        resetFootball();
-        HealthDay day = healthService.day(healthService.today());
+        cancelFootball(healthService.today());
+    }
+
+    @Transactional
+    public void cancelFootball(LocalDate date) {
+        checkDate(date);
+        resetFootball(date);
+        HealthDay day = healthService.day(date);
         day.setFootballCancelled(true);
         dayRepository.save(day);
     }
@@ -160,11 +188,15 @@ public class TrainingService {
     /** "Ändern": back to the open question. */
     @Transactional
     public void resetFootball() {
-        LocalDate today = healthService.today();
-        workoutRepository.findByUserUsernameAndDoneOnOrderByCreatedAtAsc(username(), today).stream()
+        resetFootball(healthService.today());
+    }
+
+    @Transactional
+    public void resetFootball(LocalDate date) {
+        workoutRepository.findByUserUsernameAndDoneOnOrderByCreatedAtAsc(username(), date).stream()
                 .filter(w -> w.getType() == WorkoutType.FOOTBALL)
                 .forEach(workoutRepository::delete);
-        HealthDay day = healthService.day(today);
+        HealthDay day = healthService.day(date);
         day.setFootballCancelled(false);
         dayRepository.save(day);
     }
@@ -174,13 +206,13 @@ public class TrainingService {
         workoutRepository.findByIdAndUserUsername(workoutId, username()).ifPresent(workoutRepository::delete);
     }
 
-    private Workout save(WorkoutType type, String title, int minutes, Intensity intensity, double met,
+    private Workout save(LocalDate date, WorkoutType type, String title, int minutes, Intensity intensity, double met,
                          int kcal, int bonus, KcalSource source) {
-        LocalDate today = healthService.today();
-        healthService.day(today);
+        checkDate(date);
+        healthService.day(date);
         Workout workout = new Workout();
         workout.setUser(currentUser());
-        workout.setDoneOn(today);
+        workout.setDoneOn(date);
         workout.setType(type);
         workout.setTitle(title);
         workout.setDurationMin(minutes);
@@ -191,6 +223,12 @@ public class TrainingService {
         workout.setKcalSource(source);
         workout.setCreatedAt(LocalDateTime.now(clock));
         return workoutRepository.save(workout);
+    }
+
+    private void checkDate(LocalDate date) {
+        if (date.isAfter(healthService.today())) {
+            throw new IllegalArgumentException("Das Datum darf nicht in der Zukunft liegen");
+        }
     }
 
     private static void checkMinutes(int minutes) {

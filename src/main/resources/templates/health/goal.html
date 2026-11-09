@@ -139,7 +139,12 @@
 
                     <div id="goal-form" class="collapse" th:classappend="${editGoal} ? 'show'">
                         <hr>
+                        <div class="alert alert-info small" th:if="${fromReview}">
+                            Vorschlag aus dem Ziel-Check vom <span th:text="${#temporals.format(fromReview.weekStart, 'dd.MM.')}"></span>
+                            eingesetzt. Speichern übernimmt ihn als neues Ziel ab heute.
+                        </div>
                         <form method="post" th:action="@{/health/goal}" th:object="${goalForm}" class="row g-2">
+                            <input type="hidden" th:field="*{reviewId}">
                             <div class="col-12">
                                 <label class="form-label small" for="title">Bezeichnung</label>
                                 <input class="form-control" id="title" th:field="*{title}" required maxlength="255">
@@ -187,8 +192,40 @@
         </div>
     </div>
 
+    <div class="card" id="verlauf">
+        <div class="card-body pt-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="card-title pt-0 pb-0">Verlauf</h5>
+                <div role="radiogroup" aria-label="Zeitraum" class="d-flex gap-2" id="chart-range">
+                    <input type="radio" class="btn-check" name="range" id="range-4w" value="28" checked autocomplete="off">
+                    <label class="btn btn-outline-primary btn-sm health-chip" for="range-4w">4 Wochen</label>
+                    <input type="radio" class="btn-check" name="range" id="range-3m" value="91" autocomplete="off">
+                    <label class="btn btn-outline-primary btn-sm health-chip" for="range-3m">3 Monate</label>
+                    <input type="radio" class="btn-check" name="range" id="range-goal" value="goal" autocomplete="off">
+                    <label class="btn btn-outline-primary btn-sm health-chip" for="range-goal">Seit Zielbeginn</label>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <div class="small text-muted mb-1">Gewicht: Tageswerte und 7-Tage-Trend</div>
+                    <div class="health-chart-wrap"><canvas id="chart-weight" aria-label="Gewicht" role="img"></canvas></div>
+                </div>
+                <div class="col-md-6 mt-3">
+                    <div class="small text-muted mb-1">Taille (cm)</div>
+                    <div class="health-chart-wrap"><canvas id="chart-waist" aria-label="Taille" role="img"></canvas></div>
+                </div>
+                <div class="col-md-6 mt-3">
+                    <div class="small text-muted mb-1">Liegestütze am Stück</div>
+                    <div class="health-chart-wrap"><canvas id="chart-pushups" aria-label="Liegestütze" role="img"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </main>
 
 <th:block th:replace="~{fragments/footer :: footer-js}"/>
+<script type="application/json" id="health-chart-data" th:utext="${chartJson}">{}</script>
+<script type="text/javascript" th:src="@{/resources/js/health-charts.js}" src="/resources/js/health-charts.js"></script>
 </body>
 </html>

@@ -9,6 +9,9 @@ import at.v3rtumnus.planman.service.PlanManUserDetailsService;
 import at.v3rtumnus.planman.service.health.HealthService;
 import at.v3rtumnus.planman.service.health.MealService;
 import at.v3rtumnus.planman.service.health.TrainingService;
+import at.v3rtumnus.planman.service.health.HealthHistoryService;
+import at.v3rtumnus.planman.service.health.WeeklyReviewService;
+import at.v3rtumnus.planman.dto.health.HealthChart;
 import at.v3rtumnus.planman.dto.health.FootballState;
 import at.v3rtumnus.planman.dto.health.NutritionDay;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -49,6 +53,10 @@ class HealthControllerTest {
     private MealService mealService;
     @MockitoBean
     private TrainingService trainingService;
+    @MockitoBean
+    private HealthHistoryService historyService;
+    @MockitoBean
+    private WeeklyReviewService reviewService;
     @MockitoBean
     private PlanManUserDetailsService userDetailsService;
     @MockitoBean
@@ -107,6 +115,101 @@ class HealthControllerTest {
         when(mealService.slotNow()).thenReturn(MealSlot.LUNCH);
         when(trainingService.footballState(TODAY)).thenReturn(FootballState.OPEN);
         when(trainingService.footballMinutes()).thenReturn(70);
+        when(historyService.chart(any())).thenReturn(new HealthChart(
+                List.of(new HealthChart.Point("2026-11-09", new BigDecimal("82.4"))),
+                List.of(new HealthChart.Point("2026-11-09", new BigDecimal("82.6"))),
+                List.of(), List.of(), new BigDecimal("77.0"), 25, "2026-11-03", TODAY.toString()));
+    }
+
+    @Test
+    void today_pastDay_showsThatDayWithPagerAndTraining() throws Exception {
+        LocalDate past = TODAY.minusDays(2);
+        HealthDay day = new HealthDay();
+        day.setDate(past);
+        day.setKcalTarget(2000);
+        day.setProteinTargetG(160);
+        when(healthService.day(past)).thenReturn(day);
+        when(mealService.nutritionDay(past)).thenReturn(new NutritionDay(2000, 0, 160, 0, BigDecimal.ZERO, List.of()));
+        Workout workout = new Workout();
+        workout.setId(8L);
+        workout.setType(WorkoutType.FREELETICS);
+        workout.setIntensity(Intensity.HARD);
+        workout.setDurationMin(30);
+        workout.setBonusKcal(330);
+        workout.setDoneOn(past);
+        when(trainingService.workoutsOn(past)).thenReturn(List.of(workout));
+
+        mockMvc.perform(get("/health").param("date", past.toString()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Sonntag, 8. November")))
+                .andExpect(content().string(containsString("zurück zu heute")))
+                .andExpect(content().string(containsString("/health?date=" + past.minusDays(1))))
+                .andExpect(content().string(containsString("/health?date=" + past.plusDays(1))))
+                .andExpect(content().string(containsString("Freeletics · 30 min · hart")))
+                .andExpect(content().string(containsString("/health/training?date=" + past)))
+                .andExpect(content().string(containsString("Gewicht an diesem Tag")))
+                .andExpect(content().string(not(containsString("Fußball heute?"))))
+                .andExpect(content().string(not(containsString("Messen fällig"))));
+        verify(trainingService, never()).footballState(past);
+    }
+
+    @Test
+    void today_futureDate_showsToday() throws Exception {
+        mockMvc.perform(get("/health").param("date", TODAY.plusDays(5).toString()))
+                .andExpect(content().string(containsString("Fußball heute?")))
+                .andExpect(content().string(not(containsString("zurück zu heute"))));
+    }
+
+    @Test
+    void saveMeasurement_forPastDay_goesBackToThatDay() throws Exception {
+        LocalDate past = TODAY.minusDays(1);
+        mockMvc.perform(post("/health/measurements").param("type", "WEIGHT").param("date", past.toString())
+                        .param("value", "82.1").param("returnTo", "/health"))
+                .andExpect(redirectedUrl("/health?date=" + past));
+    }
+
+    @Test
+    void goal_rendersChartData() throws Exception {
+        mockMvc.perform(get("/health/goal"))
+                .andExpect(content().string(containsString("id=\"chart-weight\"")))
+                .andExpect(content().string(containsString("\"targetKg\":77.0")))
+                .andExpect(content().string(containsString("health-charts.js")));
+    }
+
+    @Test
+    void goal_fromReview_prefillsProposalAndSavingAcceptsIt() throws Exception {
+        WeeklyReview review = new WeeklyReview();
+        review.setId(12L);
+        review.setWeekStart(LocalDate.of(2026, 11, 2));
+        review.setProposedKcalTarget(1850);
+        review.setProposedProteinTargetG(170);
+        review.setProposedTargetDate(LocalDate.of(2027, 4, 30));
+        when(reviewService.find("user", 12L)).thenReturn(Optional.of(review));
+
+        mockMvc.perform(get("/health/goal").param("review", "12"))
+                .andExpect(content().string(containsString("Vorschlag aus dem Ziel-Check")))
+                .andExpect(content().string(containsString("value=\"1850\"")))
+                .andExpect(content().string(containsString("value=\"170\"")))
+                .andExpect(content().string(containsString("value=\"2027-04-30\"")))
+                .andExpect(content().string(containsString("name=\"reviewId\" value=\"12\"")));
+
+        mockMvc.perform(post("/health/goal").param("title", "Fett verlieren + Kraft").param("kcalTarget", "1850")
+                        .param("proteinTargetG", "170").param("footballBonusKcal", "250").param("stepsTarget", "6000")
+                        .param("startWeightKg", "83").param("targetWeightKg", "77").param("targetDate", "2027-04-30")
+                        .param("pushUpsTarget", "25").param("reviewId", "12"))
+                .andExpect(redirectedUrl("/health/goal"));
+        verify(reviewService).decide("user", 12L, ReviewDecision.ACCEPTED);
+    }
+
+    @Test
+    void goal_reviewWithoutProposal_isIgnored() throws Exception {
+        WeeklyReview review = new WeeklyReview();
+        review.setId(13L);
+        review.setWeekStart(LocalDate.of(2026, 11, 2));
+        when(reviewService.find("user", 13L)).thenReturn(Optional.of(review));
+
+        mockMvc.perform(get("/health/goal").param("review", "13"))
+                .andExpect(content().string(not(containsString("Vorschlag aus dem Ziel-Check"))));
     }
 
     @Test

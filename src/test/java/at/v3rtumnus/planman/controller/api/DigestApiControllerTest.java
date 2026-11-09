@@ -1,6 +1,8 @@
 package at.v3rtumnus.planman.controller.api;
 
+import at.v3rtumnus.planman.dto.health.HealthDigest;
 import at.v3rtumnus.planman.dto.notification.DigestDTO;
+import at.v3rtumnus.planman.service.health.HealthDigestService;
 import at.v3rtumnus.planman.service.PlanManUserDetailsService;
 import at.v3rtumnus.planman.service.notification.NotificationService;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +37,8 @@ class DigestApiControllerTest {
     @MockitoBean
     private NotificationService notificationService;
     @MockitoBean
+    private HealthDigestService healthDigestService;
+    @MockitoBean
     private PlanManUserDetailsService userDetailsService;
     @MockitoBean
     private DataSource dataSource;
@@ -41,14 +47,21 @@ class DigestApiControllerTest {
 
     @Test
     void validTokenWithoutLoginGetsTheDigest() throws Exception {
-        when(notificationService.digest()).thenReturn(new DigestDTO(LocalDateTime.of(2026, 11, 9, 20, 0),
+        DigestDTO digest = new DigestDTO(LocalDateTime.of(2026, 11, 9, 20, 0),
                 Map.of("michael", new DigestDTO.UserDigest(1, List.of(new DigestDTO.DigestNotification(3L,
-                        "Budget knapp", "Noch 240 €", "WARNING", "/expenses", LocalDateTime.of(2026, 11, 9, 19, 5)))))));
+                        "Budget knapp", "Noch 240 €", "WARNING", "/expenses", LocalDateTime.of(2026, 11, 9, 19, 5))))));
+        when(notificationService.digest()).thenReturn(digest);
+        HealthDigest health = new HealthDigest(LocalDate.of(2026, 11, 8), false, 4, 1850, 2250, new BigDecimal("142"), 160,
+                new BigDecimal("82.4"), null, new BigDecimal("77.0"), "Gestern 1.850 / 2.250 kcal.", null);
+        when(healthDigestService.withHealth(digest)).thenReturn(new DigestDTO(digest.generatedAt(),
+                Map.of("michael", new DigestDTO.UserDigest(1, digest.users().get("michael").notifications(), health))));
 
         mockMvc.perform(get("/api/digest").header("Authorization", "Bearer s3cret"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.users.michael.unread").value(1))
-                .andExpect(jsonPath("$.users.michael.notifications[0].title").value("Budget knapp"));
+                .andExpect(jsonPath("$.users.michael.notifications[0].title").value("Budget knapp"))
+                .andExpect(jsonPath("$.users.michael.health.line").value("Gestern 1.850 / 2.250 kcal."))
+                .andExpect(jsonPath("$.users.michael.health.date").value("2026-11-08"));
     }
 
     @Test
@@ -61,7 +74,7 @@ class DigestApiControllerTest {
 
     @Test
     void emptyTokenTurnsTheEndpointOff() {
-        DigestApiController off = new DigestApiController(notificationService, "");
+        DigestApiController off = new DigestApiController(notificationService, healthDigestService, "");
 
         assertThat(off.digest("Bearer ").getStatusCode().value()).isEqualTo(404);
         verifyNoInteractions(notificationService);

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Health H4: one row per user and week (Monday), written the Monday after. The numbers are
+         the long-term record of progress; the text comes from Opus. Every 4 weeks the row also
+         holds the goal check and, if any, a proposed target change that you accept or not. -->
+
+    <changeSet id="1_38_create_weekly_review" author="plan-man">
+        <createTable tableName="weekly_review">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_profile_id" type="VARCHAR(255)">
+                <constraints nullable="false" foreignKeyName="weekly_review_user_fk"
+                             referencedTableName="user_profile" referencedColumnNames="username"/>
+            </column>
+            <column name="week_start" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="logged_days" type="INT"><constraints nullable="false"/></column>
+            <column name="paused_days" type="INT"><constraints nullable="false"/></column>
+            <column name="kcal_avg" type="INT"/>
+            <column name="kcal_target_avg" type="INT"/>
+            <column name="protein_avg_g" type="DECIMAL(6,1)"/>
+            <column name="protein_target_g" type="INT"/>
+            <column name="protein_days" type="INT"><constraints nullable="false"/></column>
+            <column name="freeletics_sessions" type="INT"><constraints nullable="false"/></column>
+            <column name="football_played" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="training_kcal" type="INT"><constraints nullable="false"/></column>
+            <column name="weight_trend_kg" type="DECIMAL(5,1)"/>
+            <column name="weight_change_kg" type="DECIMAL(4,1)"/>
+            <column name="weekly_rate_kg" type="DECIMAL(4,2)"/>
+            <column name="waist_cm" type="DECIMAL(5,1)"/>
+            <column name="waist_change_cm" type="DECIMAL(4,1)"/>
+            <column name="push_ups" type="INT"/>
+            <column name="goal_check" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="goal_status" type="VARCHAR(20)"/>
+            <column name="headline" type="VARCHAR(255)"/>
+            <column name="feedback" type="TEXT"/>
+            <column name="goal_reason" type="TEXT"/>
+            <column name="proposed_kcal_target" type="INT"/>
+            <column name="proposed_protein_target_g" type="INT"/>
+            <column name="proposed_target_date" type="DATE"/>
+            <column name="proposal_reason" type="TEXT"/>
+            <column name="feedback_status" type="VARCHAR(20)"><constraints nullable="false"/></column>
+            <column name="model" type="VARCHAR(50)"/>
+            <column name="feedback_at" type="DATETIME"/>
+            <column name="error" type="VARCHAR(500)"/>
+            <column name="decision" type="VARCHAR(20)"/>
+            <column name="decided_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"><constraints nullable="false"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="weekly_review" columnNames="user_profile_id, week_start"
+                             constraintName="weekly_review_user_week_uq"/>
+    </changeSet>
+
+    <!-- The two health rules. Their evaluators address each notification to the review's own
+         user, so ALL_USERS never sends one person's review to another. -->
+    <changeSet id="1_38_health_review_rules" author="plan-man">
+        <insert tableName="notification_rule">
+            <column name="name" value="Wochenrückblick"/>
+            <column name="rule_type" value="HEALTH_WEEKLY_REVIEW"/>
+            <column name="parameters_json" value="{}"/>
+            <column name="targeting_mode" value="ALL_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="notification_rule">
+            <column name="name" value="Ziel-Check: Gespräch lohnt sich"/>
+            <column name="rule_type" value="HEALTH_GOAL_CHECK"/>
+            <column name="parameters_json" value="{}"/>
+            <column name="targeting_mode" value="ALL_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

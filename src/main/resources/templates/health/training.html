@@ -21,6 +21,10 @@
 
     <div th:replace="~{fragments/health-tabs :: health-tabs}"></div>
 
+    <div class="alert alert-secondary" role="status" th:if="${pastDay}">
+        Nachtragen für <b th:text="${pastDay}">Sonntag, 8. November</b> · <a th:href="@{/health(date=${date})}">zurück zum Tag</a>
+        · <a th:href="@{/health/training}">heute</a>
+    </div>
     <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
     <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
 
@@ -33,6 +37,7 @@
                           class="d-flex flex-column gap-2"
                           th:attr="data-body-kg=${bodyKg}, data-met-light=${mets['LIGHT']},
                                    data-met-medium=${mets['MEDIUM']}, data-met-hard=${mets['HARD']}">
+                        <input type="hidden" name="date" th:value="${date}">
                         <div role="radiogroup" aria-label="Dauer" class="d-flex gap-2">
                             <th:block th:each="m : ${freeleticsMinutes}">
                                 <input type="radio" class="btn-check" name="minutes" th:id="'fl-min-' + ${m}" th:value="${m}"
@@ -59,8 +64,9 @@
                     <h5 class="card-title pt-0 pb-2">Fußball (meist Dienstag)</h5>
                     <th:block th:if="${fb == 'PLAYED'}">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-semibold text-success" th:text="'Heute ' + ${footballMinutes} + ' min eingetragen'">Heute 70 min eingetragen</span>
+                            <span class="fw-semibold text-success" th:text="(${pastDay} ? 'An diesem Tag ' : 'Heute ') + ${footballMinutes} + ' min eingetragen'">Heute 70 min eingetragen</span>
                             <form method="post" th:action="@{/health/training/football}">
+                        <input type="hidden" name="date" th:value="${date}">
                                 <input type="hidden" name="answer" value="reset">
                                 <button type="submit" class="btn btn-outline-primary btn-sm">Ändern</button>
                             </form>
@@ -68,8 +74,9 @@
                     </th:block>
                     <th:block th:if="${fb == 'CANCELLED'}">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-semibold text-muted">Fällt heute aus</span>
+                            <span class="fw-semibold text-muted" th:text="${pastDay} ? 'Fiel an diesem Tag aus' : 'Fällt heute aus'">Fällt heute aus</span>
                             <form method="post" th:action="@{/health/training/football}">
+                        <input type="hidden" name="date" th:value="${date}">
                                 <input type="hidden" name="answer" value="reset">
                                 <button type="submit" class="btn btn-outline-primary btn-sm">Ändern</button>
                             </form>
@@ -79,11 +86,13 @@
                         <p class="small text-muted mb-2">Nichts ist fix: nur was du einträgst, zählt.</p>
                         <div class="d-flex gap-2">
                             <form method="post" th:action="@{/health/training/football}" class="flex-fill">
+                        <input type="hidden" name="date" th:value="${date}">
                                 <input type="hidden" name="answer" value="played">
                                 <button type="submit" class="btn btn-outline-primary w-100 health-tool"
                                         th:text="${footballMinutes} + ' min gespielt'">70 min gespielt</button>
                             </form>
                             <form method="post" th:action="@{/health/training/football}" class="flex-fill">
+                        <input type="hidden" name="date" th:value="${date}">
                                 <input type="hidden" name="answer" value="cancelled">
                                 <button type="submit" class="btn btn-outline-secondary w-100 health-tool">Fällt aus</button>
                             </form>
@@ -98,6 +107,7 @@
                 <div class="card-body pt-3">
                     <h5 class="card-title pt-0 pb-2">Gehen / Rad</h5>
                     <form method="post" th:action="@{/health/training/activity}" class="d-flex flex-column gap-2">
+                        <input type="hidden" name="date" th:value="${date}">
                         <div role="radiogroup" aria-label="Art" class="d-flex gap-2">
                             <input type="radio" class="btn-check" name="type" id="act-walk" value="WALK" checked autocomplete="off">
                             <label class="btn btn-outline-primary btn-sm health-chip flex-fill justify-content-center" for="act-walk">Gehen</label>
@@ -121,6 +131,7 @@
                 <div class="card-body pt-3">
                     <h5 class="card-title pt-0 pb-2">Etwas anderes</h5>
                     <form method="post" th:action="@{/health/training/other}" class="d-flex flex-column gap-2" id="other-form">
+                        <input type="hidden" name="date" th:value="${date}">
                         <label for="other-description" class="small text-muted">Ein Satz, die KI schätzt die Anstrengung.</label>
                         <input type="text" id="other-description" name="description" class="form-control health-input" maxlength="500"
                                placeholder="z. B. 1 Stunde Tennis Doppel" required th:value="${otherDescription}">

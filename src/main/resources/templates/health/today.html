@@ -13,11 +13,23 @@
 <main id="main" class="main">
 
     <div class="pagetitle">
-        <h1>Heute</h1>
+        <h1 th:text="${isToday} ? 'Heute' : 'Tag'">Heute</h1>
         <nav><ol class="breadcrumb"><li class="breadcrumb-item">Gesundheit</li><li class="breadcrumb-item active" th:text="${todayLabel}"></li></ol></nav>
     </div>
 
     <div th:replace="~{fragments/health-tabs :: health-tabs}"></div>
+
+    <div class="health-pager">
+        <a class="btn btn-outline-primary" th:href="@{/health(date=${prevDate})}" aria-label="Vorheriger Tag">
+            <i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+        <div class="health-pager-label">
+            <span th:text="${todayLabel}">Montag, 9. November</span>
+            <a class="d-block small fw-normal" th:unless="${isToday}" th:href="@{/health}">zurück zu heute</a>
+        </div>
+        <a class="btn btn-outline-primary" th:if="${nextDate}" th:href="@{/health(date=${nextDate})}" aria-label="Nächster Tag">
+            <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+        <span class="btn invisible" th:unless="${nextDate}" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+    </div>
 
     <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
     <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
@@ -77,7 +89,7 @@
                             <div class="health-big" th:classappend="${nutrition.kcalLeft() < 0} ? 'text-danger'"
                                  th:text="${#numbers.formatInteger(nutrition.kcalLeft(), 1, 'POINT')} + ' kcal'">1.280 kcal</div>
                         </div>
-                        <a th:href="@{/health/meals/new(slot=${slotNow})}" class="btn btn-primary">
+                        <a th:href="@{/health/meals/new(slot=${slotNow},date=${date})}" class="btn btn-primary">
                             <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Mahlzeit</a>
                     </div>
                     <div class="mt-3">
@@ -101,12 +113,12 @@
                     <div class="small text-muted mt-2" th:if="${nutrition.trainingKcal > 0}"
                          th:text="'Tagesziel ' + ${#numbers.formatInteger(nutrition.baseKcalTarget, 1, 'POINT')} + ' + ' + ${nutrition.trainingKcal} + ' kcal Training'">Tagesziel 2.000 + 250 kcal Training</div>
                     <div class="small text-muted mt-2" th:unless="${nutrition.trainingKcal > 0}">
-                        Training erhöht das Tagesziel: <a th:href="@{/health/training}">eintragen</a></div>
+                        Training erhöht das Tagesziel: <a th:href="${isToday} ? @{/health/training} : @{/health/training(date=${date})}">eintragen</a></div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-6">
+        <div class="col-lg-6" th:if="${isToday}">
             <div class="row g-3">
                 <div class="col-6">
                     <a th:href="@{/health/goal}" class="card health-tile h-100 mb-0">
@@ -140,9 +152,9 @@
                 <div class="card-body pt-3 pb-0">
                     <div class="d-flex justify-content-between align-items-baseline">
                         <h5 class="card-title pt-0 pb-2">Mahlzeiten</h5>
-                        <a th:href="@{/health/meals/new(slot=${slotNow})}" class="small">+ erfassen</a>
+                        <a th:href="@{/health/meals/new(slot=${slotNow},date=${date})}" class="small">+ erfassen</a>
                     </div>
-                    <p class="small text-muted" th:if="${nutrition.meals.isEmpty()}">Heute noch nichts eingetragen.</p>
+                    <p class="small text-muted" th:if="${nutrition.meals.isEmpty()}">Noch nichts eingetragen.</p>
                 </div>
                 <a class="health-row health-meal-row" th:each="m : ${nutrition.meals}"
                    th:href="@{/health/meals/{id}/edit(id=${m.id})}">
@@ -157,20 +169,45 @@
                 </a>
             </div>
         </div>
+
+        <div class="col-lg-6" th:unless="${isToday}">
+            <div class="card">
+                <div class="card-body pt-3 pb-0">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <h5 class="card-title pt-0 pb-2">Training</h5>
+                        <a th:href="@{/health/training(date=${date})}" class="small">+ nachtragen</a>
+                    </div>
+                    <p class="small text-muted" th:if="${workouts.isEmpty()}">Kein Training eingetragen.</p>
+                </div>
+                <div class="health-row health-quick px-3" th:each="w : ${workouts}">
+                    <span class="flex-grow-1 me-2"
+                          th:text="${w.label()} + ' · ' + ${w.durationMin} + ' min' + (${w.intensity != null and w.type.name() == 'FREELETICS'} ? ' · ' + ${w.intensity.label} : '')">Freeletics · 30 min · mittel</span>
+                    <span class="small text-muted text-nowrap" th:text="'+' + ${w.bonusKcal} + ' kcal'">+250 kcal</span>
+                    <form method="post" th:action="@{/health/training/{id}/delete(id=${w.id})}"
+                          onsubmit="return confirm('Dieses Training löschen?')">
+                        <input type="hidden" name="date" th:value="${date}">
+                        <input type="hidden" name="returnTo" value="day">
+                        <button type="submit" class="btn btn-link text-muted health-icon-btn" th:attr="aria-label=${w.label()} + ' löschen'">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row">
         <div class="col-lg-6">
             <div class="card" id="gewicht">
                 <div class="card-body pt-3">
-                    <h5 class="card-title pt-0">Gewicht heute</h5>
+                    <h5 class="card-title pt-0" th:text="${isToday} ? 'Gewicht heute' : 'Gewicht an diesem Tag'">Gewicht heute</h5>
                     <p class="mb-2" th:if="${weightToday}">
                         Eingetragen: <b th:text="${#numbers.formatDecimal(weightToday, 1, 'POINT', 1, 'COMMA')} + ' kg'"></b>
                         <span class="small text-muted">· erneut speichern ersetzt den Wert</span>
                     </p>
                     <form method="post" th:action="@{/health/measurements}" class="d-flex gap-2 align-items-start">
                         <input type="hidden" name="type" value="WEIGHT">
-                        <input type="hidden" name="date" th:value="${today}">
+                        <input type="hidden" name="date" th:value="${date}">
                         <input type="hidden" name="returnTo" value="/health">
                         <div class="input-group">
                             <label class="visually-hidden" for="weight-value">Gewicht in kg</label>

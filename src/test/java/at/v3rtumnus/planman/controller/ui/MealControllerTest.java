@@ -62,7 +62,7 @@ class MealControllerTest {
         when(mealService.today()).thenReturn(TODAY);
         when(mealService.slotNow()).thenReturn(MealSlot.LUNCH);
         when(mealService.recognitionAvailable()).thenReturn(true);
-        when(mealService.quickMeals(any())).thenReturn(List.of(
+        when(mealService.quickMeals(any(), any())).thenReturn(List.of(
                 new QuickMeal(3L, null, "Frühstücksjause", "31× gegessen", 460, new BigDecimal("28.0")),
                 new QuickMeal(null, 9L, "Wie gestern Mittag", "Spaghetti", 780, new BigDecimal("38.0"))));
         when(mealService.nutritionDay(any())).thenReturn(
@@ -97,7 +97,7 @@ class MealControllerTest {
         MealQuestion question = new MealQuestion("Wie wurde das Schnitzel gebacken?", 0, List.of(
                 new MealQuestion.Option("Öl", new BigDecimal("238.9"), new BigDecimal("23.4"), BigDecimal.TEN, BigDecimal.ONE),
                 new MealQuestion.Option("Butterschmalz", new BigDecimal("253"), new BigDecimal("23.4"), BigDecimal.TEN, BigDecimal.ONE)));
-        when(mealService.recognize(eq(MealSlot.LUNCH), eq("Schnitzel"), eq("QUJD")))
+        when(mealService.recognize(eq(MealSlot.LUNCH), eq(TODAY), eq("Schnitzel"), eq("QUJD")))
                 .thenReturn(new MealService.Recognized(draft, question));
 
         mockMvc.perform(post("/health/meals/recognize")
@@ -116,7 +116,7 @@ class MealControllerTest {
 
     @Test
     void recognize_failure_returnsToCaptureWithText() throws Exception {
-        when(mealService.recognize(any(), any(), any())).thenThrow(new AiRequestException("Gerade nicht erreichbar"));
+        when(mealService.recognize(any(), any(), any(), any())).thenThrow(new AiRequestException("Gerade nicht erreichbar"));
 
         mockMvc.perform(post("/health/meals/recognize").param("slot", "LUNCH").param("description", "Gulasch"))
                 .andExpect(status().isOk())
@@ -132,7 +132,7 @@ class MealControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("health/meal-capture"))
                 .andExpect(content().string(containsString("zu groß")));
-        verify(mealService, never()).recognize(any(), any(), any());
+        verify(mealService, never()).recognize(any(), any(), any(), any());
     }
 
     @Test
@@ -142,7 +142,7 @@ class MealControllerTest {
         form.setDate(TODAY);
         form.setTitle("Gulasch");
         form.getItems().add(MealItemForm.empty());
-        when(mealService.manualForm(MealSlot.DINNER, "Gulasch")).thenReturn(form);
+        when(mealService.manualForm(MealSlot.DINNER, TODAY, "Gulasch")).thenReturn(form);
 
         mockMvc.perform(get("/health/meals/manual").param("slot", "DINNER").param("description", "Gulasch"))
                 .andExpect(status().isOk())
@@ -209,10 +209,10 @@ class MealControllerTest {
     void quick_logsSavedOrRepeat() throws Exception {
         Meal meal = new Meal();
         meal.setTitle("Frühstücksjause");
-        when(mealService.logSaved(3L, MealSlot.BREAKFAST)).thenReturn(meal);
+        when(mealService.logSaved(3L, MealSlot.BREAKFAST, TODAY)).thenReturn(meal);
         Meal copy = new Meal();
         copy.setTitle("Spaghetti");
-        when(mealService.logRepeat(9L, MealSlot.LUNCH)).thenReturn(copy);
+        when(mealService.logRepeat(9L, MealSlot.LUNCH, TODAY)).thenReturn(copy);
 
         mockMvc.perform(post("/health/meals/quick").param("slot", "BREAKFAST").param("savedMealId", "3"))
                 .andExpect(redirectedUrl("/health"))
@@ -220,7 +220,7 @@ class MealControllerTest {
         mockMvc.perform(post("/health/meals/quick").param("slot", "LUNCH").param("mealId", "9"))
                 .andExpect(flash().attribute("successMessage", "Spaghetti eingetragen"));
 
-        when(mealService.logSaved(4L, MealSlot.LUNCH)).thenThrow(new IllegalArgumentException("nicht gefunden"));
+        when(mealService.logSaved(4L, MealSlot.LUNCH, TODAY)).thenThrow(new IllegalArgumentException("nicht gefunden"));
         mockMvc.perform(post("/health/meals/quick").param("slot", "LUNCH").param("savedMealId", "4"))
                 .andExpect(flash().attribute("errorMessage", "nicht gefunden"));
     }
@@ -234,5 +234,54 @@ class MealControllerTest {
         mockMvc.perform(post("/health/meals/saved/3/delete").param("slot", "LUNCH"))
                 .andExpect(redirectedUrl("/health/meals/new?slot=LUNCH"));
         verify(mealService).deleteSaved(3L);
+    }
+
+    @Test
+    void pastDay_captureQuickSaveAndDeleteGoBackToThatDay() throws Exception {
+        LocalDate past = TODAY.minusDays(2);
+        mockMvc.perform(get("/health/meals/new").param("date", past.toString()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Nachtragen für")))
+                .andExpect(content().string(containsString("name=\"date\" value=\"" + past + "\"")));
+        verify(mealService).quickMeals(MealSlot.LUNCH, past);
+
+        // a future date falls back to today: no banner
+        mockMvc.perform(get("/health/meals/new").param("date", TODAY.plusDays(3).toString()))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("Nachtragen für"))));
+
+        Meal meal = new Meal();
+        meal.setTitle("Müsli");
+        when(mealService.logSaved(3L, MealSlot.BREAKFAST, past)).thenReturn(meal);
+        mockMvc.perform(post("/health/meals/quick").param("slot", "BREAKFAST").param("savedMealId", "3")
+                        .param("date", past.toString()))
+                .andExpect(redirectedUrl("/health?date=" + past));
+
+        when(mealService.delete(7L)).thenReturn(Optional.of(past));
+        mockMvc.perform(post("/health/meals/7/delete")).andExpect(redirectedUrl("/health?date=" + past));
+
+        mockMvc.perform(post("/health/meals").param("slot", "DINNER").param("date", past.toString()).param("title", "Gulasch")
+                        .param("items[0].name", "Gulasch").param("items[0].grams", "350")
+                        .param("items[0].kcalPer100g", "130").param("items[0].proteinPer100g", "10")
+                        .param("items[0].carbsPer100g", "5").param("items[0].fatPer100g", "8"))
+                .andExpect(redirectedUrl("/health?date=" + past));
+    }
+
+    @Test
+    void pastDay_recognizeAndManualUseThatDay() throws Exception {
+        LocalDate past = TODAY.minusDays(1);
+        MealForm form = new MealForm();
+        form.setSlot(MealSlot.DINNER);
+        form.setDate(past);
+        form.setTitle("Gulasch");
+        form.getItems().add(MealItemForm.empty());
+        when(mealService.manualForm(MealSlot.DINNER, past, "Gulasch")).thenReturn(form);
+        mockMvc.perform(get("/health/meals/manual").param("slot", "DINNER").param("description", "Gulasch")
+                        .param("date", past.toString()))
+                .andExpect(status().isOk());
+
+        when(mealService.recognize(any(), eq(past), any(), any())).thenThrow(new AiRequestException("weg"));
+        mockMvc.perform(post("/health/meals/recognize").param("slot", "LUNCH").param("description", "Suppe")
+                        .param("date", past.toString()))
+                .andExpect(content().string(containsString("Nachtragen für")));
     }
 }

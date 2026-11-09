@@ -49,7 +49,14 @@ class HealthSchemaTest {
                     "result_a", "kcal_a", "latency_a_ms", "model_b", "result_b", "kcal_b", "latency_b_ms", "shown_model"),
             "saved_meal", Set.of("id", "user_profile_id", "name", "usual_slot", "use_count", "last_used_at", "created_at"),
             "saved_meal_item", Set.of("id", "saved_meal_id", "position", "name", "grams", "kcal_per_100g",
-                    "protein_per_100g", "carbs_per_100g", "fat_per_100g", "portion_hint"));
+                    "protein_per_100g", "carbs_per_100g", "fat_per_100g", "portion_hint"),
+            // 1_38
+            "weekly_review", Set.of("id", "user_profile_id", "week_start", "logged_days", "paused_days", "kcal_avg",
+                    "kcal_target_avg", "protein_avg_g", "protein_target_g", "protein_days", "freeletics_sessions",
+                    "football_played", "training_kcal", "weight_trend_kg", "weight_change_kg", "weekly_rate_kg", "waist_cm",
+                    "waist_change_cm", "push_ups", "goal_check", "goal_status", "headline", "feedback", "goal_reason",
+                    "proposed_kcal_target", "proposed_protein_target_g", "proposed_target_date", "proposal_reason",
+                    "feedback_status", "model", "feedback_at", "error", "decision", "decided_at", "created_at"));
 
     @MockitoBean
     private CacheManager cacheManager;

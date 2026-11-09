@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 class NotificationRuleEvaluationServiceTest {
@@ -132,5 +133,17 @@ class NotificationRuleEvaluationServiceTest {
         service.evaluateAll();
 
         verify(jobs).success(JobStatusService.NOTIFICATION_RULES);
+    }
+
+    @Test
+    void candidateWithRecipient_reachesOnlyThatUser() {
+        NotificationRule rule = rule("BUDGET", NotificationTargetingMode.ALL_USERS);
+        when(budget.evaluate(rule)).thenReturn(List.of(new NotificationCandidate("T", "M", NotificationSeverity.INFO,
+                "review-2026-11-02", null, List.of(), false, "Aga")));
+        when(notificationService.create(any(), any(), any())).thenReturn(true);
+
+        assertThat(service.evaluate(rule)).isEqualTo(1);
+        verify(notificationService).create(eq(rule), eq(aga), any());
+        verify(notificationService, never()).create(eq(rule), eq(michael), any());
     }
 }

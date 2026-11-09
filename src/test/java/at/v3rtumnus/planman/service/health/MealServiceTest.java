@@ -447,4 +447,30 @@ class MealServiceTest {
             return new Result(model, draft, "{\"title\":\"x\"}", 1200);
         }
     }
+
+    @Test
+    void pastDay_recognizeManualQuickAndDelete() {
+        MealService service = service();
+        LocalDate past = TODAY.minusDays(3);
+
+        assertThat(service.recognize(MealSlot.LUNCH, past, "Putenschnitzel", null).form().getDate()).isEqualTo(past);
+        assertThat(service.manualForm(MealSlot.DINNER, past, "Gulasch").getDate()).isEqualTo(past);
+        assertThatThrownBy(() -> service.manualForm(MealSlot.DINNER, TODAY.plusDays(1), "x"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        MealForm form = manual("Spaghetti", 780);
+        form.setDate(past.minusDays(1));
+        form.setSlot(MealSlot.LUNCH);
+        Meal source = service.save(form);
+        assertThat(service.quickMeals(MealSlot.LUNCH, past)).extracting(QuickMeal::name).contains("Wie am Vortag Mittag");
+
+        Meal copy = service.logRepeat(source.getId(), MealSlot.LUNCH, past);
+        assertThat(copy.getEatenOn()).isEqualTo(past);
+        assertThat(dayRepository.findByUserUsernameAndDate("michael", past)).isPresent();
+        assertThatThrownBy(() -> service.logRepeat(source.getId(), MealSlot.LUNCH, TODAY.plusDays(2)))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(service.delete(copy.getId())).contains(past);
+        assertThat(service.delete(copy.getId())).isEmpty();
+    }
 }

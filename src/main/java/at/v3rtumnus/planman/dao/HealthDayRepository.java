@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface HealthDayRepository extends JpaRepository<HealthDay, Long> {
 
     Optional<HealthDay> findByUserUsernameAndDate(String username, LocalDate date);
+
+    java.util.List<HealthDay> findByUserUsernameAndDateBetween(String username, LocalDate from, LocalDate to);
 }

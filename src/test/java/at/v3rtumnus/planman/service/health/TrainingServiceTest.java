@@ -232,4 +232,31 @@ class TrainingServiceTest {
         service().delete(workout.getId());
         assertThat(service().recent()).isEmpty();
     }
+
+    @Test
+    void pastDay_logsOnThatDayWithThatDaysGoal() {
+        goal();
+        LocalDate past = TUESDAY.minusDays(7);
+        TrainingService service = service();
+
+        assertThat(service.logFreeletics(past, 30, Intensity.MEDIUM).getDoneOn()).isEqualTo(past);
+        assertThat(service.logActivity(past, WorkoutType.WALK, 30).getDoneOn()).isEqualTo(past);
+        Workout football = service.logFootball(past);
+        assertThat(football.getDoneOn()).isEqualTo(past);
+        assertThat(football.getBonusKcal()).isEqualTo(250);
+        assertThat(service.footballState(past)).isEqualTo(FootballState.PLAYED);
+        service.cancelFootball(past);
+        assertThat(service.footballState(past)).isEqualTo(FootballState.CANCELLED);
+        service.resetFootball(past);
+        assertThat(service.footballState(past)).isEqualTo(FootballState.OPEN);
+        assertThat(service.workoutsOn(past)).hasSize(2);
+
+        assertThatThrownBy(() -> service.logFreeletics(TUESDAY.plusDays(1), 30, Intensity.MEDIUM))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.logFootball(TUESDAY.plusDays(1))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.logOther(TUESDAY.plusDays(1), "Tennis", 60)).isInstanceOf(IllegalArgumentException.class);
+
+        // before any goal: football adds nothing
+        assertThat(service.logFootball(TUESDAY.minusDays(60)).getBonusKcal()).isZero();
+    }
 }
