@@ -20,4 +20,10 @@ public interface HealthPauseRepository extends JpaRepository<HealthPause, Long> 
     default Optional<HealthPause> findActive(String username, LocalDate date) {
         return findCovering(username, date).stream().findFirst();
     }
+
+    /** Pauses overlapping the range from..to. */
+    @Query("SELECT p FROM HealthPause p WHERE p.user.username = :username AND p.startDate <= :to " +
+            "AND (p.endDate IS NULL OR p.endDate >= :from)")
+    List<HealthPause> findOverlapping(@Param("username") String username, @Param("from") LocalDate from,
+                                      @Param("to") LocalDate to);
 }

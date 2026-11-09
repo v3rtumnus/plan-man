@@ -24,4 +24,7 @@ public interface HealthGoalRepository extends JpaRepository<HealthGoal, Long> {
     Optional<HealthGoal> findFirstByUserUsernameAndValidToIsNullOrderByIdDesc(String username);
 
     List<HealthGoal> findByUserUsernameOrderByValidFromDescIdDesc(String username);
+
+    @Query("SELECT DISTINCT g.user.username FROM HealthGoal g")
+    List<String> findUsernamesWithGoal();
 }

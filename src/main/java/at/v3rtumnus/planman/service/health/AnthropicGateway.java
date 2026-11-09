@@ -2,6 +2,7 @@ package at.v3rtumnus.planman.service.health;
 
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.okhttp.AnthropicOkHttpClient;
+import com.anthropic.core.RequestOptions;
 import com.anthropic.errors.AnthropicException;
 import com.anthropic.errors.AnthropicServiceException;
 import com.anthropic.models.messages.*;
@@ -28,7 +29,8 @@ public class AnthropicGateway {
     /** USD per million input / output tokens (checked 2026-11-08); unknown models count as Sonnet. */
     static final Map<String, double[]> PRICES = Map.of(
             "claude-haiku-5-5", new double[]{0.10, 0.50},
-            "claude-sonnet-5-5", new double[]{2.00, 10.00});
+            "claude-sonnet-5-5", new double[]{2.00, 10.00},
+            "claude-opus-5-5", new double[]{4.00, 20.00});
 
     static final String BILLING_MESSAGE = "Das Anthropic-Guthaben ist aufgebraucht oder das Ausgabenlimit erreicht. "
             + "Bitte manuell eintragen und in der Anthropic-Console aufladen.";
@@ -68,16 +70,25 @@ public class AnthropicGateway {
      */
     public <T> Response<T> structured(String model, String purpose, String system, List<ContentBlockParam> content,
                                       Class<T> type) {
+        return structured(model, purpose, system, content, type, OutputConfig.Effort.LOW, 8000L, null);
+    }
+
+    /**
+     * @param timeout per-request timeout instead of the client's 45 s (Opus over a month of data
+     *                takes longer); null keeps the default
+     */
+    public <T> Response<T> structured(String model, String purpose, String system, List<ContentBlockParam> content,
+                                      Class<T> type, OutputConfig.Effort effort, long maxTokens, Duration timeout) {
         if (client == null) {
             throw new AiRequestException(AiRequestException.Reason.UNAVAILABLE,
                     "Keine KI konfiguriert: bitte manuell eintragen", null);
         }
         StructuredMessageCreateParams<T> params = MessageCreateParams.builder()
                 .model(model)
-                .maxTokens(8000L)
+                .maxTokens(maxTokens)
                 .system(system)
                 .outputConfig(StructuredOutputConfig.<T>builder()
-                        .effort(OutputConfig.Effort.LOW)
+                        .effort(effort)
                         .format(type)
                         .build())
                 .addUserMessageOfContentBlockParams(content)
@@ -86,7 +97,9 @@ public class AnthropicGateway {
         long start = System.nanoTime();
         StructuredMessage<T> response;
         try {
-            response = client.messages().create(params);
+            response = timeout == null
+                    ? client.messages().create(params)
+                    : client.messages().create(params, RequestOptions.builder().timeout(timeout).build());
         } catch (AnthropicException e) {
             boolean billing = isBillingError(e);
             log.warn("Claude {} request with {} failed{}: {}", purpose, model, billing ? " (billing)" : "", e.getMessage());

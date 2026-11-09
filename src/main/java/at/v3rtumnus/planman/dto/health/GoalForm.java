@@ -42,6 +42,10 @@ public class GoalForm {
     @Min(0) @Max(500)
     private Integer pushUpsTarget = 25;
 
+    /** Set when the form was filled from a weekly review proposal; saving accepts it. */
+    private Long reviewId;
+
+
     public static GoalForm from(HealthGoal goal) {
         GoalForm form = new GoalForm();
         form.setTitle(goal.getTitle());

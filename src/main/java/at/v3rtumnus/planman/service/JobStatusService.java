@@ -33,9 +33,13 @@ public class JobStatusService {
     public static final String SNAPSHOT = "snapshot";
     public static final String FX = "fx";
     public static final String NOTIFICATION_RULES = "notification_rules";
+    /** Daily: last week's numbers written for every user with a goal. */
+    public static final String HEALTH_REVIEW = "health_review";
+    /** Daily: last week's Opus text is there (or not needed); fails while the API call keeps failing. */
+    public static final String HEALTH_REVIEW_AI = "health_review_ai";
 
     /** Jobs with a gauge from startup on. Add new scheduled jobs here and to the Grafana alert. */
-    static final List<String> JOBS = List.of(QUOTES, SNAPSHOT, FX, NOTIFICATION_RULES);
+    static final List<String> JOBS = List.of(QUOTES, SNAPSHOT, FX, NOTIFICATION_RULES, HEALTH_REVIEW, HEALTH_REVIEW_AI);
 
     private final JobStatusRepository repository;
     private final MeterRegistry meterRegistry;

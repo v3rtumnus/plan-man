@@ -92,6 +92,13 @@ public class MealService {
     /** A draft form from the model, not saved yet. */
     @Transactional
     public Recognized recognize(MealSlot slot, String description, String photoJpegBase64) {
+        return recognize(slot, healthService.today(), description, photoJpegBase64);
+    }
+
+    /** As above, for a meal eaten on {@code date} (today or a past day). */
+    @Transactional
+    public Recognized recognize(MealSlot slot, LocalDate date, String description, String photoJpegBase64) {
+        checkDate(date);
         boolean hasText = description != null && !description.isBlank();
         boolean hasPhoto = photoJpegBase64 != null && !photoJpegBase64.isBlank();
         if (!hasText && !hasPhoto) {
@@ -118,7 +125,7 @@ public class MealService {
         MealRecognition saved = recognitionRepository.save(recognition);
 
         MealForm form = formFrom(shown.draft(), slot);
-        form.setDate(healthService.today());
+        form.setDate(date);
         form.setRecognitionId(saved.getId());
         return new Recognized(form, questionFrom(shown.draft(), form.getItems().size()));
     }
@@ -223,9 +230,14 @@ public class MealService {
     }
 
     public MealForm manualForm(MealSlot slot, String description) {
+        return manualForm(slot, healthService.today(), description);
+    }
+
+    public MealForm manualForm(MealSlot slot, LocalDate date, String description) {
+        checkDate(date);
         MealForm form = new MealForm();
         form.setSlot(slot);
-        form.setDate(healthService.today());
+        form.setDate(date);
         form.setTitle(description == null ? "" : truncate(description.trim(), 255));
         form.getItems().add(MealItemForm.empty());
         return form;
@@ -323,10 +335,16 @@ public class MealService {
 
     /** Saved meals, usual slot first, then by use; plus yesterday's meals of the same slot. */
     public List<QuickMeal> quickMeals(MealSlot slot) {
+        return quickMeals(slot, healthService.today());
+    }
+
+    /** As above for a day being filled in: "wie gestern" means the day before {@code date}. */
+    public List<QuickMeal> quickMeals(MealSlot slot, LocalDate date) {
         String username = username();
         List<QuickMeal> result = new ArrayList<>();
-        mealRepository.findByUserUsernameAndEatenOnAndSlotOrderByCreatedAtAsc(username, healthService.today().minusDays(1), slot)
-                .forEach(meal -> result.add(new QuickMeal(null, meal.getId(), "Wie gestern " + slot.getLabel(),
+        String dayBefore = date.equals(healthService.today()) ? "Wie gestern " : "Wie am Vortag ";
+        mealRepository.findByUserUsernameAndEatenOnAndSlotOrderByCreatedAtAsc(username, date.minusDays(1), slot)
+                .forEach(meal -> result.add(new QuickMeal(null, meal.getId(), dayBefore + slot.getLabel(),
                         meal.getTitle(), meal.getKcal(), meal.getProteinG())));
         savedMealRepository.findByUserUsername(username).stream()
                 .sorted(Comparator.comparing((SavedMeal s) -> s.getUsualSlot() != slot)
@@ -340,12 +358,18 @@ public class MealService {
 
     @Transactional
     public Meal logSaved(Long savedMealId, MealSlot slot) {
+        return logSaved(savedMealId, slot, healthService.today());
+    }
+
+    @Transactional
+    public Meal logSaved(Long savedMealId, MealSlot slot, LocalDate date) {
+        checkDate(date);
         UserProfile user = currentUser();
         SavedMeal saved = savedMealRepository.findByIdAndUserUsername(savedMealId, user.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Gespeicherte Mahlzeit nicht gefunden"));
         saved.setUseCount(saved.getUseCount() + 1);
         saved.setLastUsedAt(LocalDateTime.now(clock));
-        Meal meal = newMeal(user, slot, saved.getName(), MealSource.SAVED);
+        Meal meal = newMeal(user, date, slot, saved.getName(), MealSource.SAVED);
         meal.setSavedMeal(saved);
         meal.replaceItems(saved.getItems().stream().map(s -> {
             MealItem item = copy(s);
@@ -357,10 +381,16 @@ public class MealService {
 
     @Transactional
     public Meal logRepeat(Long mealId, MealSlot slot) {
+        return logRepeat(mealId, slot, healthService.today());
+    }
+
+    @Transactional
+    public Meal logRepeat(Long mealId, MealSlot slot, LocalDate date) {
+        checkDate(date);
         UserProfile user = currentUser();
         Meal source = mealRepository.findByIdAndUserUsername(mealId, user.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Mahlzeit nicht gefunden"));
-        Meal meal = newMeal(user, slot, source.getTitle(), MealSource.REPEAT);
+        Meal meal = newMeal(user, date, slot, source.getTitle(), MealSource.REPEAT);
         meal.replaceItems(source.getItems().stream().map(s -> {
             MealItem item = copy(s);
             item.setPortionHint(s.getPortionHint());
@@ -369,12 +399,11 @@ public class MealService {
         return mealRepository.save(meal);
     }
 
-    private Meal newMeal(UserProfile user, MealSlot slot, String title, MealSource source) {
-        LocalDate today = healthService.today();
-        healthService.day(today);
+    private Meal newMeal(UserProfile user, LocalDate date, MealSlot slot, String title, MealSource source) {
+        healthService.day(date);
         Meal meal = new Meal();
         meal.setUser(user);
-        meal.setEatenOn(today);
+        meal.setEatenOn(date);
         meal.setSlot(slot);
         meal.setTitle(title);
         meal.setSource(source);
@@ -395,9 +424,18 @@ public class MealService {
 
     // --- delete ---
 
+    /** Returns the day the meal was on, so the page can go back to it. */
     @Transactional
-    public void delete(Long mealId) {
-        mealRepository.findByIdAndUserUsername(mealId, username()).ifPresent(mealRepository::delete);
+    public Optional<LocalDate> delete(Long mealId) {
+        Optional<Meal> meal = mealRepository.findByIdAndUserUsername(mealId, username());
+        meal.ifPresent(mealRepository::delete);
+        return meal.map(Meal::getEatenOn);
+    }
+
+    private void checkDate(LocalDate date) {
+        if (date.isAfter(healthService.today())) {
+            throw new IllegalArgumentException("Das Datum darf nicht in der Zukunft liegen");
+        }
     }
 
     /** Removes a favourite; meals logged from it stay. */

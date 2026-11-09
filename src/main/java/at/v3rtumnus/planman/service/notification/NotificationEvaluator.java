@@ -24,15 +24,22 @@ public interface NotificationEvaluator {
      * @param url       page that opens on tap (null = notification overview)
      * @param actions   up to two buttons, handled by the rule type's {@link NotificationActionHandler}
      * @param push      also send to the user's devices
+     * @param recipient only this user among the rule's targets (personal data such as a weekly
+     *                  review); null = every target user
      */
     record NotificationCandidate(String title, String message, NotificationSeverity severity, String periodKey,
-                                 String url, List<NotificationAction> actions, boolean push) {
+                                 String url, List<NotificationAction> actions, boolean push, String recipient) {
 
         public NotificationCandidate {
             actions = actions == null ? List.of() : List.copyOf(actions);
             if (actions.size() > 2) {
                 throw new IllegalArgumentException("At most two actions per notification");
             }
+        }
+
+        public NotificationCandidate(String title, String message, NotificationSeverity severity, String periodKey,
+                                     String url, List<NotificationAction> actions, boolean push) {
+            this(title, message, severity, periodKey, url, actions, push, null);
         }
     }
 }

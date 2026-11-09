@@ -24,4 +24,6 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Meal m SET m.savedMeal = null WHERE m.savedMeal.id = :savedMealId")
     void detachSavedMeal(@Param("savedMealId") Long savedMealId);
+
+    List<Meal> findByUserUsernameAndEatenOnBetween(String username, LocalDate from, LocalDate to);
 }

@@ -98,7 +98,7 @@ class TrainingControllerTest {
 
     @Test
     void freeletics_logsAndShowsBonus() throws Exception {
-        when(trainingService.logFreeletics(30, Intensity.MEDIUM)).thenReturn(workout(WorkoutType.FREELETICS, null, 30, Intensity.MEDIUM, 250));
+        when(trainingService.logFreeletics(TODAY, 30, Intensity.MEDIUM)).thenReturn(workout(WorkoutType.FREELETICS, null, 30, Intensity.MEDIUM, 250));
 
         mockMvc.perform(post("/health/training/freeletics").param("minutes", "30").param("intensity", "MEDIUM"))
                 .andExpect(redirectedUrl("/health/training"))
@@ -107,7 +107,7 @@ class TrainingControllerTest {
 
     @Test
     void activity_invalid_showsError() throws Exception {
-        when(trainingService.logActivity(WorkoutType.WALK, 0)).thenThrow(new IllegalArgumentException("Bitte eine Dauer"));
+        when(trainingService.logActivity(TODAY, WorkoutType.WALK, 0)).thenThrow(new IllegalArgumentException("Bitte eine Dauer"));
 
         mockMvc.perform(post("/health/training/activity").param("type", "WALK").param("minutes", "0"))
                 .andExpect(flash().attribute("errorMessage", "Bitte eine Dauer"));
@@ -115,18 +115,18 @@ class TrainingControllerTest {
 
     @Test
     void other_logsOrKeepsTextOnAiError() throws Exception {
-        when(trainingService.logOther("Tennis", 60)).thenReturn(workout(WorkoutType.OTHER, "Tennis Doppel", 60, null, 330));
+        when(trainingService.logOther(TODAY, "Tennis", 60)).thenReturn(workout(WorkoutType.OTHER, "Tennis Doppel", 60, null, 330));
         mockMvc.perform(post("/health/training/other").param("description", "Tennis").param("minutes", "60"))
                 .andExpect(flash().attribute("successMessage", "Tennis Doppel eingetragen: +330 kcal fürs Tagesziel"));
 
-        when(trainingService.logOther(eq("Golf"), isNull()))
+        when(trainingService.logOther(eq(TODAY), eq("Golf"), isNull()))
                 .thenThrow(new AiRequestException(AiRequestException.Reason.BILLING, "Guthaben aufgebraucht", null));
         mockMvc.perform(post("/health/training/other").param("description", "Golf"))
                 .andExpect(redirectedUrl("/health/training"))
                 .andExpect(flash().attribute("errorMessage", "Guthaben aufgebraucht"))
                 .andExpect(flash().attribute("otherDescription", "Golf"));
 
-        when(trainingService.logOther(eq("Skitag"), isNull()))
+        when(trainingService.logOther(eq(TODAY), eq("Skitag"), isNull()))
                 .thenThrow(new IllegalArgumentException("Wie lange? Bitte die Dauer in Minuten eintragen."));
         mockMvc.perform(post("/health/training/other").param("description", "Skitag"))
                 .andExpect(flash().attribute("errorMessage", "Wie lange? Bitte die Dauer in Minuten eintragen."))
@@ -135,22 +135,48 @@ class TrainingControllerTest {
 
     @Test
     void football_answers_returnToTheAskingPage() throws Exception {
-        when(trainingService.logFootball()).thenReturn(workout(WorkoutType.FOOTBALL, null, 70, Intensity.MEDIUM, 250));
+        when(trainingService.logFootball(TODAY)).thenReturn(workout(WorkoutType.FOOTBALL, null, 70, Intensity.MEDIUM, 250));
 
         mockMvc.perform(post("/health/training/football").param("answer", "played").param("returnTo", "/health"))
                 .andExpect(redirectedUrl("/health"))
                 .andExpect(flash().attribute("successMessage", "Fußball eingetragen: +250 kcal"));
         mockMvc.perform(post("/health/training/football").param("answer", "cancelled"))
                 .andExpect(redirectedUrl("/health/training"));
-        verify(trainingService).cancelFootball();
+        verify(trainingService).cancelFootball(TODAY);
         mockMvc.perform(post("/health/training/football").param("answer", "reset").param("returnTo", "https://evil.example"))
                 .andExpect(redirectedUrl("/health/training"));
-        verify(trainingService).resetFootball();
+        verify(trainingService).resetFootball(TODAY);
     }
 
     @Test
     void delete_removesWorkout() throws Exception {
         mockMvc.perform(post("/health/training/3/delete")).andExpect(redirectedUrl("/health/training"));
         verify(trainingService).delete(3L);
+    }
+
+    @Test
+    void pastDay_formsCarryTheDateAndComeBackToIt() throws Exception {
+        LocalDate past = TODAY.minusDays(3);
+        when(trainingService.footballState(past)).thenReturn(FootballState.PLAYED);
+        mockMvc.perform(get("/health/training").param("date", past.toString()))
+                .andExpect(content().string(containsString("Nachtragen für")))
+                .andExpect(content().string(containsString("An diesem Tag 70 min eingetragen")))
+                .andExpect(content().string(containsString("name=\"date\" value=\"" + past + "\"")));
+
+        when(trainingService.logFreeletics(past, 30, Intensity.MEDIUM)).thenReturn(workout(WorkoutType.FREELETICS, null, 30, Intensity.MEDIUM, 250));
+        mockMvc.perform(post("/health/training/freeletics").param("minutes", "30").param("intensity", "MEDIUM")
+                        .param("date", past.toString()))
+                .andExpect(redirectedUrl("/health/training?date=" + past));
+
+        when(trainingService.logFootball(past)).thenReturn(workout(WorkoutType.FOOTBALL, null, 70, Intensity.MEDIUM, 0));
+        mockMvc.perform(post("/health/training/football").param("answer", "played").param("returnTo", "/health")
+                        .param("date", past.toString()))
+                .andExpect(redirectedUrl("/health/training?date=" + past))
+                .andExpect(flash().attribute("successMessage", "Fußball eingetragen"));
+
+        mockMvc.perform(post("/health/training/4/delete").param("date", past.toString()).param("returnTo", "day"))
+                .andExpect(redirectedUrl("/health?date=" + past));
+        mockMvc.perform(post("/health/training/5/delete").param("date", past.toString()))
+                .andExpect(redirectedUrl("/health/training?date=" + past));
     }
 }

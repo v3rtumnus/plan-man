@@ -17,6 +17,9 @@
         <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li><li class="breadcrumb-item active">Mahlzeit</li></ol></nav>
     </div>
 
+    <div class="alert alert-secondary" role="status" th:if="${pastDay}">
+        Nachtragen für <b th:text="${pastDay}">Sonntag, 8. November</b> · <a th:href="@{/health(date=${date})}">zurück zum Tag</a>
+    </div>
     <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
     <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
 
@@ -24,6 +27,7 @@
         <div class="col-lg-6">
             <form id="meal-capture" method="post" th:action="@{/health/meals/recognize}" class="d-flex flex-column gap-3"
                   th:attr="data-open-camera=${openCamera}">
+                <input type="hidden" name="date" th:value="${date}">
                 <div role="radiogroup" aria-label="Mahlzeit" class="d-flex gap-2 flex-wrap">
                     <th:block th:each="s : ${slots}">
                         <input type="radio" class="btn-check" name="slot" th:id="'slot-' + ${s}" th:value="${s}"
@@ -90,6 +94,7 @@
                         <input type="hidden" name="slot" class="quick-slot" th:value="${slot}">
                         <input type="hidden" name="savedMealId" th:value="${q.savedMealId}" th:if="${q.savedMealId}">
                         <input type="hidden" name="mealId" th:value="${q.mealId}" th:if="${q.mealId}">
+                        <input type="hidden" name="date" th:value="${date}">
                         <button type="submit" class="btn btn-outline-primary health-add" th:attr="aria-label=${q.name} + ' eintragen'">+</button>
                     </form>
                 </div>

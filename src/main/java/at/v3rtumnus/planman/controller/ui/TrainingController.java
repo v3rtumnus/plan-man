@@ -11,7 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,14 +30,20 @@ public class TrainingController {
     static final List<Integer> ACTIVITY_MINUTES = List.of(20, 30, 45, 60, 90);
     private static final Set<String> RETURN_PATHS = Set.of("/health", "/health/training");
 
+    private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("EEEE, d. MMMM", Locale.GERMAN);
+
     private final TrainingService trainingService;
 
     @GetMapping
-    public ModelAndView training() {
+    public ModelAndView training(@RequestParam(name = "date", required = false)
+                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        LocalDate day = day(date);
         ModelAndView mav = new ModelAndView("health/training");
         mav.addObject("week", trainingService.week());
         mav.addObject("recent", trainingService.recent());
-        mav.addObject("football", trainingService.footballState(trainingService.today()));
+        mav.addObject("date", day);
+        mav.addObject("pastDay", day.isBefore(trainingService.today()) ? DAY_FORMAT.format(day) : null);
+        mav.addObject("football", trainingService.footballState(day));
         mav.addObject("footballMinutes", trainingService.footballMinutes());
         mav.addObject("freeleticsMinutes", FREELETICS_MINUTES);
         mav.addObject("activityMinutes", ACTIVITY_MINUTES);
@@ -47,22 +58,31 @@ public class TrainingController {
 
     @PostMapping("/freeletics")
     public String freeletics(@RequestParam("minutes") int minutes, @RequestParam("intensity") Intensity intensity,
+                             @RequestParam(name = "date", required = false)
+                             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                              RedirectAttributes redirect) {
-        return logged(redirect, () -> trainingService.logFreeletics(minutes, intensity));
+        LocalDate day = day(date);
+        return logged(redirect, day, () -> trainingService.logFreeletics(day, minutes, intensity));
     }
 
     @PostMapping("/activity")
     public String activity(@RequestParam("type") WorkoutType type, @RequestParam("minutes") int minutes,
+                           @RequestParam(name = "date", required = false)
+                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                            RedirectAttributes redirect) {
-        return logged(redirect, () -> trainingService.logActivity(type, minutes));
+        LocalDate day = day(date);
+        return logged(redirect, day, () -> trainingService.logActivity(day, type, minutes));
     }
 
     @PostMapping("/other")
     public String other(@RequestParam("description") String description,
                         @RequestParam(name = "minutes", required = false) Integer minutes,
+                        @RequestParam(name = "date", required = false)
+                        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                         RedirectAttributes redirect) {
+        LocalDate day = day(date);
         try {
-            Workout workout = trainingService.logOther(description, minutes);
+            Workout workout = trainingService.logOther(day, description, minutes);
             redirect.addFlashAttribute("successMessage", workout.label() + " eingetragen: +" + workout.getBonusKcal()
                     + " kcal fürs Tagesziel");
         } catch (AiRequestException | IllegalArgumentException e) {
@@ -70,33 +90,47 @@ public class TrainingController {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
             redirect.addFlashAttribute("otherDescription", description);
         }
-        return "redirect:/health/training";
+        return "redirect:" + trainingPath(day);
     }
 
     @PostMapping("/football")
     public String football(@RequestParam("answer") String answer,
                            @RequestParam(name = "returnTo", defaultValue = "/health/training") String returnTo,
+                           @RequestParam(name = "date", required = false)
+                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                            RedirectAttributes redirect) {
+        LocalDate day = day(date);
         switch (answer) {
             case "played" -> {
-                Workout workout = trainingService.logFootball();
+                Workout workout = trainingService.logFootball(day);
                 redirect.addFlashAttribute("successMessage", "Fußball eingetragen"
                         + (workout.getBonusKcal() > 0 ? ": +" + workout.getBonusKcal() + " kcal" : ""));
             }
-            case "cancelled" -> trainingService.cancelFootball();
-            default -> trainingService.resetFootball();
+            case "cancelled" -> trainingService.cancelFootball(day);
+            default -> trainingService.resetFootball(day);
+        }
+        if (day.isBefore(trainingService.today())) {
+            return "redirect:" + trainingPath(day);
         }
         return "redirect:" + (RETURN_PATHS.contains(returnTo) ? returnTo : "/health/training");
     }
 
+    /** {@code returnTo=day} goes back to the day on Heute (past days list their training there). */
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable("id") Long id, RedirectAttributes redirect) {
+    public String delete(@PathVariable("id") Long id,
+                         @RequestParam(name = "date", required = false)
+                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                         @RequestParam(name = "returnTo", required = false) String returnTo,
+                         RedirectAttributes redirect) {
         trainingService.delete(id);
         redirect.addFlashAttribute("successMessage", "Training gelöscht");
-        return "redirect:/health/training";
+        if ("day".equals(returnTo)) {
+            return "redirect:" + HealthController.dayPath(date, trainingService.today());
+        }
+        return "redirect:" + trainingPath(day(date));
     }
 
-    private String logged(RedirectAttributes redirect, java.util.function.Supplier<Workout> action) {
+    private String logged(RedirectAttributes redirect, LocalDate day, java.util.function.Supplier<Workout> action) {
         try {
             Workout workout = action.get();
             redirect.addFlashAttribute("successMessage", workout.label() + " eingetragen: +" + workout.getBonusKcal()
@@ -104,6 +138,15 @@ public class TrainingController {
         } catch (IllegalArgumentException e) {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/health/training";
+        return "redirect:" + trainingPath(day);
+    }
+
+    private LocalDate day(LocalDate date) {
+        LocalDate today = trainingService.today();
+        return date == null || date.isAfter(today) ? today : date;
+    }
+
+    private String trainingPath(LocalDate day) {
+        return day.isBefore(trainingService.today()) ? "/health/training?date=" + day : "/health/training";
     }
 }

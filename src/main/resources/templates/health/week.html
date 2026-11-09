@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Woche · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <h1>Woche</h1>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/health}">Gesundheit</a></li>
+            <li class="breadcrumb-item active" th:text="${weekLabel}">2. Nov. – 8. Nov.</li></ol></nav>
+    </div>
+
+    <div th:replace="~{fragments/health-tabs :: health-tabs}"></div>
+
+    <div class="alert alert-primary" role="alert" th:text="${successMessage}" th:if="${successMessage}"></div>
+    <div class="alert alert-danger" role="alert" th:text="${errorMessage}" th:if="${errorMessage}"></div>
+
+    <div class="health-pager">
+        <a class="btn btn-outline-primary" th:href="@{/health/week(start=${prevStart})}" aria-label="Vorherige Woche">
+            <i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+        <div class="health-pager-label">
+            <span th:text="${weekLabel}">2. Nov. – 8. Nov.</span>
+            <a class="d-block small fw-normal" th:unless="${isCurrent}" th:href="@{/health/week}">diese Woche</a>
+            <span class="d-block small fw-normal text-muted" th:if="${isCurrent}">diese Woche</span>
+        </div>
+        <a class="btn btn-outline-primary" th:if="${nextStart}" th:href="@{/health/week(start=${nextStart})}" aria-label="Nächste Woche">
+            <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+        <span class="btn invisible" th:unless="${nextStart}" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <div class="card health-tile h-100 mb-0"><div class="card-body pt-3 pb-3">
+                        <div class="small text-muted">Ø Kalorien</div>
+                        <div class="health-tile-value" th:text="${week.kcalAvg != null} ? ${#numbers.formatInteger(week.kcalAvg, 1, 'POINT')} : '–'">1.950</div>
+                        <div class="small text-muted" th:if="${week.kcalTargetAvg != null}"
+                             th:text="'Ziel Ø ' + ${#numbers.formatInteger(week.kcalTargetAvg, 1, 'POINT')}">Ziel Ø 2.080</div>
+                    </div></div>
+                </div>
+                <div class="col-6">
+                    <div class="card health-tile h-100 mb-0"><div class="card-body pt-3 pb-3">
+                        <div class="small text-muted">Protein erreicht</div>
+                        <div class="health-tile-value" th:text="${week.proteinDays} + ' von ' + ${week.loggedDays}">4 von 6</div>
+                        <div class="small text-muted" th:if="${week.proteinAvgG != null}"
+                             th:text="'Ø ' + ${#numbers.formatDecimal(week.proteinAvgG, 1, 0)} + (${week.proteinTargetG != null} ? ' / ' + ${week.proteinTargetG} : '') + ' g'">Ø 148 / 160 g</div>
+                    </div></div>
+                </div>
+                <div class="col-6">
+                    <a class="card health-tile h-100 mb-0" th:href="@{/health/training}"><div class="card-body pt-3 pb-3">
+                        <div class="small text-muted">Training</div>
+                        <div class="health-tile-value" th:text="'Freeletics ' + ${week.freeleticsSessions} + '×'">Freeletics 2×</div>
+                        <div class="small text-muted" th:text="${week.footballPlayed} ? 'Fußball gespielt' : 'kein Fußball'">Fußball gespielt</div>
+                    </div></a>
+                </div>
+                <div class="col-6">
+                    <a class="card health-tile h-100 mb-0" th:href="@{/health/goal}"><div class="card-body pt-3 pb-3">
+                        <div class="small text-muted">Gewicht-Trend</div>
+                        <div class="health-tile-value" th:text="${week.weightTrendKg != null} ? ${#numbers.formatDecimal(week.weightTrendKg, 1, 'POINT', 1, 'COMMA')} + ' kg' : '–'">82,4 kg</div>
+                        <div class="small fw-semibold" th:if="${week.weightChangeKg != null}"
+                             th:classappend="${week.weightChangeKg.signum() <= 0} ? 'text-success' : 'text-warning'"
+                             th:text="(${week.weightChangeKg.signum() > 0} ? '+' : '') + ${#numbers.formatDecimal(week.weightChangeKg, 1, 'POINT', 1, 'COMMA')} + ' kg zur Vorwoche'"></div>
+                    </div></a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3 pb-1">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <h5 class="card-title pt-0 pb-1">Tage</h5>
+                        <span class="small text-muted"
+                              th:text="${week.loggedDays} + ' von 7 eingetragen' + (${week.pausedDays > 0} ? ', ' + ${week.pausedDays} + ' Pause' : '')">6 von 7 eingetragen</span>
+                    </div>
+                </div>
+                <th:block th:each="d : ${week.days}">
+                    <a class="health-week-day" th:if="${!d.date.isAfter(today)}" th:href="@{/health(date=${d.date})}">
+                        <b th:text="${d.dayLabel()}" style="color:#012970">Mo</b>
+                        <span class="small">
+                            <th:block th:if="${d.paused}"><span class="text-muted">Pause</span></th:block>
+                            <th:block th:if="${!d.paused and d.meals == 0}"><span class="text-muted">nichts eingetragen</span></th:block>
+                            <th:block th:if="${!d.paused and d.meals > 0}">
+                                <b th:text="${#numbers.formatInteger(d.kcalEaten, 1, 'POINT')}">1.850</b><span
+                                    th:if="${d.kcalTarget() != null}" th:text="' / ' + ${#numbers.formatInteger(d.kcalTarget(), 1, 'POINT')}"> / 2.250</span> kcal
+                                · <span class="health-protein" th:classappend="${d.proteinReached()} ? 'fw-semibold'"
+                                        th:text="${#numbers.formatDecimal(d.proteinG, 1, 0)} + ' g'">142 g</span>
+                            </th:block>
+                            <span class="text-muted" th:each="w : ${d.workouts}" th:text="' · ' + ${w.label()}"> · Freeletics</span>
+                        </span>
+                        <span class="small text-muted text-nowrap" th:text="${d.weightKg != null} ? ${#numbers.formatDecimal(d.weightKg, 1, 'POINT', 1, 'COMMA')} + ' kg' : ''">82,6 kg</span>
+                        <div class="progress health-bar" role="progressbar" th:if="${!d.paused and d.meals > 0 and d.kcalTarget() != null}"
+                             th:attr="aria-label='Kalorien ' + ${d.dayLabel()}, aria-valuenow=${d.kcalPercent()}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" th:classappend="${d.overTarget()} ? 'health-bar-over'" th:style="'width:' + ${d.kcalPercent()} + '%'"></div>
+                        </div>
+                    </a>
+                    <div class="health-week-day text-muted" th:if="${d.date.isAfter(today)}">
+                        <b th:text="${d.dayLabel()}">So</b><span class="small">–</span><span></span>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title pt-0 pb-2">Rückblick</h5>
+
+                    <th:block th:if="${review != null and review.feedbackStatus.name() == 'DONE'}">
+                        <p class="fw-semibold mb-2" style="color:#012970" th:if="${review.headline}" th:text="${review.headline}">Gute Woche</p>
+                        <p class="health-feedback" th:text="${review.feedback}">…</p>
+                        <p class="small text-muted mb-0" th:text="'Von ' + ${review.model} + ', ' + ${#temporals.format(review.feedbackAt, 'dd.MM. HH:mm')}"></p>
+                    </th:block>
+
+                    <th:block th:if="${review != null and review.feedbackStatus.name() != 'DONE'}" th:switch="${review.feedbackStatus.name()}">
+                        <p class="small text-muted" th:case="'PAUSED'">Pause in dieser Woche: kein Feedback, nichts zählt als verpasst.</p>
+                        <p class="small text-muted" th:case="'TOO_FEW_DAYS'">Weniger als 3 Tage eingetragen: zu wenig für eine Rückmeldung. Die Zahlen sind gespeichert.</p>
+                        <p class="small text-muted" th:case="'SKIPPED'">Nur die Zahlen, ohne Text.</p>
+                        <p class="small text-muted" th:case="*">Der Text konnte noch nicht erstellt werden<span th:if="${review.error}" th:text="' (' + ${review.error} + ')'"></span>. Neuer Versuch morgen früh.</p>
+                    </th:block>
+
+                    <p class="small text-muted" th:if="${review == null and isCurrent}">Der Rückblick auf diese Woche kommt am Montag früh.</p>
+                    <p class="small text-muted" th:if="${review == null and !isCurrent}">Für diese Woche gibt es keinen Rückblick.</p>
+
+                    <form method="post" th:action="@{/health/week/review}" th:if="${canCreateReview}" class="mt-2"
+                          onsubmit="this.querySelector('button').disabled = true; this.querySelector('.spinner-border').classList.remove('d-none')">
+                        <input type="hidden" name="start" th:value="${week.weekStart}">
+                        <button type="submit" class="btn btn-outline-primary health-tool">
+                            <span class="spinner-border spinner-border-sm me-2 d-none" aria-hidden="true"></span>Rückblick jetzt erstellen
+                        </button>
+                        <div class="small text-muted mt-1">Opus braucht dafür bis zu einer Minute.</div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card" th:if="${review != null and review.goalCheck}">
+                <div class="card-body pt-3">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <h5 class="card-title pt-0 pb-2">Ziel-Check</h5>
+                        <span class="badge" th:classappend="${review.needsTalk()} ? 'bg-warning text-dark' : 'bg-success'"
+                              th:text="${review.goalStatus.label}">Im Plan</span>
+                    </div>
+                    <p th:if="${review.goalReason}" th:text="${review.goalReason}">…</p>
+
+                    <div class="border rounded p-2 mb-3" th:if="${review.hasProposal()}">
+                        <div class="small text-muted mb-1">Vorschlag</div>
+                        <div th:if="${review.proposedKcalTarget}" th:text="'Kalorienziel ' + ${#numbers.formatInteger(review.proposedKcalTarget, 1, 'POINT')} + ' kcal'"></div>
+                        <div th:if="${review.proposedProteinTargetG}" th:text="'Protein ' + ${review.proposedProteinTargetG} + ' g'"></div>
+                        <div th:if="${review.proposedTargetDate}" th:text="'Zieldatum ' + ${#temporals.format(review.proposedTargetDate, 'dd.MM.yyyy')}"></div>
+                        <div class="small text-muted mt-1" th:if="${review.proposalReason}" th:text="${review.proposalReason}"></div>
+                        <a class="btn btn-primary btn-sm mt-2" th:if="${review.decision == null}"
+                           th:href="@{/health/goal(review=${review.id})}">Vorschlag übernehmen…</a>
+                    </div>
+
+                    <div class="d-flex gap-2" th:if="${review.needsTalk() and review.decision == null}">
+                        <form method="post" th:action="@{/health/week/review/{id}/decision(id=${review.id})}" class="flex-fill">
+                            <input type="hidden" name="decision" value="TALK">
+                            <button type="submit" class="btn btn-outline-primary w-100 health-tool">Gespräch führen</button>
+                        </form>
+                        <form method="post" th:action="@{/health/week/review/{id}/decision(id=${review.id})}" class="flex-fill">
+                            <input type="hidden" name="decision" value="KEEP">
+                            <button type="submit" class="btn btn-outline-secondary w-100 health-tool">Passt so</button>
+                        </form>
+                    </div>
+                    <p class="small mb-0" th:if="${review.decision != null}" th:switch="${review.decision.name()}">
+                        <span th:case="'TALK'">Gespräch vorgemerkt: in Claude Code in <code>/opt/appl</code> „health review“ sagen.</span>
+                        <span th:case="'KEEP'" class="text-muted">Entschieden: Ziel bleibt.</span>
+                        <span th:case="*" class="text-success">Vorschlag als neues Ziel übernommen.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+</body>
+</html>
