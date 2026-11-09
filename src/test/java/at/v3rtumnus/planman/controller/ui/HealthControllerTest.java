@@ -141,6 +141,20 @@ class HealthControllerTest {
     }
 
     @Test
+    void today_duringPause_noFootballQuestion_butAnswerStillShown() throws Exception {
+        HealthPause pause = new HealthPause();
+        pause.setStartDate(TODAY.minusDays(1));
+        when(healthService.activePause()).thenReturn(Optional.of(pause));
+
+        mockMvc.perform(get("/health"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("Fußball heute?"))));
+
+        when(trainingService.footballState(TODAY)).thenReturn(FootballState.PLAYED);
+        mockMvc.perform(get("/health"))
+                .andExpect(content().string(containsString("Fußball 70 min eingetragen")));
+    }
+
+    @Test
     void today_notFootballDay_noCard() throws Exception {
         when(trainingService.footballState(TODAY)).thenReturn(FootballState.NOT_ASKED);
 

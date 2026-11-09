@@ -11,12 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Training: Freeletics in one tap, football, other activities and the dumbbell weights. */
+/** Training: Freeletics in one tap, football and other activities. */
 @Controller
 @RequestMapping("/health/training")
 @RequiredArgsConstructor
@@ -95,46 +94,6 @@ public class TrainingController {
         trainingService.delete(id);
         redirect.addFlashAttribute("successMessage", "Training gelöscht");
         return "redirect:/health/training";
-    }
-
-    // --- dumbbell weights ---
-
-    @GetMapping("/weights")
-    public ModelAndView weights() {
-        ModelAndView mav = new ModelAndView("health/weights");
-        mav.addObject("exercises", trainingService.exercises());
-        return mav;
-    }
-
-    @PostMapping("/weights")
-    public String addExercise(@RequestParam("name") String name,
-                              @RequestParam(name = "weightKg", required = false) BigDecimal weightKg,
-                              RedirectAttributes redirect) {
-        try {
-            trainingService.addExercise(name, weightKg);
-            redirect.addFlashAttribute("successMessage", name.trim() + " hinzugefügt");
-        } catch (IllegalArgumentException e) {
-            redirect.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/health/training/weights";
-    }
-
-    @PostMapping("/weights/{id}")
-    public String changeWeight(@PathVariable("id") Long id, @RequestParam("weightKg") BigDecimal weightKg,
-                               RedirectAttributes redirect) {
-        try {
-            trainingService.changeWeight(id, weightKg);
-        } catch (IllegalArgumentException e) {
-            redirect.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/health/training/weights#exercise-" + id;
-    }
-
-    @PostMapping("/weights/{id}/remove")
-    public String removeExercise(@PathVariable("id") Long id, RedirectAttributes redirect) {
-        trainingService.removeExercise(id);
-        redirect.addFlashAttribute("successMessage", "Übung entfernt");
-        return "redirect:/health/training/weights";
     }
 
     private String logged(RedirectAttributes redirect, java.util.function.Supplier<Workout> action) {

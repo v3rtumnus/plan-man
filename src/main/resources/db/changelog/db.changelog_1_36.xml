@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Hantelgewichte dropped on 2026-11-08 before first use (both tables were empty): the weights
+         live in Freeletics; a second list in plan-man only added a step. -->
+    <changeSet id="1_36_drop_exercise_weight" author="plan-man">
+        <dropTable tableName="exercise_weight"/>
+    </changeSet>
+
+    <changeSet id="1_36_drop_exercise" author="plan-man">
+        <dropTable tableName="exercise"/>
+    </changeSet>
+
+</databaseChangeLog>

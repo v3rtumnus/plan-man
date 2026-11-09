@@ -1,7 +1,6 @@
 package at.v3rtumnus.planman.service.health;
 
 import at.v3rtumnus.planman.dao.*;
-import at.v3rtumnus.planman.dto.health.ExerciseView;
 import at.v3rtumnus.planman.dto.health.FootballState;
 import at.v3rtumnus.planman.dto.health.TrainingWeek;
 import at.v3rtumnus.planman.dto.health.ai.ActivityDraft;
@@ -57,8 +56,6 @@ class TrainingServiceTest {
     private UserProfileRepository userProfileRepository;
     @Autowired
     private WorkoutRepository workoutRepository;
-    @Autowired
-    private ExerciseRepository exerciseRepository;
 
     private final ActivityEstimator estimator = mock(ActivityEstimator.class);
     private LocalDate today = TUESDAY;
@@ -92,7 +89,7 @@ class TrainingServiceTest {
 
     private TrainingService service() {
         Clock clock = Clock.fixed(today.atTime(18, 0).atZone(ZONE).toInstant(), ZONE);
-        return new TrainingService(workoutRepository, exerciseRepository, dayRepository, userProfileRepository,
+        return new TrainingService(workoutRepository, dayRepository, userProfileRepository,
                 health(), estimator, clock, DayOfWeek.TUESDAY, 70, 2);
     }
 
@@ -234,85 +231,5 @@ class TrainingServiceTest {
         assertThat(service().recent()).hasSize(1);
         service().delete(workout.getId());
         assertThat(service().recent()).isEmpty();
-    }
-
-    // --- dumbbell weights ---
-
-    @Test
-    void exercises_addChangeSameDayAndRemove() {
-        TrainingService service = service();
-        Exercise squat = service.addExercise(" Goblet Squat ", new BigDecimal("12.5"));
-        service.addExercise("Rudern", null);
-
-        List<ExerciseView> views = service.exercises();
-        assertThat(views).extracting(ExerciseView::name).containsExactly("Goblet Squat", "Rudern");
-        assertThat(views.getFirst().weightLabel()).isEqualTo("12,5 kg");
-        assertThat(views.getFirst().since()).isEqualTo(TUESDAY);
-        assertThat(views.get(1).weightKg()).isNull();
-        assertThat(views.get(1).heavierKg()).isEqualByComparingTo("2.5");
-
-        service.changeWeight(squat.getId(), new BigDecimal("15"));
-        em.flush();
-        em.clear();
-        assertThat(exerciseRepository.findById(squat.getId()).orElseThrow().getWeights()).hasSize(1);
-        assertThat(service.exercises().getFirst().weightLabel()).isEqualTo("15 kg");
-
-        today = TUESDAY.plusDays(7);
-        service().changeWeight(squat.getId(), new BigDecimal("17.5"));
-        em.flush();
-        em.clear();
-        assertThat(exerciseRepository.findById(squat.getId()).orElseThrow().getWeights())
-                .extracting(w -> w.getWeightKg().stripTrailingZeros().toPlainString())
-                .containsExactly("17.5", "15");
-
-        service().removeExercise(squat.getId());
-        assertThat(service().exercises()).extracting(ExerciseView::name).containsExactly("Rudern");
-        service().addExercise("goblet squat", null);
-        assertThat(service().exercises()).hasSize(2);
-
-        assertThatThrownBy(() -> service().changeWeight(squat.getId(), BigDecimal.ZERO))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service().addExercise(" ", null)).isInstanceOf(IllegalArgumentException.class);
-        loginAs("other");
-        assertThatThrownBy(() -> service().changeWeight(squat.getId(), BigDecimal.TEN))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void tip_afterThreeWeeksWithThreeEasySessions_noUpperLimit() {
-        today = TUESDAY.minusDays(21);
-        Exercise squat = service().addExercise("Goblet Squat", new BigDecimal("40"));
-        for (int i = 0; i < 3; i++) {
-            today = TUESDAY.minusDays(20 - i * 5);
-            service().logFreeletics(30, Intensity.MEDIUM);
-        }
-        today = TUESDAY;
-
-        ExerciseView view = service().exercises().getFirst();
-        assertThat(view.tipKg()).isEqualByComparingTo("42.5");
-        assertThat(view.tipLabel()).isEqualTo("42,5 kg");
-
-        // one hard session since the weight was set: no tip
-        service().logFreeletics(30, Intensity.HARD);
-        assertThat(service().exercises().getFirst().tipKg()).isNull();
-        // taking the tip starts a new 3-week period
-        service().changeWeight(squat.getId(), new BigDecimal("42.5"));
-        assertThat(service().exercises().getFirst().tipKg()).isNull();
-    }
-
-    @Test
-    void tip_tooFewSessionsOrTooSoon_none() {
-        today = TUESDAY.minusDays(21);
-        service().addExercise("Rudern", new BigDecimal("10"));
-        service().logFreeletics(30, Intensity.LIGHT);
-        service().logFreeletics(30, Intensity.LIGHT);
-        today = TUESDAY;
-        assertThat(service().exercises().getFirst().tipKg()).isNull();
-
-        today = TUESDAY.minusDays(20);
-        service().addExercise("Schulterdrücken", new BigDecimal("7.5"));
-        today = TUESDAY;
-        service().logFreeletics(30, Intensity.LIGHT);
-        assertThat(service().exercises().get(1).tipKg()).isNull();
     }
 }
