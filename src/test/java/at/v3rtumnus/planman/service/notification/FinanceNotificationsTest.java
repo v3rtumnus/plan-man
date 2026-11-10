@@ -7,7 +7,6 @@ import at.v3rtumnus.planman.entity.balance.BalanceGroup;
 import at.v3rtumnus.planman.entity.balance.BalanceGroupType;
 import at.v3rtumnus.planman.entity.balance.BalanceItem;
 import at.v3rtumnus.planman.entity.balance.BalanceItemDetail;
-import at.v3rtumnus.planman.entity.credit.CreditInterval;
 import at.v3rtumnus.planman.entity.finance.UploadLog;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
 import at.v3rtumnus.planman.entity.notification.Notification;
@@ -206,34 +205,5 @@ class FinanceNotificationsTest {
         when(uploads.findByOrderByImportedAtDesc()).thenReturn(List.of());
 
         assertThat(new FinanceNotifications.ImportDueEvaluator(uploads, clock).evaluate(rule("IMPORT_DUE", "{}"))).isEmpty();
-    }
-
-    // --- Kreditkondition endet
-
-    private static CreditInterval interval(long id, String rate, LocalDate validUntil) {
-        CreditInterval interval = new CreditInterval();
-        interval.setId(id);
-        interval.setInterestRate(new BigDecimal(rate));
-        interval.setValidUntilDate(validUntil);
-        return interval;
-    }
-
-    @Test
-    void credit_onlyTermsEndingWithinTheWindow() {
-        CreditIntervalRepository intervals = mock(CreditIntervalRepository.class);
-        when(intervals.findAll()).thenReturn(List.of(
-                interval(1, "0.8", LocalDate.of(2022, 5, 30)),
-                interval(3, "1.1270", TODAY.plusDays(90)),
-                interval(5, "2.0", TODAY.plusDays(91)),
-                interval(4, "1.8", null)));
-        var evaluator = new FinanceNotifications.CreditTermEndingEvaluator(intervals, clock);
-        assertThat(evaluator.ruleType()).isEqualTo("CREDIT_TERM_ENDING");
-
-        assertThat(evaluator.evaluate(rule("CREDIT_TERM_ENDING", "{\"days\":90}"))).singleElement().satisfies(c -> {
-            assertThat(c.message()).isEqualTo("Der Zinssatz von 1,127 % gilt bis 08.02.2027 (noch 90 Tage). Neue Kondition klären und eintragen.");
-            assertThat(c.periodKey()).isEqualTo("credit-3-2027-02-08");
-            assertThat(c.severity()).isEqualTo(NotificationSeverity.WARNING);
-            assertThat(c.url()).isEqualTo("/credit/overview");
-        });
     }
 }

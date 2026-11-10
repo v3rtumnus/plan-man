@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- "Kreditkondition endet" removed at the user's request (2026-11-10). Its targets and any
+         notifications go with it (ON DELETE CASCADE). -->
+    <changeSet id="1_40_remove_credit_term_rule" author="plan-man">
+        <delete tableName="notification_rule">
+            <where>rule_type = 'CREDIT_TERM_ENDING'</where>
+        </delete>
+    </changeSet>
+
+</databaseChangeLog>
