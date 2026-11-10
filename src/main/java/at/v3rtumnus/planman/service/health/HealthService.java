@@ -121,6 +121,16 @@ public class HealthService {
                 .orElseGet(() -> refreshDay(user, date));
     }
 
+    /** Same as {@link #day(LocalDate)} for a job without a login (phone data, H8). */
+    @Transactional
+    public HealthDay day(String username, LocalDate date) {
+        UserProfile user = userProfileRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown user " + username));
+        return dayRepository.findByUserUsernameAndDate(username, date)
+                .map(day -> day.getGoal() == null ? refreshDay(user, date) : day)
+                .orElseGet(() -> refreshDay(user, date));
+    }
+
     private HealthDay refreshDay(UserProfile user, LocalDate date) {
         HealthDay day = dayRepository.findByUserUsernameAndDate(user.getUsername(), date).orElseGet(() -> {
             HealthDay created = new HealthDay();

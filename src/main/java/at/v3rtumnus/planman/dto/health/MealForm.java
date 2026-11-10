@@ -29,6 +29,10 @@ public class MealForm {
     @NotBlank
     @Size(max = 255)
     private String title;
+    /** Set when the draft came from a scanned barcode (H7). */
+    @Size(max = 32)
+    private String barcode;
+
     /** Keep as a favourite for "Schnell wieder". */
     private boolean remember;
     @Valid

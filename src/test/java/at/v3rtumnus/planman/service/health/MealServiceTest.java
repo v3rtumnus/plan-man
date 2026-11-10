@@ -234,6 +234,18 @@ class MealServiceTest {
     }
 
     @Test
+    void save_scannedProduct_isSourceBarcode() {
+        MealForm form = manual("Skyr", 150);
+        form.setBarcode("4056489123456");
+
+        assertThat(service().save(form).getSource()).isEqualTo(MealSource.BARCODE);
+
+        MealForm plain = manual("Apfel", 150);
+        plain.setBarcode(" ");
+        assertThat(service().save(plain).getSource()).isEqualTo(MealSource.MANUAL);
+    }
+
+    @Test
     void save_remember_createsAndThenUpdatesTheFavourite() {
         MealService service = service();
         MealForm form = manual("Frühstücksjause", 300);

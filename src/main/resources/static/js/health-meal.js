@@ -25,11 +25,9 @@
     button.addEventListener("click", () => input.click());
 
     // Shrink in the browser: the model needs ~1024 px, and the photo is never stored.
-    input.addEventListener("change", () => {
-      const file = input.files && input.files[0];
-      if (!file) return;
+    const usePhoto = (blob) => {
       const img = new Image();
-      const url = URL.createObjectURL(file);
+      const url = URL.createObjectURL(blob);
       img.onload = () => {
         const scale = Math.min(1, PHOTO_MAX_PX / Math.max(img.width, img.height));
         const canvas = document.createElement("canvas");
@@ -44,7 +42,101 @@
         remove.classList.remove("d-none");
       };
       img.src = url;
+    };
+
+    input.addEventListener("change", () => {
+      const file = input.files && input.files[0];
+      if (file) usePhoto(file);
     });
+
+    // Barcode (H7): Chrome on Android has BarcodeDetector; elsewhere the number is typed.
+    const barcodeButton = document.getElementById("barcode-button");
+    const barcodePanel = document.getElementById("barcode-panel");
+    if (barcodeButton && barcodePanel) {
+      const video = document.getElementById("barcode-video");
+      const status = document.getElementById("barcode-status");
+      const codeInput = document.getElementById("barcode-code");
+      let stream = null;
+      let timer = null;
+      const stop = () => {
+        if (timer) clearInterval(timer);
+        timer = null;
+        if (stream) stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+        video.classList.add("d-none");
+      };
+      const go = (code) => {
+        const clean = String(code || "").replace(/\s/g, "");
+        if (!/^\d{8,14}$/.test(clean)) {
+          status.textContent = "Bitte 8 bis 14 Ziffern eingeben.";
+          return;
+        }
+        stop();
+        const slot = capture.querySelector("input[name=slot]:checked");
+        const date = capture.querySelector("input[name=date]");
+        const query = new URLSearchParams({ code: clean });
+        if (slot) query.set("slot", slot.value);
+        if (date && date.value) query.set("date", date.value);
+        status.textContent = "Suche " + clean + " …";
+        window.location.href = barcodePanel.dataset.action + "?" + query.toString();
+      };
+      barcodeButton.addEventListener("click", async () => {
+        barcodePanel.classList.remove("d-none");
+        if (!("BarcodeDetector" in window) || !navigator.mediaDevices) {
+          status.textContent = "Scannen geht in diesem Browser nicht: Nummer unter dem Strichcode eintippen.";
+          codeInput.focus();
+          return;
+        }
+        try {
+          const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
+          stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+          video.srcObject = stream;
+          video.classList.remove("d-none");
+          await video.play();
+          status.textContent = "Barcode in die Mitte halten …";
+          timer = setInterval(async () => {
+            try {
+              const codes = await detector.detect(video);
+              if (codes.length) go(codes[0].rawValue);
+            } catch (e) { /* next frame */ }
+          }, 300);
+        } catch (e) {
+          stop();
+          status.textContent = "Kamera nicht verfügbar: Nummer eintippen.";
+          codeInput.focus();
+        }
+      });
+      document.getElementById("barcode-go").addEventListener("click", () => go(codeInput.value));
+      codeInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          go(codeInput.value);
+        }
+      });
+      document.getElementById("barcode-cancel").addEventListener("click", () => {
+        stop();
+        barcodePanel.classList.add("d-none");
+      });
+    }
+
+    // A photo shared to the app ("Teilen → Plan-Man"): the service worker left it in a cache.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("shared") === "1") {
+      const text = params.get("text");
+      const description = document.getElementById("description");
+      if (text && !description.value) description.value = text;
+      if ("caches" in window) {
+        caches.open("plan-man-share")
+          .then((cache) => cache.match("/shared-photo").then((response) => {
+            if (!response) return null;
+            return response.blob().then((blob) => {
+              cache.delete("/shared-photo");
+              usePhoto(blob);
+            });
+          }))
+          .catch(() => undefined);
+      }
+    }
 
     remove.addEventListener("click", () => {
       data.value = "";

@@ -27,6 +27,7 @@
                            data-kcal-target=${kcalTarget}, data-protein-target=${proteinTarget}">
                 <input type="hidden" th:field="*{mealId}">
                 <input type="hidden" th:field="*{recognitionId}">
+                <input type="hidden" th:field="*{barcode}">
 
                 <div class="d-flex align-items-center gap-3">
                     <div class="flex-grow-1">
@@ -175,6 +176,6 @@
 </main>
 
 <th:block th:replace="~{fragments/footer :: footer-js}"/>
-<script type="text/javascript" th:src="@{/resources/js/health-meal.js}" src="/resources/js/health-meal.js"></script>
+<script type="text/javascript" th:src="@{/resources/js/health-meal.js(v=2)}" src="/resources/js/health-meal.js"></script>
 </body>
 </html>

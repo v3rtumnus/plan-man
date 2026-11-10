@@ -276,7 +276,8 @@ public class MealService {
                 recognitionRepository.findByIdAndUserUsername(form.getRecognitionId(), user.getUsername())
                         .ifPresent(meal::setRecognition);
             }
-            meal.setSource(meal.getRecognition() != null ? MealSource.AI : MealSource.MANUAL);
+            meal.setSource(meal.getRecognition() != null ? MealSource.AI
+                    : form.getBarcode() != null && !form.getBarcode().isBlank() ? MealSource.BARCODE : MealSource.MANUAL);
         }
         meal.setEatenOn(form.getDate());
         meal.setSlot(form.getSlot());

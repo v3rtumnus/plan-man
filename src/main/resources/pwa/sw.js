@@ -1,9 +1,12 @@
 // Service worker for the installed app. It does not cache pages: every request goes to the
 // network as usual, so the app always shows current data and login redirects still work.
-// It shows plan-man's Web Push messages and sends their button taps back.
+// It shows plan-man's Web Push messages and sends their button taps back, and it receives
+// photos shared to the app ("Teilen → Plan-Man", health H6).
 
 // Shown on /notifications; raise it with every change to this file.
-const VERSION = 2;
+const VERSION = 3;
+const SHARE_PATH = '/health/meals/share';
+const SHARE_CACHE = 'plan-man-share';
 
 self.addEventListener('message', (event) => {
     if (event.data === 'version' && event.ports[0]) {
@@ -17,6 +20,33 @@ self.addEventListener('install', () => {
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
+});
+
+// Share target: keep the shared photo in a cache and open meal capture, which picks it up.
+// Handled here, so the shared POST never has to pass Authelia (its cookie may not be sent
+// with a share). Without this worker the POST reaches the server, which opens capture.
+self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+    if (event.request.method !== 'POST' || url.origin !== self.location.origin || url.pathname !== SHARE_PATH) {
+        return;
+    }
+    event.respondWith((async () => {
+        let text = '';
+        try {
+            const form = await event.request.formData();
+            const photo = form.get('photo');
+            text = String(form.get('text') || form.get('title') || '').trim();
+            const cache = await caches.open(SHARE_CACHE);
+            await cache.delete('/shared-photo');
+            if (photo && typeof photo !== 'string') {
+                await cache.put('/shared-photo', new Response(photo, { headers: { 'Content-Type': photo.type || 'image/jpeg' } }));
+            }
+        } catch (e) {
+            // Nothing usable: capture opens empty.
+        }
+        const target = '/health/meals/new?shared=1' + (text && !/^https?:/.test(text) ? '&text=' + encodeURIComponent(text.slice(0, 500)) : '');
+        return Response.redirect(target, 303);
+    })());
 });
 
 self.addEventListener('push', (event) => {

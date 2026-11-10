@@ -139,6 +139,12 @@
                             <div class="small text-muted">Schritte</div>
                             <div class="health-tile-value" th:text="${day.steps != null} ? ${#numbers.formatInteger(day.steps, 1, 'POINT')} : '–'">6.240</div>
                             <div class="small text-muted" th:if="${day.stepsTarget}" th:text="'Ziel ' + ${#numbers.formatInteger(day.stepsTarget, 1, 'POINT')}"></div>
+                            <div class="small text-muted" th:if="${day.restingHr != null or day.sleepMinutes != null}">
+                                <span th:if="${day.restingHr != null}" th:text="'Ruhepuls ' + ${day.restingHr}">Ruhepuls 58</span>
+                                <span th:if="${day.restingHr != null and day.sleepMinutes != null}"> · </span>
+                                <span th:if="${day.sleepMinutes != null}"
+                                      th:text="'Schlaf ' + ${day.sleepMinutes / 60} + ':' + ${#numbers.formatInteger(day.sleepMinutes % 60, 2)}">Schlaf 7:10</span>
+                            </div>
                         </div>
                     </div>
                 </div>
