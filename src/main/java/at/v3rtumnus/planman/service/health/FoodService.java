@@ -4,6 +4,7 @@ import at.v3rtumnus.planman.dao.FoodRepository;
 import at.v3rtumnus.planman.dto.health.MealItemForm;
 import at.v3rtumnus.planman.entity.health.Food;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,7 @@ public class FoodService {
     private final Clock clock;
     private final String baseUrl;
 
+    @Autowired
     public FoodService(FoodRepository foods, Clock clock,
                        @Value("${planman.health.off-url:https://world.openfoodfacts.org}") String baseUrl) {
         this(foods, HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NORMAL).build(),
