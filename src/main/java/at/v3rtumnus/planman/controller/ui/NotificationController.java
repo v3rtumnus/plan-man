@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.controller.ui;
 
+import at.v3rtumnus.planman.service.notification.NotificationRuleService;
 import at.v3rtumnus.planman.service.notification.NotificationService;
 import at.v3rtumnus.planman.service.notification.PushSubscriptionService;
 import at.v3rtumnus.planman.service.notification.WebPushService;
@@ -17,6 +18,7 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final PushSubscriptionService subscriptionService;
     private final WebPushService webPush;
+    private final NotificationRuleService ruleService;
 
     @GetMapping("/notifications")
     public ModelAndView overview() {
@@ -25,5 +27,10 @@ public class NotificationController {
         mav.addObject("devices", subscriptionService.devices(CurrentUser.require()));
         mav.addObject("vapidPublicKey", webPush.publicKey());
         return mav;
+    }
+
+    @GetMapping("/notifications/rules")
+    public ModelAndView rules() {
+        return new ModelAndView("notifications/rules", "rules", ruleService.list());
     }
 }

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Finance rules (N2). Kursbewegung measures each position against the EUR price at its
+         last notification (the anchor), not against yesterday, so a long slide notifies at
+         -10 % and again at -20 % instead of every day. -->
+
+    <changeSet id="1_39_create_price_anchor" author="plan-man">
+        <createTable tableName="price_anchor">
+            <column name="isin" type="VARCHAR(12)">
+                <constraints primaryKey="true" foreignKeyName="price_anchor_product_fk"
+                             referencedTableName="financial_product" referencedColumnNames="isin"
+                             deleteCascade="true"/>
+            </column>
+            <column name="anchor_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="anchor_price_eur" type="DECIMAL(19,6)"><constraints nullable="false"/></column>
+            <column name="last_notified_on" type="DATE"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Thresholds are starting values, editable on /notifications/rules. Kursbewegung's were
+         set by replaying 2023-07 to 2026-11: shares 20 % / ETFs and funds 10 % fire about 1.7
+         times a month (the plan's 12 % / 8 % would have been 3.3). -->
+    <changeSet id="1_39_finance_rules" author="plan-man">
+        <insert tableName="notification_rule">
+            <column name="name" value="Noch nicht eingereicht"/>
+            <column name="rule_type" value="CLAIM_NOT_SUBMITTED"/>
+            <column name="parameters_json" value="{&quot;days&quot;:14}"/>
+            <column name="targeting_mode" value="ALL_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="notification_rule">
+            <column name="name" value="Budget knapp"/>
+            <column name="rule_type" value="BUDGET_NEAR_LIMIT"/>
+            <column name="parameters_json" value="{&quot;thresholdAmount&quot;:300}"/>
+            <column name="targeting_mode" value="ALL_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="notification_rule">
+            <column name="name" value="Import fällig"/>
+            <column name="rule_type" value="IMPORT_DUE"/>
+            <column name="parameters_json" value="{&quot;days&quot;:35}"/>
+            <column name="targeting_mode" value="SPECIFIC_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="notification_rule">
+            <column name="name" value="Kreditkondition endet"/>
+            <column name="rule_type" value="CREDIT_TERM_ENDING"/>
+            <column name="parameters_json" value="{&quot;days&quot;:90}"/>
+            <column name="targeting_mode" value="SPECIFIC_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="notification_rule">
+            <column name="name" value="Kursbewegung"/>
+            <column name="rule_type" value="PRICE_MOVE"/>
+            <column name="parameters_json" value="{&quot;sharePercent&quot;:20,&quot;fundPercent&quot;:10,&quot;minDepotPercent&quot;:2,&quot;bundleMin&quot;:3,&quot;staleDays&quot;:4}"/>
+            <column name="targeting_mode" value="SPECIFIC_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+    </changeSet>
+
+    <!-- Import, credit and depot are michael's; claims and budget reach both logins. Skipped
+         where that user does not exist (test databases). -->
+    <changeSet id="1_39_finance_rule_targets" author="plan-man">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT COUNT(*) FROM user_profile WHERE username = 'michael'</sqlCheck>
+        </preConditions>
+        <sql>
+            INSERT INTO notification_rule_target_user (rule_id, user_profile_id)
+            SELECT id, 'michael' FROM notification_rule
+            WHERE rule_type IN ('IMPORT_DUE', 'CREDIT_TERM_ENDING', 'PRICE_MOVE')
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

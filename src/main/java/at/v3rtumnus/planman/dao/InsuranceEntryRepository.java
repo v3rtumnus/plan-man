@@ -1,18 +1,29 @@
 package at.v3rtumnus.planman.dao;
 
+import at.v3rtumnus.planman.dto.insurance.OpenClaim;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntry;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface InsuranceEntryRepository extends JpaRepository<InsuranceEntry, Long>, FilterableInsuranceEntryRepository {
+
+    /** Claims in one state entered on or before a date, without loading the attachment BLOBs. */
+    @Query("SELECT new at.v3rtumnus.planman.dto.insurance.OpenClaim(i.id, i.entryDate, i.person.name, i.name, i.amount) " +
+            "FROM InsuranceEntry i WHERE i.state = :state AND i.entryDate <= :enteredBy ORDER BY i.entryDate")
+    List<OpenClaim> findOpenClaims(@Param("state") InsuranceEntryState state, @Param("enteredBy") LocalDate enteredBy);
+
+    @Query("SELECT i.state FROM InsuranceEntry i WHERE i.id = :id")
+    Optional<InsuranceEntryState> findStateById(@Param("id") Long id);
 
     @Query("SELECT MIN(i.entryDate) FROM InsuranceEntry i")
     Optional<LocalDate> getOldestInsuranceEntryDate();

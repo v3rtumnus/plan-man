@@ -22,9 +22,19 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findByReadAtIsNullOrderByCreatedAtDesc();
 
+    long countByRuleAndCreatedAtAfter(NotificationRule rule, LocalDateTime after);
+
+    long countByRuleAndCreatedAtAfterAndReadAtIsNotNull(NotificationRule rule, LocalDateTime after);
+
     boolean existsByRuleAndRecipientUsernameAndPeriodKey(NotificationRule rule, String username, String periodKey);
 
     @Modifying
     @Query("UPDATE Notification n SET n.readAt = :now WHERE n.recipient.username = :username AND n.readAt IS NULL")
     int markAllRead(@Param("username") String username, @Param("now") LocalDateTime now);
+
+    /** Marks every user's unread notifications of a rule whose period key starts with a prefix. */
+    @Modifying
+    @Query("UPDATE Notification n SET n.readAt = :now WHERE n.rule = :rule AND n.periodKey LIKE CONCAT(:prefix, '%') AND n.readAt IS NULL")
+    int markReadByPeriodKeyPrefix(@Param("rule") NotificationRule rule, @Param("prefix") String prefix,
+                                  @Param("now") LocalDateTime now);
 }

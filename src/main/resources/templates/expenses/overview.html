@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/header :: header-css}"/>
+    <script th:src="@{/resources/js/expense-date.js}" src="/resources/js/expense-date.js"></script>
 
     <script>
         function retrieveMonthlyOverview(date) {
@@ -49,6 +50,11 @@
             var category = $('#categories-list').val();
             var comment = $('#comment').val() != '' ? $('#comment').val() : null;
             var amount = $('#amount').val();
+
+            if (!confirmExpenseDates([date])) {
+                $('#date').focus();
+                return;
+            }
 
             $.ajax({
                 url:"/api/expenses",

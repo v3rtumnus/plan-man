@@ -13,8 +13,13 @@
 > - `job_status` + gauge `planman_job_last_success_timestamp_seconds{task}` for every
 >   scheduled job; the Grafana alert *plan-man job stale* watches it.
 > - `GET /api/digest` (bearer token) for n8n.
-> - Not built yet: the budget rule (N2) and the admin rules page / rule CRUD API (with N2,
->   when the first rules exist).
+> - N2 (2026-11-10, changelog 1_39): finance rules `CLAIM_NOT_SUBMITTED` (button *Eingereicht*),
+>   `BUDGET_NEAR_LIMIT` (the rule below, push once a month), `IMPORT_DUE`, `CREDIT_TERM_ENDING`
+>   and `PRICE_MOVE` (*Kursbewegung*, anchors in `price_anchor`). Parameters are a flat JSON
+>   object of numbers (`RuleParameters`). Rules page `/notifications/rules` (on/off,
+>   thresholds, fired/read in the last 30 days) and `GET/PUT /api/notifications/rules`, open
+>   to both logins; rules are created by changelog only. Expense form asks before saving a date
+>   more than 7 days ahead (`expense-date.js`).
 
 ## Overview
 

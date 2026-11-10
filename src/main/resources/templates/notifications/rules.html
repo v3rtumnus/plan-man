@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Regeln · Plan-Man</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"/>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main id="main" class="main">
+
+    <div class="pagetitle d-flex justify-content-between align-items-center">
+        <h1>Benachrichtigungs-Regeln</h1>
+        <a class="btn btn-sm btn-outline-secondary" th:href="@{/notifications}">Posteingang</a>
+    </div>
+
+    <div id="rule-saved" class="alert alert-primary" role="alert" style="display: none">Gespeichert</div>
+    <div id="rule-error" class="alert alert-danger" role="alert" style="display: none"></div>
+
+    <p class="small text-muted">Die Regeln laufen stündlich. „Letzte 30 Tage“ zählt eine Meldung pro Empfänger;
+        Regeln, auf die nie reagiert wird, kommen nach vier Wochen weg.</p>
+
+    <div class="row">
+        <div class="col-lg-6" th:each="r : ${rules}">
+            <form class="card rule-form" th:attr="data-rule-id=${r.id()}">
+                <div class="card-body pt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title p-0 m-0" th:text="${r.name()}">Regel</h5>
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input rule-enabled" type="checkbox" role="switch"
+                                   th:id="'rule-enabled-' + ${r.id()}" th:checked="${r.enabled()}">
+                            <label class="form-check-label small" th:for="'rule-enabled-' + ${r.id()}">aktiv</label>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-2">
+                        <span th:text="'Für: ' + ${r.targets()}">Für: Alle</span> ·
+                        <span th:text="'Letzte 30 Tage: ' + ${r.fired30Days()} + ' gemeldet, ' + ${r.read30Days()} + ' gelesen'">Letzte 30 Tage</span>
+                    </p>
+                    <div class="row g-2 mb-2" th:unless="${r.parameters().isEmpty()}">
+                        <div class="col-6" th:each="p : ${r.parameters()}">
+                            <label class="form-label small mb-0" th:for="'rule-' + ${r.id()} + '-' + ${p.key()}"
+                                   th:text="${p.label()}">Tage</label>
+                            <input type="number" class="form-control form-control-sm rule-param" min="0" step="any" required
+                                   th:id="'rule-' + ${r.id()} + '-' + ${p.key()}"
+                                   th:attr="data-key=${p.key()}" th:value="${p.value().stripTrailingZeros().toPlainString()}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/footer :: footer-js}"/>
+<script>
+    document.querySelectorAll('.rule-form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var parameters = {};
+            form.querySelectorAll('.rule-param').forEach(function (input) {
+                parameters[input.dataset.key] = Number(input.value);
+            });
+            var saved = document.getElementById('rule-saved');
+            var error = document.getElementById('rule-error');
+            fetch('/api/notifications/rules/' + form.dataset.ruleId, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({enabled: form.querySelector('.rule-enabled').checked, parameters: parameters})
+            }).then(function (response) {
+                if (response.ok) {
+                    error.style.display = 'none';
+                    saved.style.display = '';
+                    setTimeout(function () { saved.style.display = 'none'; }, 2000);
+                    return;
+                }
+                return response.json().catch(function () { return {}; }).then(function (body) {
+                    saved.style.display = 'none';
+                    error.textContent = 'Nicht gespeichert: ' + (body.error || response.status);
+                    error.style.display = '';
+                });
+            });
+        });
+    });
+</script>
+</body>
+</html>
