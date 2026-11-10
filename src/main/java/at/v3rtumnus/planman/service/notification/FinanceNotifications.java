@@ -1,7 +1,6 @@
 package at.v3rtumnus.planman.service.notification;
 
 import at.v3rtumnus.planman.dao.BalanceItemDetailRepository;
-import at.v3rtumnus.planman.dao.CreditIntervalRepository;
 import at.v3rtumnus.planman.dao.InsuranceEntryRepository;
 import at.v3rtumnus.planman.dao.NotificationRepository;
 import at.v3rtumnus.planman.dao.UploadLogRepository;
@@ -9,7 +8,6 @@ import at.v3rtumnus.planman.dto.expense.ExpenseDTO;
 import at.v3rtumnus.planman.dto.insurance.OpenClaim;
 import at.v3rtumnus.planman.dto.notification.NotificationAction;
 import at.v3rtumnus.planman.entity.balance.BalanceGroupType;
-import at.v3rtumnus.planman.entity.credit.CreditInterval;
 import at.v3rtumnus.planman.entity.finance.UploadLog;
 import at.v3rtumnus.planman.entity.insurance.InsuranceEntryState;
 import at.v3rtumnus.planman.entity.notification.Notification;
@@ -34,7 +32,7 @@ import java.util.Locale;
 
 /**
  * The finance rules (N2) apart from Kursbewegung: claims not yet submitted, budget nearly used
- * up, finance import due and credit terms ending. All are inbox-only except the budget, which
+ * up and finance import due. All are inbox-only except the budget, which
  * pushes once a month.
  */
 public final class FinanceNotifications {
@@ -42,7 +40,6 @@ public final class FinanceNotifications {
     public static final String CLAIM_NOT_SUBMITTED = "CLAIM_NOT_SUBMITTED";
     public static final String BUDGET_NEAR_LIMIT = "BUDGET_NEAR_LIMIT";
     public static final String IMPORT_DUE = "IMPORT_DUE";
-    public static final String CREDIT_TERM_ENDING = "CREDIT_TERM_ENDING";
     public static final String ACTION_SUBMITTED = "submitted";
 
     static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -204,43 +201,6 @@ public final class FinanceNotifications {
                                     + ChronoUnit.DAYS.between(last, today) + " Tagen.",
                             NotificationSeverity.INFO, "import-" + last, "/securities/upload", List.of(), false)))
                     .orElse(List.of());
-        }
-    }
-
-    /** A credit interval's {@code valid_until} lies within {@code days} days. */
-    @Component
-    @RequiredArgsConstructor
-    public static class CreditTermEndingEvaluator implements NotificationEvaluator {
-
-        private final CreditIntervalRepository intervals;
-        private final Clock clock;
-
-        @Override
-        public String ruleType() {
-            return CREDIT_TERM_ENDING;
-        }
-
-        @Override
-        public List<NotificationCandidate> evaluate(NotificationRule rule) {
-            int days = RuleParameters.parse(rule.getParametersJson()).integer("days", 90);
-            LocalDate today = LocalDate.now(clock);
-            return intervals.findAll().stream()
-                    .filter(i -> i.getValidUntilDate() != null)
-                    .filter(i -> !i.getValidUntilDate().isBefore(today)
-                            && !i.getValidUntilDate().isAfter(today.plusDays(days)))
-                    .map(i -> new NotificationCandidate("Kreditkondition endet", message(i, today),
-                            NotificationSeverity.WARNING, "credit-" + i.getId() + "-" + i.getValidUntilDate(),
-                            "/credit/overview", List.of(), false))
-                    .toList();
-        }
-
-        static String message(CreditInterval interval, LocalDate today) {
-            NumberFormat rate = NumberFormat.getNumberInstance(Locale.GERMANY);
-            rate.setMaximumFractionDigits(3);
-            return "Der Zinssatz von " + rate.format(interval.getInterestRate()) + " % gilt bis "
-                    + DATE.format(interval.getValidUntilDate()) + " (noch "
-                    + ChronoUnit.DAYS.between(today, interval.getValidUntilDate())
-                    + " Tage). Neue Kondition klären und eintragen.";
         }
     }
 }
