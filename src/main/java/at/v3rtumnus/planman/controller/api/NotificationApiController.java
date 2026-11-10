@@ -2,6 +2,9 @@ package at.v3rtumnus.planman.controller.api;
 
 import at.v3rtumnus.planman.dto.notification.NotificationDTO;
 import at.v3rtumnus.planman.dto.notification.NotificationHeaderDTO;
+import at.v3rtumnus.planman.dto.notification.NotificationRuleDTO;
+import at.v3rtumnus.planman.dto.notification.NotificationRuleUpdate;
+import at.v3rtumnus.planman.service.notification.NotificationRuleService;
 import at.v3rtumnus.planman.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,7 @@ import java.util.List;
 public class NotificationApiController {
 
     private final NotificationService notificationService;
+    private final NotificationRuleService ruleService;
 
     @GetMapping
     public List<NotificationDTO> list() {
@@ -49,6 +53,17 @@ public class NotificationApiController {
     @PostMapping("/{id}/actions/{action}")
     public ResponseEntity<Void> perform(@PathVariable Long id, @PathVariable String action) {
         notificationService.performAction(id, action, CurrentUser.require());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/rules")
+    public List<NotificationRuleDTO> rules() {
+        return ruleService.list();
+    }
+
+    @PutMapping("/rules/{id}")
+    public ResponseEntity<Void> updateRule(@PathVariable Long id, @RequestBody NotificationRuleUpdate update) {
+        ruleService.update(id, update);
         return ResponseEntity.noContent().build();
     }
 }

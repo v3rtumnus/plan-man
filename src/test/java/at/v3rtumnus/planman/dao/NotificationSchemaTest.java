@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Pins the notification entities' columns to the ones changelog 1_37 creates (see HealthSchemaTest). */
+/** Pins the notification entities' columns to the ones changelogs 1_37 and 1_39 create (see HealthSchemaTest). */
 @DataJpaTest
 @TestPropertySource(properties = {
         "spring.liquibase.enabled=false",
@@ -31,7 +31,8 @@ class NotificationSchemaTest {
                     "actions_json", "push", "period_key", "created_at", "read_at", "pushed_at"),
             "push_subscription", Set.of("id", "user_profile_id", "endpoint", "p256dh", "auth", "device_label",
                     "created_at", "last_success_at", "last_failure_at", "last_error"),
-            "job_status", Set.of("name", "last_success_at", "last_failure_at", "last_error"));
+            "job_status", Set.of("name", "last_success_at", "last_failure_at", "last_error"),
+            "price_anchor", Set.of("isin", "anchor_date", "anchor_price_eur", "last_notified_on"));
 
     @MockitoBean
     private CacheManager cacheManager;

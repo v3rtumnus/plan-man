@@ -3,9 +3,11 @@ package at.v3rtumnus.planman.controller.ui;
 import at.v3rtumnus.planman.dto.notification.NotificationAction;
 import at.v3rtumnus.planman.dto.notification.NotificationDTO;
 import at.v3rtumnus.planman.dto.notification.NotificationHeaderDTO;
+import at.v3rtumnus.planman.dto.notification.NotificationRuleDTO;
 import at.v3rtumnus.planman.dto.notification.PushSubscriptionDTO;
 import at.v3rtumnus.planman.entity.notification.NotificationSeverity;
 import at.v3rtumnus.planman.service.PlanManUserDetailsService;
+import at.v3rtumnus.planman.service.notification.NotificationRuleService;
 import at.v3rtumnus.planman.service.notification.NotificationService;
 import at.v3rtumnus.planman.service.notification.PushSubscriptionService;
 import at.v3rtumnus.planman.service.notification.WebPushService;
@@ -37,6 +39,8 @@ class NotificationControllerTest {
 
     @MockitoBean
     private NotificationService notificationService;
+    @MockitoBean
+    private NotificationRuleService ruleService;
     @MockitoBean
     private PushSubscriptionService subscriptionService;
     @MockitoBean
@@ -93,5 +97,21 @@ class NotificationControllerTest {
                 .andExpect(content().string(containsString("Push aus")))
                 .andExpect(content().string(not(containsString("Alle gelesen"))))
                 .andExpect(content().string(not(containsString("notification-badge"))));
+    }
+
+    @Test
+    void rules_rendersThresholdsAndCounts() throws Exception {
+        when(notificationService.header("michael")).thenReturn(NotificationHeaderDTO.empty());
+        when(ruleService.list()).thenReturn(List.of(new NotificationRuleDTO(4L, "Budget knapp", "BUDGET_NEAR_LIMIT", true,
+                "Alle", List.of(new NotificationRuleDTO.Parameter("thresholdAmount", "Schwelle (€)", new java.math.BigDecimal("300.00"))),
+                2, 1)));
+
+        mockMvc.perform(get("/notifications/rules"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Budget knapp")))
+                .andExpect(content().string(containsString("Schwelle (€)")))
+                .andExpect(content().string(containsString("value=\"300\"")))
+                .andExpect(content().string(containsString("Letzte 30 Tage: 2 gemeldet, 1 gelesen")))
+                .andExpect(content().string(containsString("data-rule-id=\"4\"")));
     }
 }

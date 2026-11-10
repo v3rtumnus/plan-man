@@ -66,6 +66,27 @@ class InsuranceEntryRepositoryTest {
                 new BigDecimal("100"), null, null, expense);
     }
 
+    // --- findOpenClaims / findStateById (notification rule "Noch nicht eingereicht") ---
+
+    @Test
+    void findOpenClaims_onlyThatStateEnteredByTheDate_oldestFirst() {
+        InsuranceEntry late = em.persist(entry(alice, LocalDate.of(2026, 10, 27), InsuranceEntryState.RECORDED));
+        InsuranceEntry early = em.persist(entry(bob, LocalDate.of(2026, 10, 1), InsuranceEntryState.RECORDED));
+        em.persist(entry(alice, LocalDate.of(2026, 10, 28), InsuranceEntryState.RECORDED));
+        em.persist(entry(alice, LocalDate.of(2026, 10, 1), InsuranceEntryState.DONE));
+        em.flush();
+
+        List<at.v3rtumnus.planman.dto.insurance.OpenClaim> claims =
+                insuranceEntryRepository.findOpenClaims(InsuranceEntryState.RECORDED, LocalDate.of(2026, 10, 27));
+
+        assertThat(claims).extracting(at.v3rtumnus.planman.dto.insurance.OpenClaim::id).containsExactly(early.getId(), late.getId());
+        assertThat(claims.getFirst().person()).isEqualTo("Bob");
+        assertThat(claims.getFirst().name()).isEqualTo("Dr. Smith");
+        assertThat(claims.getFirst().amount()).isEqualByComparingTo("100");
+        assertThat(insuranceEntryRepository.findStateById(late.getId())).contains(InsuranceEntryState.RECORDED);
+        assertThat(insuranceEntryRepository.findStateById(-1L)).isEmpty();
+    }
+
     // --- getOldestInsuranceEntryDate ---
 
     @Test

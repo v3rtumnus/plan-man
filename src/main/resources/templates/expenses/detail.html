@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/header :: header-css}"/>
+    <script th:src="@{/resources/js/expense-date.js}" src="/resources/js/expense-date.js"></script>
     <script>
         function retrieveMonthlyDetails() {
             var date = $("#monthSelection :selected").val();
@@ -33,6 +34,10 @@
 
                 payload.push(item)
             });
+
+            if (!confirmExpenseDates(payload.map(function (item) { return item['date']; }))) {
+                return;
+            }
 
             $.ajax({
                 url:"/api/expenses",
