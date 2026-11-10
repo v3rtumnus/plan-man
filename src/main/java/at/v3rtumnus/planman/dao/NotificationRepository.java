@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,11 +34,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     boolean existsByRuleAndRecipientUsernameAndPeriodKey(NotificationRule rule, String username, String periodKey);
 
     @Modifying
+    @Transactional
     @Query("UPDATE Notification n SET n.readAt = :now WHERE n.recipient.username = :username AND n.readAt IS NULL")
     int markAllRead(@Param("username") String username, @Param("now") LocalDateTime now);
 
-    /** Marks every user's unread notifications of a rule whose period key starts with a prefix. */
+    /**
+     * Marks every user's unread notifications of a rule whose period key starts with a prefix.
+     * Opens its own transaction: the health nudges call it from the scheduler thread, where none is active.
+     */
     @Modifying
+    @Transactional
     @Query("UPDATE Notification n SET n.readAt = :now WHERE n.rule = :rule AND n.periodKey LIKE CONCAT(:prefix, '%') AND n.readAt IS NULL")
     int markReadByPeriodKeyPrefix(@Param("rule") NotificationRule rule, @Param("prefix") String prefix,
                                   @Param("now") LocalDateTime now);
