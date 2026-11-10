@@ -40,7 +40,7 @@ public class HealthDigestService {
         Map<String, DigestDTO.UserDigest> users = new LinkedHashMap<>();
         digest.users().forEach((username, user) -> users.put(username,
                 new DigestDTO.UserDigest(user.unread(), user.notifications(), digest(username).orElse(null))));
-        return new DigestDTO(digest.generatedAt(), users);
+        return new DigestDTO(digest.generatedAt(), users, digest.depot());
     }
 
     public Optional<HealthDigest> digest(String username) {
