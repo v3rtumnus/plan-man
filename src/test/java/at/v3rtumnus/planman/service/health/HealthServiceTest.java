@@ -141,6 +141,15 @@ class HealthServiceTest {
     }
 
     @Test
+    void dayForUser_worksWithoutLogin_andRejectsUnknownUsers() {
+        service().changeGoal(goalForm(2000));
+
+        assertThat(service().day("michael", today).getKcalTarget()).isEqualTo(2000);
+        assertThat(service().day("michael", today).getId()).isEqualTo(service().day(today).getId());
+        assertThatThrownBy(() -> service().day("nobody", today)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void day_withoutGoal_isFilledOnceAGoalExists() {
         HealthService service = service();
         assertThat(service.day(today).getKcalTarget()).isNull();

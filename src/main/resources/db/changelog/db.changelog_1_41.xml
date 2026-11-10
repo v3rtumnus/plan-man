@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Health H7: products by barcode. Filled from Open Food Facts on the first scan; your
+         corrections on the review form overwrite the values (source USER), so the next scan
+         of the same product uses them. -->
+    <changeSet id="1_41_create_food" author="plan-man">
+        <createTable tableName="food">
+            <column name="barcode" type="VARCHAR(32)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="brand" type="VARCHAR(255)"/>
+            <column name="kcal_per_100g" type="DECIMAL(6,1)"><constraints nullable="false"/></column>
+            <column name="protein_per_100g" type="DECIMAL(5,1)"><constraints nullable="false"/></column>
+            <column name="carbs_per_100g" type="DECIMAL(5,1)"><constraints nullable="false"/></column>
+            <column name="fat_per_100g" type="DECIMAL(5,1)"><constraints nullable="false"/></column>
+            <column name="serving_g" type="INT"/>
+            <column name="serving_hint" type="VARCHAR(255)"/>
+            <column name="source" type="VARCHAR(16)"><constraints nullable="false"/></column>
+            <column name="updated_at" type="DATETIME"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <!-- Health H6 nudges. Hours are when the hourly run (:05) may first ask; at most two
+         health pushes a day per user over all health rules (planman.health.max-pushes-per-day). -->
+    <changeSet id="1_41_health_nudge_rules" author="plan-man">
+        <insert tableName="notification_rule">
+            <column name="name" value="Fußball heute?"/>
+            <column name="rule_type" value="HEALTH_FOOTBALL"/>
+            <column name="parameters_json" value="{&quot;hour&quot;:22}"/>
+            <column name="targeting_mode" value="ALL_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="notification_rule">
+            <column name="name" value="Taille messen"/>
+            <column name="rule_type" value="HEALTH_WAIST_DUE"/>
+            <column name="parameters_json" value="{&quot;hour&quot;:7}"/>
+            <column name="targeting_mode" value="ALL_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="notification_rule">
+            <column name="name" value="Gewicht fehlt"/>
+            <column name="rule_type" value="HEALTH_WEIGHT_MISSING"/>
+            <column name="parameters_json" value="{&quot;hour&quot;:10,&quot;days&quot;:2}"/>
+            <column name="targeting_mode" value="ALL_USERS"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

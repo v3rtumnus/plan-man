@@ -26,6 +26,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     long countByRuleAndCreatedAtAfterAndReadAtIsNotNull(NotificationRule rule, LocalDateTime after);
 
+    /** Pushes of one rule family (e.g. "HEALTH_") a user got since a time: the daily push cap. */
+    long countByRecipientUsernameAndPushTrueAndCreatedAtGreaterThanEqualAndRuleRuleTypeStartingWith(
+            String username, LocalDateTime since, String ruleTypePrefix);
+
     boolean existsByRuleAndRecipientUsernameAndPeriodKey(NotificationRule rule, String username, String periodKey);
 
     @Modifying

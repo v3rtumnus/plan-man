@@ -6,6 +6,8 @@ import at.v3rtumnus.planman.dto.health.MealQuestion;
 import at.v3rtumnus.planman.dto.health.NutritionDay;
 import at.v3rtumnus.planman.entity.health.MealSlot;
 import at.v3rtumnus.planman.service.health.AiRequestException;
+import at.v3rtumnus.planman.entity.health.Food;
+import at.v3rtumnus.planman.service.health.FoodService;
 import at.v3rtumnus.planman.service.health.MealService;
 import at.v3rtumnus.planman.entity.health.Meal;
 import jakarta.validation.Valid;
@@ -22,6 +24,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
 
 /** Meal capture (sentence/photo → model → review → save) and "Schnell wieder". */
 @Controller
@@ -35,6 +38,7 @@ public class MealController {
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("EEEE, d. MMMM", Locale.GERMAN);
 
     private final MealService mealService;
+    private final FoodService foodService;
 
     @GetMapping("/new")
     public ModelAndView capture(@RequestParam(name = "slot", required = false) MealSlot slot,
@@ -52,6 +56,44 @@ public class MealController {
         mav.addObject("aiAvailable", mealService.recognitionAvailable());
         mav.addObject("openCamera", photo);
         return mav;
+    }
+
+    /** H7: a scanned (or typed) barcode → review form with the product, or back to capture. */
+    @GetMapping("/barcode")
+    public ModelAndView barcode(@RequestParam("code") String code,
+                                @RequestParam(name = "slot", required = false) MealSlot slot,
+                                @RequestParam(name = "date", required = false)
+                                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        MealSlot selected = slot != null ? slot : mealService.slotNow();
+        LocalDate day = day(date);
+        String barcode = code == null ? "" : code.replaceAll("\\s", "");
+        String error;
+        try {
+            Optional<Food> food = foodService.lookup(barcode);
+            if (food.isPresent()) {
+                MealForm form = mealService.manualForm(selected, day, FoodService.displayName(food.get()));
+                form.getItems().clear();
+                form.getItems().add(FoodService.item(food.get()));
+                form.setBarcode(barcode);
+                return review(form, null, false);
+            }
+            error = "Produkt " + barcode + " ist bei Open Food Facts nicht bekannt. Bitte per Satz oder Foto erfassen.";
+        } catch (IllegalArgumentException | FoodService.LookupException e) {
+            error = e.getMessage();
+        }
+        ModelAndView mav = capture(selected, false, day);
+        mav.addObject("errorMessage", error);
+        return mav;
+    }
+
+    /**
+     * Share target fallback: normally the service worker catches the shared photo and opens
+     * capture itself. Without it (first start, worker not active yet) the POST lands here; the
+     * photo is not kept, capture opens with the camera so it can be picked again.
+     */
+    @PostMapping("/share")
+    public String shareFallback() {
+        return "redirect:/health/meals/new?photo=true";
     }
 
     @PostMapping("/recognize")
@@ -100,6 +142,9 @@ public class MealController {
         if (!result.hasErrors()) {
             try {
                 mealService.save(form);
+                if (form.getBarcode() != null && form.getItems().size() == 1) {
+                    foodService.remember(form.getBarcode(), form.getItems().getFirst());
+                }
                 redirect.addFlashAttribute("successMessage", form.getTitle().trim() + " gespeichert");
                 return new ModelAndView("redirect:" + HealthController.dayPath(form.getDate(), mealService.today()));
             } catch (IllegalArgumentException e) {

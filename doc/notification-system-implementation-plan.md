@@ -13,6 +13,10 @@
 > - `job_status` + gauge `planman_job_last_success_timestamp_seconds{task}` for every
 >   scheduled job; the Grafana alert *plan-man job stale* watches it.
 > - `GET /api/digest` (bearer token) for n8n.
+> - Health H6 (2026-11-10, changelog 1_41): `HEALTH_FOOTBALL` (Tuesday from 22:00, buttons
+>   *Gespielt* / *Fällt aus*), `HEALTH_WAIST_DUE` (from 07:00), `HEALTH_WEIGHT_MISSING` (no weight
+>   for 2 days, from 10:00); none during a Pause; open nudges are marked read once answered
+>   elsewhere; at most `planman.health.max-pushes-per-day` (2) health pushes per user and day.
 > - N2 (2026-11-10, changelog 1_39): finance rules `CLAIM_NOT_SUBMITTED` (button *Eingereicht*),
 >   `BUDGET_NEAR_LIMIT` (the rule below, push once a month), `IMPORT_DUE` and `PRICE_MOVE` (*Kursbewegung*, anchors in `price_anchor`). Parameters are a flat JSON
 >   object of numbers (`RuleParameters`). Rules page `/notifications/rules` (on/off,

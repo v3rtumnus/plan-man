@@ -9,5 +9,7 @@ public enum MealSource {
     /** One tap on "wie gestern": a copy of an earlier meal. */
     REPEAT,
     /** Entered by hand on the review form. */
-    MANUAL
+    MANUAL,
+    /** Scanned barcode (Open Food Facts or your saved correction), then reviewed (H7). */
+    BARCODE
 }

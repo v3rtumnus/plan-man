@@ -5,6 +5,8 @@ import at.v3rtumnus.planman.entity.health.Meal;
 import at.v3rtumnus.planman.entity.health.MealSlot;
 import at.v3rtumnus.planman.service.PlanManUserDetailsService;
 import at.v3rtumnus.planman.service.health.AiRequestException;
+import at.v3rtumnus.planman.entity.health.Food;
+import at.v3rtumnus.planman.service.health.FoodService;
 import at.v3rtumnus.planman.service.health.MealService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -40,6 +43,8 @@ class MealControllerTest {
 
     @MockitoBean
     private MealService mealService;
+    @MockitoBean
+    private FoodService foodService;
     @MockitoBean
     private PlanManUserDetailsService userDetailsService;
     @MockitoBean
@@ -283,5 +288,76 @@ class MealControllerTest {
         mockMvc.perform(post("/health/meals/recognize").param("slot", "LUNCH").param("description", "Suppe")
                         .param("date", past.toString()))
                 .andExpect(content().string(containsString("Nachtragen für")));
+    }
+
+    // --- H7 barcode, H6 share target
+
+    private static Food skyr() {
+        Food food = new Food();
+        food.setBarcode("4056489123456");
+        food.setName("Skyr Natur");
+        food.setBrand("Milbona");
+        food.setKcalPer100g(new BigDecimal("63"));
+        food.setProteinPer100g(new BigDecimal("11"));
+        food.setCarbsPer100g(new BigDecimal("4.1"));
+        food.setFatPer100g(new BigDecimal("0.2"));
+        food.setServingG(150);
+        return food;
+    }
+
+    @Test
+    void barcode_found_opensReviewWithTheProduct() throws Exception {
+        when(foodService.lookup("4056489123456")).thenReturn(Optional.of(skyr()));
+        MealForm empty = new MealForm();
+        empty.setSlot(MealSlot.SNACK);
+        empty.setDate(TODAY);
+        empty.setTitle("Skyr Natur (Milbona)");
+        empty.getItems().add(MealItemForm.empty());
+        when(mealService.manualForm(MealSlot.SNACK, TODAY, "Skyr Natur (Milbona)")).thenReturn(empty);
+
+        mockMvc.perform(get("/health/meals/barcode").param("code", "4056489 123456").param("slot", "SNACK"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("health/meal-review"))
+                .andExpect(content().string(containsString("value=\"4056489123456\"")))
+                .andExpect(content().string(containsString("Skyr Natur (Milbona)")));
+        assertThat(empty.getItems()).singleElement().satisfies(i -> assertThat(i.getGrams()).isEqualTo(150));
+    }
+
+    @Test
+    void barcode_unknownOrUnreachable_backToCaptureWithMessage() throws Exception {
+        when(foodService.lookup("12345678")).thenReturn(Optional.empty());
+        mockMvc.perform(get("/health/meals/barcode").param("code", "12345678"))
+                .andExpect(view().name("health/meal-capture"))
+                .andExpect(model().attribute("errorMessage", "Produkt 12345678 ist bei Open Food Facts nicht bekannt. Bitte per Satz oder Foto erfassen."));
+
+        when(foodService.lookup("87654321")).thenThrow(new FoodService.LookupException("Open Food Facts ist gerade nicht erreichbar.", null));
+        mockMvc.perform(get("/health/meals/barcode").param("code", "87654321"))
+                .andExpect(model().attribute("errorMessage", "Open Food Facts ist gerade nicht erreichbar."));
+    }
+
+    @Test
+    void save_withBarcode_remembersYourValues() throws Exception {
+        mockMvc.perform(post("/health/meals")
+                        .param("slot", "SNACK")
+                        .param("date", "2026-11-10")
+                        .param("title", "Skyr")
+                        .param("barcode", "4056489123456")
+                        .param("items[0].name", "Skyr")
+                        .param("items[0].grams", "150")
+                        .param("items[0].kcalPer100g", "70")
+                        .param("items[0].proteinPer100g", "11")
+                        .param("items[0].carbsPer100g", "4")
+                        .param("items[0].fatPer100g", "0.2"))
+                .andExpect(redirectedUrl("/health"));
+        verify(foodService).remember(eq("4056489123456"), argThat(i -> i.getKcalPer100g().intValue() == 70));
+    }
+
+    @Test
+    void capture_hasBarcodeButton_andShareFallbackOpensCamera() throws Exception {
+        mockMvc.perform(get("/health/meals/new"))
+                .andExpect(content().string(containsString("id=\"barcode-button\"")))
+                .andExpect(content().string(containsString("data-action=\"/health/meals/barcode\"")));
+        mockMvc.perform(post("/health/meals/share"))
+                .andExpect(redirectedUrl("/health/meals/new?photo=true"));
     }
 }

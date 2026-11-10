@@ -56,7 +56,10 @@ class HealthSchemaTest {
                     "football_played", "training_kcal", "weight_trend_kg", "weight_change_kg", "weekly_rate_kg", "waist_cm",
                     "waist_change_cm", "push_ups", "goal_check", "goal_status", "headline", "feedback", "goal_reason",
                     "proposed_kcal_target", "proposed_protein_target_g", "proposed_target_date", "proposal_reason",
-                    "feedback_status", "model", "feedback_at", "error", "decision", "decided_at", "created_at"));
+                    "feedback_status", "model", "feedback_at", "error", "decision", "decided_at", "created_at"),
+            // 1_41
+            "food", Set.of("barcode", "name", "brand", "kcal_per_100g", "protein_per_100g", "carbs_per_100g",
+                    "fat_per_100g", "serving_g", "serving_hint", "source", "updated_at"));
 
     @MockitoBean
     private CacheManager cacheManager;

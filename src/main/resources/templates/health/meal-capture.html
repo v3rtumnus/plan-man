@@ -49,8 +49,22 @@
                                     th:disabled="${!aiAvailable}">
                                 <i class="bi bi-camera" aria-hidden="true"></i> Foto
                             </button>
+                            <button type="button" class="btn btn-outline-primary health-tool" id="barcode-button">
+                                <i class="bi bi-upc-scan" aria-hidden="true"></i> Barcode
+                            </button>
                             <img id="photo-preview" class="health-photo d-none" alt="Foto der Mahlzeit">
                             <button type="button" class="btn btn-link btn-sm d-none" id="photo-remove">Foto entfernen</button>
+                        </div>
+                        <div id="barcode-panel" class="d-none d-flex flex-column gap-2"
+                             th:attr="data-action=@{/health/meals/barcode}">
+                            <video id="barcode-video" class="w-100 rounded d-none" playsinline muted></video>
+                            <div class="small text-muted" id="barcode-status">Barcode in die Mitte halten …</div>
+                            <div class="input-group">
+                                <input type="text" inputmode="numeric" pattern="[0-9]{8,14}" maxlength="14"
+                                       class="form-control" id="barcode-code" placeholder="oder Nummer eintippen" aria-label="Barcode-Nummer">
+                                <button type="button" class="btn btn-outline-primary" id="barcode-go">Suchen</button>
+                                <button type="button" class="btn btn-outline-secondary" id="barcode-cancel">Abbrechen</button>
+                            </div>
                         </div>
                         <div class="small text-muted">Foto + Satz = beste Schätzung. Das Foto wird nur zur Erkennung gesendet, nicht gespeichert.</div>
                     </div>
@@ -105,6 +119,6 @@
 </main>
 
 <th:block th:replace="~{fragments/footer :: footer-js}"/>
-<script type="text/javascript" th:src="@{/resources/js/health-meal.js}" src="/resources/js/health-meal.js"></script>
+<script type="text/javascript" th:src="@{/resources/js/health-meal.js(v=2)}" src="/resources/js/health-meal.js"></script>
 </body>
 </html>
