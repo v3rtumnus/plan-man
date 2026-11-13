@@ -32,7 +32,7 @@ class PwaControllerTest {
         mockMvc.perform(get("/manifest.webmanifest"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/manifest+json"))
-                .andExpect(content().string(containsString("\"start_url\": \"/health\"")));
+                .andExpect(content().string(containsString("\"start_url\": \"/start\"")));
     }
 
     @Test

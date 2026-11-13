@@ -2,7 +2,7 @@
   "name": "Plan-Man",
   "short_name": "Plan-Man",
   "lang": "de",
-  "start_url": "/health",
+  "start_url": "/start",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f6f9ff",

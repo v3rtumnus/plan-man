@@ -1,5 +1,6 @@
 package at.v3rtumnus.planman.controller.ui;
 
+import at.v3rtumnus.planman.conf.CurrentUser;
 import at.v3rtumnus.planman.dto.PlanManUser;
 import at.v3rtumnus.planman.dto.expense.ExpenseSummary;
 import at.v3rtumnus.planman.dto.finance.FinancialSnapshotDto;
@@ -66,6 +67,12 @@ public class UiController {
         modelAndView.addObject("openInsuranceClaims", openInsuranceClaims);
 
         return modelAndView;
+    }
+
+    /** The installed app's start page: aga lands on expenses, everyone else on health. */
+    @GetMapping("/start")
+    public String start() {
+        return "aga".equals(CurrentUser.name()) ? "redirect:/expenses" : "redirect:/health";
     }
 
     @GetMapping("/login")

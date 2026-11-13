@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -89,5 +90,17 @@ class UiControllerTest {
         mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"));
+    }
+
+    @Test
+    @WithMockUser(username = "michael")
+    void start_redirectsMichaelToHealth() throws Exception {
+        mockMvc.perform(get("/start")).andExpect(redirectedUrl("/health"));
+    }
+
+    @Test
+    @WithMockUser(username = "aga")
+    void start_redirectsAgaToExpenses() throws Exception {
+        mockMvc.perform(get("/start")).andExpect(redirectedUrl("/expenses"));
     }
 }
