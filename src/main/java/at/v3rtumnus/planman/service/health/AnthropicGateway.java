@@ -36,6 +36,9 @@ public class AnthropicGateway {
             + "Bitte manuell eintragen und in der Anthropic-Console aufladen.";
     static final String UNAVAILABLE_MESSAGE = "Die KI ist gerade nicht erreichbar. Bitte nochmal versuchen oder manuell eintragen.";
 
+    /** Outcomes registered up front; stop_* stays lazy (rare, and its reason is open-ended). */
+    static final List<String> TRACKED_OUTCOMES = List.of("ok", "billing", "unavailable");
+
     private final AnthropicClient client;
     private final MeterRegistry meters;
 
@@ -148,21 +151,48 @@ public class AnthropicGateway {
         return false;
     }
 
+    /**
+     * Registers the series of one model and purpose at 0. A counter that first appears with its
+     * first call loses that call in Prometheus' increase(), and plan-man restarts on every deploy.
+     */
+    public void track(String model, String purpose) {
+        if (model == null || model.isBlank()) {
+            return;
+        }
+        tokens(model, purpose, "input");
+        tokens(model, purpose, "output");
+        cost(model, purpose);
+        for (String outcome : TRACKED_OUTCOMES) {
+            requests(model, purpose, outcome);
+        }
+    }
+
     private void countUsage(String model, String purpose, long inputTokens, long outputTokens) {
         double[] price = PRICES.getOrDefault(model, PRICES.get("claude-sonnet-5-5"));
-        Counter.builder("planman.ai.tokens").tag("model", model).tag("purpose", purpose).tag("type", "input")
-                .description("Tokens sent to and received from the Anthropic API")
-                .register(meters).increment(inputTokens);
-        Counter.builder("planman.ai.tokens").tag("model", model).tag("purpose", purpose).tag("type", "output")
-                .register(meters).increment(outputTokens);
-        Counter.builder("planman.ai.cost.usd").tag("model", model).tag("purpose", purpose)
-                .description("Estimated Anthropic API cost from token counts and list prices")
-                .register(meters).increment((inputTokens * price[0] + outputTokens * price[1]) / 1_000_000.0);
+        tokens(model, purpose, "input").increment(inputTokens);
+        tokens(model, purpose, "output").increment(outputTokens);
+        cost(model, purpose).increment((inputTokens * price[0] + outputTokens * price[1]) / 1_000_000.0);
     }
 
     private void count(String model, String purpose, String outcome) {
-        Counter.builder("planman.ai.requests").tag("model", model).tag("purpose", purpose).tag("outcome", outcome)
+        requests(model, purpose, outcome).increment();
+    }
+
+    private Counter tokens(String model, String purpose, String type) {
+        return Counter.builder("planman.ai.tokens").tag("model", model).tag("purpose", purpose).tag("type", type)
+                .description("Tokens sent to and received from the Anthropic API")
+                .register(meters);
+    }
+
+    private Counter cost(String model, String purpose) {
+        return Counter.builder("planman.ai.cost.usd").tag("model", model).tag("purpose", purpose)
+                .description("Estimated Anthropic API cost from token counts and list prices")
+                .register(meters);
+    }
+
+    private Counter requests(String model, String purpose, String outcome) {
+        return Counter.builder("planman.ai.requests").tag("model", model).tag("purpose", purpose).tag("outcome", outcome)
                 .description("Anthropic API requests by outcome (ok, billing, unavailable, stop_*)")
-                .register(meters).increment();
+                .register(meters);
     }
 }
