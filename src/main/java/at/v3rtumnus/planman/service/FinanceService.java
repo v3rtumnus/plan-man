@@ -195,17 +195,36 @@ public class FinanceService {
                             BigDecimal totalChangeBase = product.getCurrentPrice().add(dividendPerItem).subtract(product.getCombinedPurchasePrice()).setScale(4, RoundingMode.HALF_UP).divide(product.getCombinedPurchasePrice(), RoundingMode.HALF_UP);
                             product.setPercentChangeTotal(totalChangeBase.multiply(BigDecimal.valueOf(100L)));
 
-                            double lifetime = (double) Duration.between(product.getPurchaseDate().atStartOfDay(), product.getSellDate().atStartOfDay()).toDays() / 365;
-
-                            product.setPercentChangeYearly(
-                                    (BigDecimal.valueOf(Math.pow(totalChangeBase.doubleValue() + 1, 1 / lifetime)).subtract(BigDecimal.ONE)).multiply(BigDecimal.valueOf(100L))
-                            );
+                            long days = Duration.between(product.getPurchaseDate().atStartOfDay(), product.getSellDate().atStartOfDay()).toDays();
+                            BigDecimal yearly = yearlyPercent(totalChangeBase, days);
+                            if (yearly == null) {
+                                log.warn("No yearly return for {} ({}): total change base {} over {} days (bad quote or split not booked?)",
+                                        product.getName(), product.getIsin(), totalChangeBase, days);
+                            }
+                            product.setPercentChangeYearly(yearly);
                         }
                     }
 
                     return product;
                 })
                 .toList();
+    }
+
+    /**
+     * Yearly return in percent from the total change (0.5 = +50 %) over the holding days, or null
+     * when it has no real value: bought today, or a loss beyond 100 % (a quote 60× too low after an
+     * unbooked split once made this NaN, and the NaN broke the whole product list, 2026-11-24).
+     */
+    static BigDecimal yearlyPercent(BigDecimal totalChangeBase, long days) {
+        double growth = totalChangeBase.doubleValue() + 1;
+        if (days <= 0 || growth <= 0) {
+            return null;
+        }
+        double yearly = Math.pow(growth, 365.0 / days);
+        if (!Double.isFinite(yearly)) {
+            return null;
+        }
+        return BigDecimal.valueOf(yearly).subtract(BigDecimal.ONE).multiply(BigDecimal.valueOf(100L));
     }
 
     public List<SavingsPlanDto> retrieveActiveSavingPlans() {

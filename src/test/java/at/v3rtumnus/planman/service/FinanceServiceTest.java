@@ -303,4 +303,18 @@ class FinanceServiceTest {
         verify(quoteRepository).save(any(FinancialProductStockQuote.class));
         verify(jobStatusService).success(JobStatusService.QUOTES);
     }
+
+    @Test
+    void yearlyPercent_normalHolding() {
+        // +21 % over two years is +10 % a year
+        assertThat(FinanceService.yearlyPercent(new BigDecimal("0.21"), 730).doubleValue()).isCloseTo(10.0, org.assertj.core.data.Offset.offset(0.01));
+    }
+
+    @Test
+    void yearlyPercent_noRealValue_isNull() {
+        // unbooked 1:60 split: price 4.69 against a cost of 175 → base -1.065 (was NaN)
+        assertThat(FinanceService.yearlyPercent(new BigDecimal("-1.065"), 2333)).isNull();
+        assertThat(FinanceService.yearlyPercent(new BigDecimal("-1"), 2333)).isNull();
+        assertThat(FinanceService.yearlyPercent(new BigDecimal("0.10"), 0)).isNull();
+    }
 }
