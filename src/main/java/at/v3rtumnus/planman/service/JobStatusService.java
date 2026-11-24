@@ -38,7 +38,7 @@ public class JobStatusService {
     /** Daily: last week's Opus text is there (or not needed); fails while the API call keeps failing. */
     public static final String HEALTH_REVIEW_AI = "health_review_ai";
 
-    /** Hourly: steps, resting HR and sleep from Home Assistant (H8); a no-op until sensors are set. */
+    /** Hourly: steps from Home Assistant (H8); a no-op until the sensor is set. */
     public static final String PHONE_DATA = "phone_data";
 
     /** Jobs with a gauge from startup on. Add new scheduled jobs here and to the Grafana alert. */

@@ -31,11 +31,12 @@ class HealthSchemaTest {
     /**
      * Columns as created by the health changelogs 1_33–1_35 (1_33/1_34 checked against MariaDB on
      * 2026-11-08; 1_35 adds workout and health_day.football_cancelled and drops
-     * health_goal.freeletics_bonus_kcal; 1_36 drops exercise and exercise_weight again).
+     * health_goal.freeletics_bonus_kcal; 1_36 drops exercise and exercise_weight again; 1_42 drops
+     * health_day.resting_hr and sleep_minutes).
      */
     private static final Map<String, Set<String>> CHANGELOG = Map.of(
             "health_day", Set.of("id", "user_profile_id", "day_date", "health_goal_id", "kcal_target", "protein_target_g",
-                    "steps_target", "steps", "resting_hr", "sleep_minutes", "paused", "football_cancelled"),
+                    "steps_target", "steps", "paused", "football_cancelled"),
             "health_goal", Set.of("id", "user_profile_id", "title", "valid_from", "valid_to", "kcal_target",
                     "protein_target_g", "football_bonus_kcal", "steps_target", "start_weight_kg", "target_weight_kg",
                     "target_date", "push_ups_target", "created_at"),

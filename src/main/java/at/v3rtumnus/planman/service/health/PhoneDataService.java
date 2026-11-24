@@ -23,12 +23,11 @@ import java.time.*;
 import java.util.*;
 
 /**
- * Phone data (H8): the Home Assistant companion app's Health Connect sensors → {@code health_day}
- * (steps, resting heart rate, sleep). Hourly, plan-man reads HA's history for yesterday and
- * today, so the last steps before midnight still land on yesterday. Steps are the day's highest
- * value (the sensor counts up during the day); heart rate and sleep the day's last value.
- * Sleep in minutes; a value below 24 is taken as hours. Nothing happens until the entity IDs are
- * set ({@code planman.health.phone.*}); a wrong ID makes the job fail, so the Grafana alert
+ * Phone data (H8): the Home Assistant companion app's Health Connect steps sensor →
+ * {@code health_day.steps}. Hourly, plan-man reads HA's history for yesterday and today, so the
+ * last steps before midnight still land on yesterday. Steps are the day's highest value (the
+ * sensor counts up during the day). Nothing happens until the entity ID is set
+ * ({@code planman.health.phone.steps-entity}); a wrong ID makes the job fail, so the Grafana alert
  * *plan-man job stale* shows it.
  */
 @Service
@@ -45,23 +44,21 @@ public class PhoneDataService {
     private final String haUrl;
     private final String token;
     private final String username;
-    private final Map<String, String> entities;
+    private final String stepsEntity;
 
     @Autowired
     public PhoneDataService(HealthService healthService, HealthDayRepository days, JobStatusService jobs, Clock clock,
                             @Value("${planman.health.ha.url:http://homeassistant:8123}") String haUrl,
                             @Value("${planman.health.ha.token:${HA_TOKEN:}}") String token,
                             @Value("${planman.health.phone.user:michael}") String username,
-                            @Value("${planman.health.phone.steps-entity:}") String stepsEntity,
-                            @Value("${planman.health.phone.resting-hr-entity:}") String restingHrEntity,
-                            @Value("${planman.health.phone.sleep-entity:}") String sleepEntity) {
+                            @Value("${planman.health.phone.steps-entity:}") String stepsEntity) {
         this(healthService, days, jobs, HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build(), clock,
-                haUrl, token, username, stepsEntity, restingHrEntity, sleepEntity);
+                haUrl, token, username, stepsEntity);
     }
 
     PhoneDataService(HealthService healthService, HealthDayRepository days, JobStatusService jobs, HttpClient http,
                      Clock clock, String haUrl, String token, String username,
-                     String stepsEntity, String restingHrEntity, String sleepEntity) {
+                     String stepsEntity) {
         this.healthService = healthService;
         this.days = days;
         this.jobs = jobs;
@@ -70,15 +67,11 @@ public class PhoneDataService {
         this.haUrl = haUrl;
         this.token = token;
         this.username = username;
-        Map<String, String> map = new LinkedHashMap<>();
-        if (!stepsEntity.isBlank()) map.put("steps", stepsEntity.trim());
-        if (!restingHrEntity.isBlank()) map.put("restingHr", restingHrEntity.trim());
-        if (!sleepEntity.isBlank()) map.put("sleep", sleepEntity.trim());
-        this.entities = Collections.unmodifiableMap(map);
+        this.stepsEntity = stepsEntity.trim();
     }
 
     public boolean configured() {
-        return !entities.isEmpty() && !token.isBlank();
+        return !stepsEntity.isBlank() && !token.isBlank();
     }
 
     @Scheduled(cron = "${planman.health.phone.cron:0 20 * * * *}")
@@ -104,26 +97,19 @@ public class PhoneDataService {
         LocalDate yesterday = today.minusDays(1);
         Map<String, List<Point>> history = history(yesterday.atStartOfDay(zone).toOffsetDateTime(),
                 OffsetDateTime.now(clock));
-        for (Map.Entry<String, String> e : entities.entrySet()) {
-            if (!history.containsKey(e.getValue())) {
-                throw new IllegalStateException("Home Assistant has no history for " + e.getValue()
-                        + " (entity ID wrong or sensor off in the companion app?)");
-            }
+        if (!history.containsKey(stepsEntity)) {
+            throw new IllegalStateException("Home Assistant has no history for " + stepsEntity
+                    + " (entity ID wrong or sensor off in the companion app?)");
         }
         int changed = 0;
         for (LocalDate date : List.of(yesterday, today)) {
-            Integer steps = dayMax(history.get(entities.get("steps")), date, zone);
-            Integer hr = dayLast(history.get(entities.get("restingHr")), date, zone);
-            Integer sleep = sleepMinutes(lastValue(history.get(entities.get("sleep")), date, zone));
-            if (steps == null && hr == null && sleep == null) {
+            Integer steps = dayMax(history.get(stepsEntity), date, zone);
+            if (steps == null) {
                 continue;
             }
             HealthDay day = healthService.day(username, date);
-            boolean dirty = false;
-            if (steps != null && !steps.equals(day.getSteps())) { day.setSteps(steps); dirty = true; }
-            if (hr != null && !hr.equals(day.getRestingHr())) { day.setRestingHr(hr); dirty = true; }
-            if (sleep != null && !sleep.equals(day.getSleepMinutes())) { day.setSleepMinutes(sleep); dirty = true; }
-            if (dirty) {
+            if (!steps.equals(day.getSteps())) {
+                day.setSteps(steps);
                 days.save(day);
                 changed++;
             }
@@ -137,7 +123,7 @@ public class PhoneDataService {
     Map<String, List<Point>> history(OffsetDateTime from, OffsetDateTime to) throws IOException, InterruptedException {
         String url = haUrl + "/api/history/period/" + enc(from.toString())
                 + "?end_time=" + enc(to.toString())
-                + "&filter_entity_id=" + enc(String.join(",", new LinkedHashSet<>(entities.values())))
+                + "&filter_entity_id=" + enc(stepsEntity)
                 + "&minimal_response&no_attributes&significant_changes_only=0";
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofSeconds(20))
@@ -180,24 +166,6 @@ public class PhoneDataService {
     private static Integer dayMax(List<Point> points, LocalDate date, ZoneId zone) {
         return onDay(points, date, zone).map(Point::value).max(Comparator.naturalOrder())
                 .map(v -> v.setScale(0, java.math.RoundingMode.HALF_UP).intValue()).orElse(null);
-    }
-
-    private static Integer dayLast(List<Point> points, LocalDate date, ZoneId zone) {
-        BigDecimal value = lastValue(points, date, zone);
-        return value == null ? null : value.setScale(0, java.math.RoundingMode.HALF_UP).intValue();
-    }
-
-    private static BigDecimal lastValue(List<Point> points, LocalDate date, ZoneId zone) {
-        return onDay(points, date, zone).max(Comparator.comparing(Point::at)).map(Point::value).orElse(null);
-    }
-
-    /** Minutes; a value below 24 is hours (the sensor's unit is not in the minimal history). */
-    static Integer sleepMinutes(BigDecimal value) {
-        if (value == null) {
-            return null;
-        }
-        BigDecimal minutes = value.compareTo(BigDecimal.valueOf(24)) < 0 ? value.multiply(BigDecimal.valueOf(60)) : value;
-        return minutes.setScale(0, java.math.RoundingMode.HALF_UP).intValue();
     }
 
     private static java.util.stream.Stream<Point> onDay(List<Point> points, LocalDate date, ZoneId zone) {

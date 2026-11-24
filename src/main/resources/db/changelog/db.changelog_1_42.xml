@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Phone data: only steps are synced. Resting heart rate and sleep are gone (never filled). -->
+    <changeSet id="1_42_drop_resting_hr_sleep" author="plan-man">
+        <dropColumn tableName="health_day" columnName="resting_hr"/>
+        <dropColumn tableName="health_day" columnName="sleep_minutes"/>
+    </changeSet>
+
+</databaseChangeLog>

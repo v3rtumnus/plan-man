@@ -25,8 +25,8 @@ class PhoneDataServiceTest {
     private final JobStatusService jobs = mock(JobStatusService.class);
     private final HttpClient http = mock(HttpClient.class);
 
-    private PhoneDataService service(String steps, String hr, String sleep, String token) {
-        return new PhoneDataService(healthService, days, jobs, http, clock, "http://ha:8123", token, "michael", steps, hr, sleep);
+    private PhoneDataService service(String steps, String token) {
+        return new PhoneDataService(healthService, days, jobs, http, clock, "http://ha:8123", token, "michael", steps);
     }
 
     @SuppressWarnings("unchecked")
@@ -49,55 +49,48 @@ class PhoneDataServiceTest {
               {"state":"9100","last_changed":"2026-11-09T22:30:00+00:00"},
               {"state":"40","last_changed":"2026-11-09T23:10:00+00:00"},
               {"state":"unavailable","last_changed":"2026-11-10T08:00:00+00:00"},
-              {"state":"3500","last_changed":"2026-11-10T12:00:00+00:00"}],
-             [{"entity_id":"sensor.handy_resting_hr","state":"61","last_changed":"2026-11-09T06:00:00+00:00"},
-              {"state":"58","last_changed":"2026-11-10T06:00:00+00:00"}],
-             [{"entity_id":"sensor.handy_sleep","state":"7.5","last_changed":"2026-11-10T06:00:00+00:00"}]]""";
+              {"state":"3500","last_changed":"2026-11-10T12:00:00+00:00"}]]""";
 
     @Test
     void sync_writesYesterdayAndToday() throws Exception {
         HttpRequest[] seen = respond(200, HISTORY);
         HealthDay yesterday = new HealthDay();
         HealthDay today = new HealthDay();
-        today.setSteps(3500);
+        today.setSteps(3000);
         when(healthService.day("michael", TODAY.minusDays(1))).thenReturn(yesterday);
         when(healthService.day("michael", TODAY)).thenReturn(today);
-        PhoneDataService service = service("sensor.handy_steps", "sensor.handy_resting_hr", "sensor.handy_sleep", "t0k");
+        PhoneDataService service = service("sensor.handy_steps", "t0k");
         assertThat(service.configured()).isTrue();
 
         service.sync();
 
         assertThat(yesterday.getSteps()).isEqualTo(9100);
-        assertThat(yesterday.getRestingHr()).isEqualTo(61);
-        assertThat(yesterday.getSleepMinutes()).isNull();
         assertThat(today.getSteps()).isEqualTo(3500);
-        assertThat(today.getRestingHr()).isEqualTo(58);
-        assertThat(today.getSleepMinutes()).isEqualTo(450);
         verify(days).save(yesterday);
         verify(days).save(today);
         verify(jobs).success(JobStatusService.PHONE_DATA);
         assertThat(seen[0].uri().toString()).startsWith("http://ha:8123/api/history/period/2026-11-09T00%3A00%2B01%3A00?end_time=")
-                .contains("filter_entity_id=sensor.handy_steps%2Csensor.handy_resting_hr%2Csensor.handy_sleep");
+                .contains("filter_entity_id=sensor.handy_steps&");
         assertThat(seen[0].headers().firstValue("Authorization")).contains("Bearer t0k");
     }
 
     @Test
-    void sync_unchangedDaysAreNotSaved_andMinutesStayMinutes() throws Exception {
+    void sync_unchangedDaysAreNotSaved() throws Exception {
         respond(200, """
                 [[{"entity_id":"sensor.s","state":"450","last_changed":"2026-11-10T06:00:00+00:00"}]]""");
         HealthDay today = new HealthDay();
-        today.setSleepMinutes(450);
+        today.setSteps(450);
         when(healthService.day("michael", TODAY)).thenReturn(today);
 
-        assertThat(service("", "", "sensor.s", "t").syncDays()).isZero();
+        assertThat(service("sensor.s", "t").syncDays()).isZero();
         verify(days, never()).save(any());
         verify(healthService, never()).day(eq("michael"), eq(TODAY.minusDays(1)));
     }
 
     @Test
     void sync_notConfigured_isANoOpSuccess() {
-        service("", "", "", "t").sync();
-        service("sensor.x", "", "", "").sync();
+        service("", "t").sync();
+        service("sensor.x", "").sync();
         verify(jobs, times(2)).success(JobStatusService.PHONE_DATA);
         verifyNoInteractions(http);
     }
@@ -105,11 +98,11 @@ class PhoneDataServiceTest {
     @Test
     void sync_wrongEntityOrHttpError_fails() throws Exception {
         respond(200, "[]");
-        service("sensor.missing", "", "", "t").sync();
+        service("sensor.missing", "t").sync();
         verify(jobs).failure(eq(JobStatusService.PHONE_DATA), any());
 
         respond(401, "");
-        service("sensor.x", "", "", "t").sync();
+        service("sensor.x", "t").sync();
         verify(jobs, times(2)).failure(eq(JobStatusService.PHONE_DATA), any());
     }
 

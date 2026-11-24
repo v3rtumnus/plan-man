@@ -41,10 +41,6 @@ public class HealthDay {
 
     private Integer steps;
 
-    private Integer restingHr;
-
-    private Integer sleepMinutes;
-
     private boolean paused;
 
     /** "Fällt aus" was tapped on the football question. */
